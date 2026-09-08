@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Mochi, drawn at 3px per bitmap pixel and centred in the 72dp safe zone.
+  Same 20x18 grid the app and the share card render from.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <group android:translateX="24" android:translateY="27">
+        <!-- ears -->
+        <path android:fillColor="#12120F" android:pathData="M12,0h6v3h-6z M42,0h6v3h-6z" />
+        <path android:fillColor="#12120F" android:pathData="M9,3h3v3h-3z M18,3h3v3h-3z M39,3h3v3h-3z M48,3h3v3h-3z" />
+        <path android:fillColor="#56564E" android:pathData="M12,3h3v3h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M15,3h3v3h-3z M42,3h3v3h-3z" />
+        <path android:fillColor="#56564E" android:pathData="M45,3h3v3h-3z" />
+        <path android:fillColor="#12120F" android:pathData="M9,6h3v3h-3z M18,6h3v3h-3z M39,6h3v3h-3z M48,6h3v3h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M12,6h3v3h-3z M45,6h3v3h-3z" />
+        <path android:fillColor="#E0A3A3" android:pathData="M15,6h3v3h-3z M42,6h3v3h-3z" />
+
+        <!-- head -->
+        <path android:fillColor="#12120F" android:pathData="M6,9h3v3h-3z M51,9h3v3h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M9,9h6v3h-6z M45,9h6v3h-6z" />
+        <path android:fillColor="#E0A3A3" android:pathData="M15,9h3v3h-3z M39,9h3v3h-3z" />
+        <path android:fillColor="#12120F" android:pathData="M18,9h21v3h-21z" />
+
+        <path android:fillColor="#12120F" android:pathData="M6,12h3v3h-3z M51,12h3v3h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M9,12h42v3h-42z" />
+
+        <path android:fillColor="#12120F" android:pathData="M3,15h3v6h-3z M54,15h3v6h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M6,15h48v6h-48z" />
+
+        <!-- closed happy eyes -->
+        <path android:fillColor="#12120F" android:pathData="M3,21h3v3h-3z M54,21h3v3h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M6,21h48v3h-48z" />
+        <path android:fillColor="#12120F" android:pathData="M12,21h3v3h-3z M45,21h3v3h-3z" />
+
+        <path android:fillColor="#12120F" android:pathData="M3,24h3v3h-3z M54,24h3v3h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M6,24h48v3h-48z" />
+        <path android:fillColor="#12120F" android:pathData="M9,24h3v3h-3z M15,24h3v3h-3z M42,24h3v3h-3z M48,24h3v3h-3z" />
+
+        <path android:fillColor="#12120F" android:pathData="M3,27h3v3h-3z M54,27h3v3h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M6,27h48v3h-48z" />
+
+        <!-- nose and smile -->
+        <path android:fillColor="#12120F" android:pathData="M3,30h3v3h-3z M54,30h3v3h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M6,30h48v3h-48z" />
+        <path android:fillColor="#E0A3A3" android:pathData="M27,30h6v3h-6z" />
+
+        <path android:fillColor="#12120F" android:pathData="M3,33h3v3h-3z M54,33h3v3h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M6,33h48v3h-48z" />
+        <path android:fillColor="#12120F" android:pathData="M21,33h6v3h-6z M33,33h6v3h-6z" />
+        <path android:fillColor="#E0A3A3" android:pathData="M27,33h6v3h-6z" />
+
+        <path android:fillColor="#12120F" android:pathData="M6,36h3v3h-3z M51,36h3v3h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M9,36h42v3h-42z" />
+        <path android:fillColor="#12120F" android:pathData="M27,36h6v3h-6z" />
+
+        <!-- body -->
+        <path android:fillColor="#12120F" android:pathData="M6,39h6v3h-6z M48,39h6v3h-6z" />
+        <path android:fillColor="#8A8A80" android:pathData="M12,39h36v3h-36z" />
+        <path android:fillColor="#12120F" android:pathData="M12,42h3v9h-3z M45,42h3v9h-3z" />
+        <path android:fillColor="#8A8A80" android:pathData="M15,42h30v9h-30z" />
+        <path android:fillColor="#12120F" android:pathData="M12,51h36v3h-36z" />
+    </group>
+</vector>

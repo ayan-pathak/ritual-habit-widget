@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The entire face is one bitmap. Two transparent panes sit on top of it:
+  the field (opens the app) and the pill (marks today in place). The pill's
+  bounds mirror the renderer's action rect: 34dp tall, right-aligned,
+  15dp from the bottom and right edges.
+-->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/slab"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:importantForAccessibility="no"
+        android:contentDescription="@null" />
+
+    <FrameLayout
+        android:id="@+id/tap_grid"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="?android:attr/selectableItemBackground"
+        android:focusable="true" />
+
+    <FrameLayout
+        android:id="@+id/tap_action"
+        android:layout_width="118dp"
+        android:layout_height="42dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="11dp"
+        android:layout_marginBottom="11dp"
+        android:background="?android:attr/selectableItemBackgroundBorderless"
+        android:contentDescription="@string/widget_mark_today"
+        android:focusable="true" />
+
+</FrameLayout>

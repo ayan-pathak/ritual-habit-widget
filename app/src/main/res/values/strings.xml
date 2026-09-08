@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ritual</string>
+    <string name="widget_description">A year of days as a field of dark stones. Light one each day.</string>
+    <string name="widget_mark_today">Mark today complete</string>
+</resources>

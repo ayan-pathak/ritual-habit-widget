@@ -1,0 +1,45 @@
+{
+  "pages": [
+    { "id": "page-1", "name": "Screens" },
+    { "id": "page-2", "name": "Mochi" },
+    { "id": "page-3", "name": "Widget" }
+  ],
+  "artboards": [
+    { "file": "Main.dc.html",   "page": "page-1", "x": 0,    "y": 0, "w": 390, "h": 844, "title": "Home" },
+    { "file": "Detail.dc.html", "page": "page-1", "x": 490,  "y": 0, "w": 390, "h": 844, "title": "Ritual" },
+    { "file": "Create.dc.html", "page": "page-1", "x": 980,  "y": 0, "w": 390, "h": 844, "title": "New ritual" },
+    { "file": "Marked.dc.html", "page": "page-1", "x": 1470, "y": 0, "w": 390, "h": 844, "title": "Marked" },
+    { "file": "Broken.dc.html", "page": "page-1", "x": 1960, "y": 0, "w": 390, "h": 844, "title": "Streak broken" },
+
+    { "file": "Cat.dc.html", "page": "page-2", "x": 0, "y": 0, "w": 900, "h": 620, "title": "Mochi" },
+
+    { "file": "Widget.dc.html", "page": "page-3", "x": 0, "y": 0, "w": 820, "h": 300, "title": "Home screen" }
+  ],
+  "annotations": [
+    {
+      "id": "screens-note",
+      "page": "page-1",
+      "x": 0,
+      "y": -190,
+      "w": 700,
+      "text": "Flat, cream, chunky — the void and the glow are gone entirely.\nA kept day is now solid ink on a colour block, a missed one a wash of the same ink. Nothing bleeds, so a dense year stays readable where the old glow smeared into blobs.\nType is Archivo 800 set tight; every action is a black pill.\nMarked and Streak broken are the same moment structure as your VPN reference: big statement, cat on a white card, black pill plus outline pill."
+    },
+    {
+      "id": "cat-note",
+      "page": "page-2",
+      "x": 0,
+      "y": -170,
+      "w": 700,
+      "text": "Mochi is a 20x18 bitmap. Only the eye and mouth rows change between moods, so the silhouette never shifts — that is what keeps a pixel mascot from looking redrawn each time.\nThe mood is driven by streak state, not decoration: awake when today is unmarked, pleased once you mark it, resting on a planned rest day, let down the morning after a break.\nHe carries the brand colour in his eyes."
+    },
+    {
+      "id": "widget-note",
+      "page": "page-3",
+      "x": 0,
+      "y": -150,
+      "w": 700,
+      "text": "The widget inverts on marking — colour block to black, ink grid to lime — so a glance across the home screen tells you which rituals are still open today.\nMochi sits in the corner at 2.2px per pixel and still reads, because the silhouette is chunky and the outline is one solid black."
+    }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}

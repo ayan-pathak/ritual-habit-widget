@@ -1,0 +1,49 @@
+{
+  "pages": [
+    { "id": "page-1", "name": "Screens" },
+    { "id": "page-2", "name": "Widget sizes" },
+    { "id": "page-3", "name": "Directions" }
+  ],
+  "artboards": [
+    { "file": "Main.dc.html",   "page": "page-1", "x": 0,    "y": 0, "w": 390, "h": 844, "title": "Home" },
+    { "file": "Detail.dc.html", "page": "page-1", "x": 490,  "y": 0, "w": 390, "h": 844, "title": "Habit detail" },
+    { "file": "Create.dc.html", "page": "page-1", "x": 980,  "y": 0, "w": 390, "h": 844, "title": "New ritual" },
+    { "file": "Bind.dc.html",   "page": "page-1", "x": 1470, "y": 0, "w": 390, "h": 844, "title": "Bind widget" },
+
+    { "file": "Widget4x2.dc.html",     "page": "page-2", "x": 0,   "y": 0,   "w": 360, "h": 190, "title": "4x2 — compact" },
+    { "file": "Widget5x2.dc.html",     "page": "page-2", "x": 460, "y": 0,   "w": 440, "h": 190, "title": "5x2 — wide" },
+    { "file": "Widget4x3.dc.html",     "page": "page-2", "x": 0,   "y": 320, "w": 360, "h": 270, "title": "4x3 — full" },
+    { "file": "WidgetUnbound.dc.html", "page": "page-2", "x": 460, "y": 320, "w": 360, "h": 190, "title": "Unbound" },
+
+    { "file": "DirObsidian.dc.html",   "page": "page-3", "x": 0,    "y": 0, "w": 420, "h": 250 },
+    { "file": "DirVellum.dc.html",     "page": "page-3", "x": 520,  "y": 0, "w": 420, "h": 250 },
+    { "file": "DirInstrument.dc.html", "page": "page-3", "x": 1040, "y": 0, "w": 420, "h": 250 }
+  ],
+  "annotations": [
+    {
+      "id": "screens-note",
+      "page": "page-1",
+      "x": 0,
+      "y": -150,
+      "w": 560,
+      "text": "Ritual — the four screens as built.\nColours, type ramp and spacing lifted from Palette.kt / SlabRenderer.kt, not approximated.\nThe beam falls on today's square on every slab: ornament that is also navigation."
+    },
+    {
+      "id": "widget-note",
+      "page": "page-2",
+      "x": 0,
+      "y": -170,
+      "w": 620,
+      "text": "Finding: at 4x2 (320x150dp) there is no room for header + month ruler + grid + tally + action pill.\nThe renderer currently shrinks the grid to fit, which crushes it.\nProposal: drop the month ruler below ~180dp of height, and the weekday spine below ~220dp.\n5x2 shows the opposite case — extra width buys a finer grid, so the ruler fits even at 150dp tall."
+    },
+    {
+      "id": "dir-note",
+      "page": "page-3",
+      "x": 0,
+      "y": -150,
+      "w": 620,
+      "text": "Three stances on the same data, not three shades of one.\nA is shipped. B inverts the premise — ink on paper, absence as blank page; warm, quiet, no glow to bleed.\nC drops the metaphor entirely for a measuring instrument: flat marks, monospace, one signal colour, and it stays legible at any density."
+    }
+  ],
+  "launch": { "view": "canvas", "page": "page-1" }
+}

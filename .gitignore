@@ -1,0 +1,21 @@
+# Build output
+build/
+app/build/
+.gradle/
+*.apk
+*.aab
+
+# Local machine config — points at this machine's SDK
+local.properties
+
+# IDE
+.idea/
+*.iml
+.DS_Store
+
+# Design working artifacts (the seeded canvases are large and regenerable)
+design/*.html
+design2/*.html
+
+# Kotlin compiler scratch
+.kotlin/
