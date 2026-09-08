@@ -112,7 +112,7 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
         Box(Modifier.padding(horizontal = 20.dp, vertical = 20.dp)) {
             RitualCard(
                 model = model,
-                height = 200.dp,
+                height = 132.dp,
                 header = false,
                 footer = false,
                 cat = false,

@@ -35,8 +35,8 @@ object ShareCardRenderer {
         // A single colour block anchors the composition; the story's safe area
         // keeps clear of Instagram's own chrome top and bottom.
         val margin = s(84f)
-        val blockTop = h * 0.20f
-        val block = RectF(margin, blockTop, w - margin, blockTop + s(1150f))
+        val blockTop = h * 0.235f
+        val block = RectF(margin, blockTop, w - margin, blockTop + s(990f))
         p.color = accent.block
         canvas.drawRoundRect(block, s(64f), s(64f), p)
 
