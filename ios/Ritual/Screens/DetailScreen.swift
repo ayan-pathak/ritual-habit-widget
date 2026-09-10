@@ -150,6 +150,7 @@ struct DetailScreen: View {
                             background: Theme.red,
                             content: Theme.paper,
                             action: {
+                                CloudSync.shared.markDeleted(id: habit.id)
                                 store.delete(id: habit.id)
                                 onBack()
                             }

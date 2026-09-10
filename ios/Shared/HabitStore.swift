@@ -27,6 +27,13 @@ final class HabitStore: ObservableObject {
     private var defaults: UserDefaults { HabitStore.defaults }
     private var loaded = false
 
+    /// Called after every local change, so a mirror can follow.
+    ///
+    /// Nothing set here may block or fail a write: the device's own store is
+    /// the source of truth, and marking a day has to work with no network and
+    /// no account.
+    var onChanged: (() -> Void)?
+
     private init() {}
 
     func ensureLoaded() {
@@ -95,6 +102,13 @@ final class HabitStore: ObservableObject {
         return habit
     }
 
+    /// Replaces everything, for a merge arriving from the cloud.
+    func replaceAll(_ habits: [Habit]) {
+        ensureLoaded()
+        self.habits = habits
+        HabitStore.defaults.set(HabitStore.encode(habits), forKey: HabitStore.key)
+    }
+
     func update(_ habit: Habit) {
         ensureLoaded()
         habits = habits.map { $0.id == habit.id ? habit : $0 }
@@ -126,6 +140,7 @@ final class HabitStore: ObservableObject {
     private func persist() {
         defaults.set(HabitStore.encode(habits), forKey: HabitStore.key)
         WidgetCenter.shared.reloadAllTimelines()
+        onChanged?()
     }
 
     private static func encode(_ list: [Habit]) -> String {

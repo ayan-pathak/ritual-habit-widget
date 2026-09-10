@@ -6,6 +6,7 @@ struct HomeScreen: View {
     let onOpen: (Habit) -> Void
     let onCreate: () -> Void
     let onPaywall: () -> Void
+    let onAccount: () -> Void
 
     private var today: DayDate { DayDate.today() }
 
@@ -24,13 +25,16 @@ struct HomeScreen: View {
                 HStack {
                     Text("Ritual").displayStyle(19)
                     Spacer()
-                    MochiTile(
-                        mood: allDone ? .pleased : .awake,
-                        tile: allDone ? Theme.lime : Theme.paper,
-                        pixel: 0.95,
-                        corner: 999,
-                        inset: 7
-                    )
+                    Button(action: onAccount) {
+                        MochiTile(
+                            mood: allDone ? .pleased : .awake,
+                            tile: allDone ? Theme.lime : Theme.paper,
+                            pixel: 0.95,
+                            corner: 999,
+                            inset: 7
+                        )
+                    }
+                    .buttonStyle(.plain)
                 }
                 .padding(.top, 18)
 

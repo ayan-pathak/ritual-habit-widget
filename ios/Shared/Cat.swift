@@ -11,11 +11,15 @@ enum Mood {
 
  Only the eye and mouth rows change between moods, so the silhouette never
  shifts — that is what keeps a pixel mascot from looking redrawn each time.
- He is a head, exactly as the 20x18 original was: ears on a wide rounded block,
- two big eyes, a pink nose, a flat chin. That proportion is the character, so
- the extra resolution goes into shading, the inside of the ears, and eyes big
- enough to carry a mood — never into a body. The rule the original was built on
- is unchanged, and it is the rule that matters.
+ The 20x18 original is three parts, and they are the character: two straight
+ tufts for ears, a wide rounded head, and a narrower neck under it with a flat
+ chin. 32x28 is 1.6x of that, so every landmark lands where it always did.
+
+ The extra pixels go into shading, the inside of the ears, blushed cheeks, and
+ eyes big enough to be cute — set below the midline of the head, which is the
+ whole trick — and never into changing the shape. The rule the original was
+ built on is unchanged, and it is the rule that matters: one silhouette, and
+ only the eye and mouth rows move.
  */
 enum Cat {
 
@@ -23,34 +27,34 @@ enum Cat {
     static let rows = 28
 
     private static let base = [
-        ".......K................K.......",
-        "......KGK..............KGK......",
-        ".....KGGGK............KGGGK.....",
-        "....KGGPPGK..........KGPPGGK....",
-        "...KGGPPPPGKKKKKKKKKKGPPPPGGK...",
-        "..KGGPPPPPPGGGGGGGGGGPPPPPPGGK..",
-        "...KGLLLLLLLLLLLGGGGGGGGGGGGK...",
-        "...KGLLLLLLLLLLGGGGGGGGGGGGGK...",
-        "..KGGLLLLLLLLGGGGGGGGGGGGGGGSK..",
-        "..KGGLLLLLLLGGGGGGGGGGGGGGGGGK..",
+        "................................",
+        ".....KKKKK............KKKKK.....",
+        ".....KSSSK............KSSSK.....",
+        ".....KPPPK............KPPPK.....",
+        ".....KPPPGKKKKKKKKKKKKGPPPK.....",
+        ".....KPPPGGGGGGGGGGGGGGPPPK.....",
+        "....KGPPPLLLLLLLLLLLGGGPPPGK....",
+        "...KGGLLLLLLLLLLLLLGGGGGGGGSK...",
+        "..KGGLLLLLLLLLLLLGGGGGGGGGGGSK..",
+        "..KGLLLLLLLLLLLLGGGGGGGGGGGGGK..",
+        "..KGLLLLLLLLLLLGGGGGGGGGGGGGGK..",
+        "..KGLLLLLLLLLLGGGGGGGGGGGGGGGK..",
+        "..KGLLLLLLLLGGGGGGGGGGGGGGGGGK..",
         "..KGLLLLLLLGGGGGGGGGGGGGGGGGGK..",
         "..KGLLLLLLGGGGGGGGGGGGGGGGGGGK..",
         "..KGLLLLGGGGGGGGGGGGGGGGGGGGGK..",
-        "..KGLLLGGGGGGGGGGGGGGGGGGGGGGK..",
-        "..KGLLGGGGGGGGGGGGGGGGGGGGGGGK..",
-        "..KGLGGGGGGGGGGGGGGGGGGGGGGGGK..",
-        "..KGGGGGGGGGGGGGGGGGGGGGGGGGGK..",
-        "..KGGGGGGGGGGGGGGGGGGGGGGGGGGK..",
-        "..KGGGGGGGGGGGPPPPGGGGGGGGGGGK..",
-        "..KGGGGGGGGGGGGPPGGGGGGGGGGGGK..",
-        "..KGGGGGGGGGGGGGGGGGGGGGGGGGGK..",
-        "..KGGGGGGGGGGGGGGGGGGGGGGGGGGK..",
-        "..KGGGGGGGGGGGGGGGGGGGGGGGGGGK..",
-        "..KGGGGGGGGGGGGGGGGGGGGGGGGGSK..",
-        "...KGGGGGGGGGGGGGGGGGGGGGGGGK...",
-        "...KGGGGGGGGGGGGGGGGGGGGGGGSK...",
-        "....KKSGGGGGGGGGGGGGGGGGGSKK....",
-        "......KKKKKKKKKKKKKKKKKKKK......"
+        "..KGLHHHGGGGGGGGGGGGGGGGHHHGGK..",
+        "..KGLHHHGGGGGGGGGGGGGGGGHHHGGK..",
+        "..KGGGGGGGGGGGPPPPGGGGGGGGGGSK..",
+        "...KGGGGGGGGGGGPPGGGGGGGGGGSK...",
+        "....KGGGGGGGGGGGGGGGGGGGGGSK....",
+        ".....KGGGGGGGGGGGGGGGGGGGSK.....",
+        "......KKKSGGGGGGGGGGGGSKKK......",
+        ".........KGGGGGGGGGGGGK.........",
+        ".........KGGGGGGGGGGGGK.........",
+        ".........KGGGGGGGGGGGGK.........",
+        ".........KGGGGGGGGGGGGK.........",
+        ".........KKKKKKKKKKKKKK........."
     ]
 
     private static func rowsFor(_ mood: Mood) -> [String] {
@@ -58,24 +62,26 @@ enum Cat {
         switch mood {
         case .awake:
             r[12] = "..KGLLLLEEEEEGGGGGGEEEEEGGGGGK.."
-            r[13] = "..KGLLLGEBBEEGGGGGGEBBEEGGGGGK.."
-            r[14] = "..KGLLGGEBBEEGGGGGGEBBEEGGGGGK.."
-            r[15] = "..KGLGGGWEEEEGGGGGGWEEEEGGGGGK.."
+            r[13] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
+            r[14] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
+            r[15] = "..KGLLLLWEEEEGGGGGGWEEEEGGGGGK.."
+            r[16] = "..KGLHHHGEEEGGGGGGGGEEEGHHHGGK.."
         case .pleased:
-            r[12] = "..KGLLLLGKKKGGGGGGGGKKKGGGGGGK.."
-            r[13] = "..KGLLLKKGGGKKGGGGKKGGGKKGGGGK.."
-            r[21] = "..KGGGGGGGGGKGGGGGGKGGGGGGGGGK.."
-            r[22] = "..KGGGGGGGGGGKKKKKKGGGGGGGGGGK.."
+            r[13] = "..KGLLLLLKKKGGGGGGGGKKKGGGGGGK.."
+            r[14] = "..KGLLLKKLGGKKGGGGKKGGGKKGGGGK.."
+            r[20] = "....KGGGGGGGGKGGGGKGGGGGGGSK...."
+            r[21] = ".....KGGGGGGGGKKKKGGGGGGGSK....."
         case .resting:
-            r[14] = "..KGLLGGKKKKKGGGGGGKKKKKGGGGGK.."
+            r[14] = "..KGLLLLKKKKKGGGGGGKKKKKGGGGGK.."
+            r[15] = "..KGLLLLGKKGGGGGGGGGKKGGGGGGGK.."
         case .letDown:
-            r[10] = "..KGLLKKLLLGGGGGGGGGGGGGKKGGGK.."
-            r[11] = "..KGLLLLLKKKKGGGGGGKKKKGGGGGGK.."
-            r[13] = "..KGLLLGEBBEEGGGGGGEBBEEGGGGGK.."
-            r[14] = "..KGLLGGEBBEEGGGGGGEBBEEGGGGGK.."
-            r[15] = "..KGLGGGEEEEEGGGGGGEEEEEGGGGGK.."
-            r[21] = "..KGGGGGGGGGGKKKKKKGGGGGGGGGGK.."
-            r[22] = "..KGGGGGGGGGKGGGGGGKGGGGGGGGGK.."
+            r[10] = "..KGLLKKLLLLLLLGGGGGGGGGKKGGGK.."
+            r[11] = "..KGLLLLLKKKKLGGGGGKKKKGGGGGGK.."
+            r[13] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
+            r[14] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
+            r[15] = "..KGLLLLEEEEEGGGGGGEEEEEGGGGGK.."
+            r[20] = "....KGGGGGGGGGKKKKGGGGGGGGSK...."
+            r[21] = ".....KGGGGGGGKGGGGKGGGGGGSK....."
         }
         return r
     }
@@ -87,6 +93,7 @@ enum Cat {
         case "G": return 0xFF8A8A80   // coat
         case "S": return 0xFF6E6E66   // coat, shaded rim
         case "P": return 0xFFE0A3A3   // ear pink, nose
+        case "H": return 0xFFD69B96   // blushed cheek
         case "E": return 0xFFCFE85F   // eye — carries the brand colour
         case "B": return 0xFF12120F   // pupil
         case "W": return 0xFFF4F2EA   // catchlight
