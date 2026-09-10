@@ -54,9 +54,14 @@ object StoryShare {
 
         if (isInstagramInstalled(context)) {
             val story = Intent(IG_STORY_ACTION).apply {
+                // The card is the background asset and nothing else. Handing
+                // Instagram the same image again as `interactive_asset_uri`
+                // makes it composite the card twice — once scaled to fill a
+                // screen taller than 9:16, once as a sticker on top — and the
+                // background's edges show past the sticker down either side.
                 setDataAndType(uri, "image/png")
-                putExtra("interactive_asset_uri", uri)
-                // The two brand colours become the story's backdrop gradient.
+                // The two brand colours become the story's backdrop gradient,
+                // filling whatever the card doesn't cover on a taller screen.
                 putExtra("top_background_color", "#E7E3D4")
                 putExtra("bottom_background_color", "#C9F73F")
                 putExtra("source_application", context.packageName)
