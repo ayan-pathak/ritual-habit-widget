@@ -37,8 +37,11 @@ extension ARGB {
     var cgColor: CGColor { uiColor.cgColor }
 
     /// The same colour at a new alpha (0...255), preserving its RGB.
+    ///
+    /// `Swift.min` explicitly: inside an extension on `UInt32`, a bare `min`
+    /// finds the type's own static `min` property instead of the free function.
     func withAlpha(_ alpha: Int) -> ARGB {
-        let a = UInt32(min(max(alpha, 0), 255))
+        let a = UInt32(Swift.min(Swift.max(alpha, 0), 255))
         return (self & 0x00FFFFFF) | (a << 24)
     }
 }
