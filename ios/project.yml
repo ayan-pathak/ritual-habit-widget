@@ -26,6 +26,9 @@ packages:
   Firebase:
     url: https://github.com/firebase/firebase-ios-sdk
     from: 11.4.0
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: 7.1.0
 
 targets:
 
@@ -50,7 +53,15 @@ targets:
         CFBundleURLTypes:
           - CFBundleURLName: com.ayan.ritual
             CFBundleURLSchemes: [ritual]
+          # Google hands the sign-in back on the reversed client id, which is
+          # per-project and so comes from a build setting rather than being
+          # written down here. bootstrap.sh reads it out of the plist.
+          - CFBundleURLName: com.googleusercontent.apps
+            CFBundleURLSchemes: [$(GOOGLE_REVERSED_CLIENT_ID)]
         LSApplicationQueriesSchemes: [instagram-stories, instagram]
+    configFiles:
+      Debug: Config/Google.xcconfig
+      Release: Config/Google.xcconfig
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ayan.ritual
@@ -65,6 +76,8 @@ targets:
         product: FirebaseAuth
       - package: Firebase
         product: FirebaseFirestore
+      - package: GoogleSignIn
+        product: GoogleSignIn
 
   RitualWidgetExtension:
     type: app-extension

@@ -1,3 +1,4 @@
+import AuthenticationServices
 import SwiftUI
 
 /**
@@ -58,7 +59,36 @@ struct AccountView: View {
 
     private var signedOut: some View {
         VStack(alignment: .leading, spacing: 0) {
-            CapsLabel(text: "Email").padding(.top, 26)
+            if account.available {
+                VStack(spacing: 10) {
+                    SignInWithAppleButton(.continue) { request in
+                        account.prepare(request)
+                    } onCompletion: { result in
+                        Task { landed(await account.finish(result)) }
+                    }
+                    .signInWithAppleButtonStyle(.black)
+                    .frame(height: 58)
+                    .clipShape(Capsule())
+
+                    if account.googleAvailable {
+                        InkPill(
+                            label: "Continue with Google",
+                            background: Theme.paper,
+                            content: Theme.ink,
+                            border: Theme.ink,
+                            action: { Task { landed(await account.signInWithGoogle()) } }
+                        )
+                    }
+                }
+                .padding(.top, 26)
+
+                Text("or use an email")
+                    .bodyStyle(12, color: Theme.inkFaint)
+                    .frame(maxWidth: .infinity)
+                    .padding(.top, 22)
+            }
+
+            CapsLabel(text: "Email").padding(.top, account.available ? 18 : 26)
             TextField("you@example.com", text: $address)
                 .textContentType(.emailAddress)
                 .keyboardType(.emailAddress)
@@ -93,13 +123,9 @@ struct AccountView: View {
                 label: account.busy ? "Working…" : (creating ? "Create account" : "Sign in"),
                 action: {
                     Task {
-                        let ok = creating
+                        landed(creating
                             ? await account.createAccount(email: address, password: password)
-                            : await account.signIn(email: address, password: password)
-                        if ok, let uid = account.uid {
-                            CloudSync.shared.start(uid: uid)
-                            onBack()
-                        }
+                            : await account.signIn(email: address, password: password))
                     }
                 }
             )
@@ -114,6 +140,12 @@ struct AccountView: View {
             .frame(maxWidth: .infinity)
             .padding(.top, 12)
         }
+    }
+
+    private func landed(_ ok: Bool) {
+        guard ok, let uid = account.uid else { return }
+        CloudSync.shared.start(uid: uid)
+        onBack()
     }
 
     private var signedIn: some View {

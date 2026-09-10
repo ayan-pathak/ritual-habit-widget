@@ -11,4 +11,18 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p "$here/Resources"
 cp "$here/../app/src/main/res/font/archivo.ttf" "$here/Resources/Archivo.ttf"
-echo "Archivo.ttf staged in ios/Resources"
+
+# Google hands the sign-in back on a URL scheme named after the project's
+# reversed client id, which has to be in Info.plist and so cannot be read at
+# runtime. It is written into a build setting here instead of into project.yml,
+# which is checked in and must stay free of anyone's project configuration.
+mkdir -p "$here/Config"
+plist="$here/Resources/GoogleService-Info.plist"
+reversed="com.googleusercontent.apps.unconfigured"
+if [ -f "$plist" ]; then
+  found=$(/usr/libexec/PlistBuddy -c "Print :REVERSED_CLIENT_ID" "$plist" 2>/dev/null || true)
+  [ -n "$found" ] && reversed="$found"
+fi
+printf 'GOOGLE_REVERSED_CLIENT_ID = %s\n' "$reversed" > "$here/Config/Google.xcconfig"
+
+echo "Archivo.ttf staged, Google URL scheme set to $reversed"

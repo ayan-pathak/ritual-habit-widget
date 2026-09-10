@@ -1,4 +1,5 @@
 import FirebaseCore
+import GoogleSignIn
 import SwiftUI
 import WidgetKit
 
@@ -70,6 +71,8 @@ struct RitualApp: App {
                     if let uid = account.uid { CloudSync.shared.start(uid: uid) }
                 }
                 .onOpenURL { url in
+                    // Google comes back on its own scheme; take that first.
+                    if GIDSignIn.sharedInstance.handle(url) { return }
                     // A tap on the widget lands straight on that ritual.
                     guard url.scheme == "ritual" else { return }
                     let id = url.host ?? url.lastPathComponent

@@ -12,14 +12,34 @@ phone, and nothing here is required for the app to run.
    `google-services.json`. Add an **iOS app** with the bundle id
    `com.ayan.ritual` for `GoogleService-Info.plist`.
 
-   No SHA-1 fingerprint is needed. That is only for Google Sign-In, phone auth
-   and Dynamic Links; Ritual signs in with email and password, which is the
-   one method that behaves identically on both platforms.
+3. **Register the signing fingerprint on the Android app.** Google Sign-In
+   matches on package name plus fingerprint, and refuses the sign-in with a
+   bare `ApiException: 10` if it does not recognise the one it sees.
 
-3. **Authentication → Sign-in method → enable Email/Password.** Leave the
-   passwordless link off; nothing uses it.
+   ```
+   SHA-1  AD:A2:07:ED:1B:43:AC:2E:47:08:7E:72:C0:E5:4A:94:70:3E:95:10
+   ```
 
-4. **Firestore Database → Create database**, in production mode. Then paste
+   That is `keystore/ritual-dev.jks`, which every build here is signed with —
+   checked in on purpose, because a runner generates a fresh debug keystore
+   otherwise and the fingerprint would change on every build. It is a
+   development key: it is not secret and must never sign a Play release. When
+   the app does ship, Play App Signing issues its own fingerprint, and that one
+   gets registered here too.
+
+   Re-download `google-services.json` after adding it. The file carries the
+   OAuth client the app reads its web client id from, and without the
+   fingerprint that client is not in there.
+
+4. **Authentication → Sign-in method.** Enable **Email/Password**, **Google**
+   and **Apple**. Leave the passwordless email link off; nothing uses it.
+
+   Apple also needs an Apple Developer account: a Services ID, a key, and the
+   team id, all pasted into the Apple provider in Firebase. On Android it runs
+   as a web flow through that Services ID, so it works there whether or not
+   anyone has an iPhone.
+
+5. **Firestore Database → Create database**, in production mode. Then paste
    `firestore.rules` from this directory into **Rules** and publish.
 
    Do not leave it in test mode. Those rules let anyone read and write every
@@ -41,6 +61,11 @@ Set them under **Settings → Secrets and variables → Actions**. With a secret
 present the workflow writes the file before building and sign-in is live in
 that build; with no secret it is a no-op and the app behaves exactly as it
 does now.
+
+On iOS the plist does one more thing: `bootstrap.sh` reads `REVERSED_CLIENT_ID`
+out of it and writes the URL scheme Google hands the sign-in back on. That has
+to be in `Info.plist`, so it cannot be read at runtime — with no plist the
+scheme is a placeholder and the Google button hides itself.
 
 To build locally instead, drop `google-services.json` at `app/` and
 `GoogleService-Info.plist` at `ios/Resources/`. Gradle applies the
