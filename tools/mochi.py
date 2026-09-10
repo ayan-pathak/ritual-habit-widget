@@ -39,6 +39,19 @@ NUDGE = {
 }
 MOODS = ('awake', 'pleased', 'resting', 'let_down')
 
+# The launcher icon is Mochi's head on the lime, cropped off below the chin.
+# HEAD is that head's box in a mood's own coordinates — ear tips to just under
+# the jaw, whiskers left outside it on purpose so they run to the mask's edge
+# rather than shrinking the face to fit.
+ICON_MOOD = 'pleased'
+ICON = 108.0                 # the adaptive-icon canvas
+HEAD = (69.9, 7.4, 794.8, 644.3)
+# Sized so the ear tips land inside the 66dp circle that is the only part of
+# an adaptive icon guaranteed to survive a mask. They are the far corners of
+# the head, so they are what sets the size.
+HEAD_W = 53.0                # what that box's width becomes on the canvas
+HEAD_AT = (54.0, 52.0)       # and where its centre lands
+
 NUM = re.compile(r'-?\d*\.?\d+(?:[eE][-+]?\d+)?')
 
 
@@ -57,21 +70,25 @@ def fmt(v):
     return ('%.3f' % v).rstrip('0').rstrip('.') or '0'
 
 
-def shift(d, ox, oy):
-    """Moves absolute path data by (-ox, -oy). M, L and C take x,y pairs."""
+def transform(d, fn):
+    """Maps every point in absolute path data through fn. M, L and C take
+    x,y pairs; nothing else appears in what the exporter writes."""
     out, i, n = [], 0, len(d)
     while i < n:
         c = d[i]
         if c in 'MLC':
-            coords = {'M': 2, 'L': 2, 'C': 6}[c]
+            pairs = {'M': 1, 'L': 1, 'C': 3}[c]
             vals = []
             i += 1
-            for k in range(coords):
-                m = NUM.search(d, i)
-                if m is None:
-                    raise ValueError('%s wants %d numbers' % (c, coords))
-                vals.append(float(m.group(0)) - (ox if k % 2 == 0 else oy))
-                i = m.end()
+            for _ in range(pairs):
+                xy = []
+                for _ in range(2):
+                    m = NUM.search(d, i)
+                    if m is None:
+                        raise ValueError('%s wants %d numbers' % (c, pairs * 2))
+                    xy.append(float(m.group(0)))
+                    i = m.end()
+                vals.extend(fn(xy[0], xy[1]))
             out.append(c + ' '.join(fmt(v) for v in vals))
         elif c in 'zZ':
             out.append('Z')
@@ -92,13 +109,33 @@ def bbox(d):
     return min(xs[0::2]), min(xs[1::2]), max(xs[0::2]), max(xs[1::2])
 
 
-def parse(mood):
-    """One mood as (paths, gradients), windowed onto its quadrant and registered."""
+def origin(mood):
+    """Where this mood's crop starts, in the sheet's own coordinates."""
     src = open(os.path.join(ART, mood + '.svg'), encoding='utf-8-sig').read()
     vb = [float(v) for v in NUM.findall(
         re.search(r'viewBox="([^"]+)"', src).group(1))]
     nx, ny = NUDGE[mood]
-    ox, oy = vb[0] + nx, vb[1] + ny
+    return vb[0] + nx, vb[1] + ny
+
+
+def parse(mood, fn=None, view=None):
+    """One mood as (paths, gradients), placed by fn and culled to view.
+
+    fn maps a *registered* coordinate — this mood's own crop, origin at its
+    top left — to the output viewport, and defaults to leaving it alone.
+
+    Culling happens twice, and the order matters. First against the mood's own
+    quadrant, because the sheet holds all four cats and only one of them is
+    this mood. Only then against view, for an output that shows less than the
+    whole cat. Doing it the other way round lets a magnified neighbour clip
+    the corner of the viewport and survive.
+    """
+    src = open(os.path.join(ART, mood + '.svg'), encoding='utf-8-sig').read()
+    ox, oy = origin(mood)
+    if fn is None:
+        fn = lambda x, y: (x, y)
+    if view is None:
+        view = (VIEW_W, VIEW_H)
 
     for t in set(re.findall(r'transform="([^"]*)"', src)):
         if re.sub(r'[\s]', '', t) != 'translate(0,0)':
@@ -111,6 +148,7 @@ def parse(mood):
         gid = re.search(r'id="([^"]+)"', head).group(1)
         x1, y1, x2, y2 = (float(re.search(r'\b%s="([^"]+)"' % k, head).group(1))
                           for k in ('x1', 'y1', 'x2', 'y2'))
+        (x1, y1), (x2, y2) = fn(x1 - ox, y1 - oy), fn(x2 - ox, y2 - oy)
         stops = []
         for st in re.finditer(r'<stop\b([^>]*)/>', body):
             a = st.group(1)
@@ -118,7 +156,7 @@ def parse(mood):
             stops.append((float(re.search(r'offset="([^"]+)"', a).group(1)),
                           re.search(r'stop-color="([^"]+)"', a).group(1),
                           float(op.group(1)) if op else 1.0))
-        grads[gid] = (x1 - ox, y1 - oy, x2 - ox, y2 - oy, sorted(stops))
+        grads[gid] = (x1, y1, x2, y2, sorted(stops))
 
     paths = []
     for m in re.finditer(r'<path\b([^>]*?)/?>', src):
@@ -128,26 +166,36 @@ def parse(mood):
         if not dm or not fm or fm.group(1) == 'none':
             continue
         om = re.search(r'\bopacity="([^"]*)"', a)
-        # The sheet holds all four cats; keep only what this window shows.
+        # This mood's quadrant, in the sheet's own coordinates.
         box = bbox(dm.group(1))
         if box and (box[2] < ox or box[0] > ox + VIEW_W
                     or box[3] < oy or box[1] > oy + VIEW_H):
             continue
-        paths.append((shift(dm.group(1), ox, oy), fm.group(1),
-                      float(om.group(1)) if om else 1.0))
+        d = transform(dm.group(1), lambda x, y: fn(x - ox, y - oy))
+        box = bbox(d)
+        if box and (box[2] < 0 or box[0] > view[0]
+                    or box[3] < 0 or box[1] > view[1]):
+            continue
+        paths.append((d, fm.group(1), float(om.group(1)) if om else 1.0))
     return paths, grads
 
 
 def vector_drawable(mood):
-    paths, grads = parse(mood)
-    out = ['<?xml version="1.0" encoding="utf-8"?>',
-           '<!-- Generated by tools/mochi.py from art/mochi/%s.svg. Do not edit. -->' % mood,
-           '<vector xmlns:android="http://schemas.android.com/apk/res/android"',
-           '    xmlns:aapt="http://schemas.android.com/aapt"',
-           '    android:width="120dp"',
-           '    android:height="124dp"',
-           '    android:viewportWidth="%s"' % fmt(VIEW_W),
-           '    android:viewportHeight="%s">' % fmt(VIEW_H)]
+    return render_vector(mood, None, None, (120, 124), head=(
+        '<!-- Generated by tools/mochi.py from art/mochi/%s.svg. Do not edit. -->' % mood,))
+
+
+def render_vector(mood, fn, view, size, head=()):
+    paths, grads = parse(mood, fn, view)
+    vw, vh = view if view else (VIEW_W, VIEW_H)
+    out = ['<?xml version="1.0" encoding="utf-8"?>']
+    out += list(head)
+    out += ['<vector xmlns:android="http://schemas.android.com/apk/res/android"',
+            '    xmlns:aapt="http://schemas.android.com/aapt"',
+            '    android:width="%sdp"' % fmt(size[0]),
+            '    android:height="%sdp"' % fmt(size[1]),
+            '    android:viewportWidth="%s"' % fmt(vw),
+            '    android:viewportHeight="%s">' % fmt(vh)]
     for d, fill, alpha in paths:
         gid = re.match(r'url\(#(\w+)\)', fill)
         if gid is None:
@@ -215,9 +263,32 @@ def swift():
     return '\n'.join(out) + '\n'
 
 
+def launcher_foreground():
+    """Mochi's head, placed on the 108x108 adaptive-icon canvas.
+
+    Only the safe circle is guaranteed visible, so the head is sized to it and
+    everything below the jaw runs off the canvas to be masked away — the same
+    framing a portrait gets when it is cropped to a circle.
+    """
+    scale = HEAD_W / (HEAD[2] - HEAD[0])
+    cx, cy = (HEAD[0] + HEAD[2]) / 2, (HEAD[1] + HEAD[3]) / 2
+
+    def place(x, y):
+        return ((x - cx) * scale + HEAD_AT[0], (y - cy) * scale + HEAD_AT[1])
+
+    return render_vector(ICON_MOOD, place, (ICON, ICON), (ICON, ICON), head=(
+        '<!-- Generated by tools/mochi.py from art/mochi/%s.svg. Do not edit.' % ICON_MOOD,
+        '     Mochi wears the pleased face on the launcher, and comes off the'
+        ' same drawings as',
+        '     render/Cat.kt, so the icon and the mascot in the app cannot'
+        ' diverge. -->'))
+
+
 def targets():
     t = {os.path.join(ROOT, 'app/src/main/res/drawable/mochi_%s.xml' % m): vector_drawable(m)
          for m in MOODS}
+    t[os.path.join(ROOT, 'app/src/main/res/drawable/ic_launcher_foreground.xml')] = \
+        launcher_foreground()
     t[os.path.join(ROOT, 'ios/Shared/MochiArt.swift')] = swift()
     return t
 
