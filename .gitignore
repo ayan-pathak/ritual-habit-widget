@@ -19,3 +19,4 @@ design2/*.html
 
 # Kotlin compiler scratch
 .kotlin/
+google-services.json

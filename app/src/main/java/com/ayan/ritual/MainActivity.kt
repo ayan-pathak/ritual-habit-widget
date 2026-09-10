@@ -11,10 +11,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.ayan.ritual.billing.Unlock
+import com.ayan.ritual.cloud.Account
+import com.ayan.ritual.cloud.CloudSync
 import com.ayan.ritual.data.HabitStore
 import com.ayan.ritual.render.Fonts
 import com.ayan.ritual.ui.CreateScreen
 import com.ayan.ritual.ui.DetailScreen
+import com.ayan.ritual.ui.AccountScreen
 import com.ayan.ritual.ui.HomeScreen
 import com.ayan.ritual.ui.PaywallScreen
 import com.ayan.ritual.ui.RitualTheme
@@ -25,6 +28,7 @@ sealed interface Route {
     data class Detail(val habitId: String) : Route
     data object Create : Route
     data object Paywall : Route
+    data object Account : Route
 }
 
 class MainActivity : ComponentActivity() {
@@ -37,6 +41,12 @@ class MainActivity : ComponentActivity() {
         HabitStore.ensureLoaded(this)
         Fonts.load(this)
         Unlock.start(this)
+        Account.start()
+
+        // The cloud copy follows the device, never the other way round: every
+        // local write is mirrored after it has already landed on disk.
+        HabitStore.onChanged = { CloudSync.pushAll(applicationContext) }
+        Account.uid?.let { CloudSync.start(this, it) }
         pendingHabitId.value = intent?.getStringExtra(RitualWidgetProvider.EXTRA_HABIT_ID)
 
         setContent {
@@ -86,10 +96,13 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
             habits = habits,
             onOpen = { route = Route.Detail(it.id) },
             onCreate = { route = Route.Create },
-            onPaywall = { route = Route.Paywall }
+            onPaywall = { route = Route.Paywall },
+            onAccount = { route = Route.Account }
         )
 
         is Route.Paywall -> PaywallScreen(onClose = { route = Route.Home })
+
+        is Route.Account -> AccountScreen(onBack = { route = Route.Home })
 
         is Route.Create -> CreateScreen(
             onDone = { route = Route.Detail(it.id) },

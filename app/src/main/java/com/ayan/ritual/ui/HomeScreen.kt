@@ -44,7 +44,8 @@ fun HomeScreen(
     habits: List<Habit>,
     onOpen: (Habit) -> Unit,
     onCreate: () -> Unit,
-    onPaywall: () -> Unit = {}
+    onPaywall: () -> Unit = {},
+    onAccount: () -> Unit = {}
 ) {
     val unlocked by Unlock.unlockedState
     val canCreate = unlocked || habits.size < Unlock.FREE_LIMIT
@@ -84,7 +85,10 @@ fun HomeScreen(
                     tile = if (allDone) Lime else Paper,
                     pixel = 1.5.dp,
                     corner = 999.dp,
-                    inset = 7.dp
+                    inset = 7.dp,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .clickable(onClick = onAccount)
                 )
             }
         }
