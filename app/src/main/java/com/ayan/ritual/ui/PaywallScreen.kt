@@ -88,7 +88,7 @@ fun PaywallScreen(onClose: () -> Unit) {
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            MochiTile(Mood.PLEASED, Paper, pixel = 4.dp, corner = 18.dp, inset = 14.dp)
+            MochiTile(Mood.PLEASED, Paper, pixel = 2.dp, corner = 18.dp, inset = 14.dp)
             Spacer(Modifier.height(18.dp))
             Text(
                 "Keep more than one.",

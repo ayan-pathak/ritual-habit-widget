@@ -118,7 +118,7 @@ object SlabRenderer {
             var textRight = w - pad
 
             if (cfg.cat) {
-                val px = dp(1.9f)
+                val px = dp(0.95f)
                 val catW = Cat.widthFor(px)
                 val catH = Cat.heightFor(px)
                 val boxW = catW + dp(11f)

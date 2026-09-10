@@ -62,7 +62,7 @@ object ShareCardRenderer {
         )
 
         // ── Mochi ───────────────────────────────────────────────────────────
-        val px = s(11f)
+        val px = s(5.5f)
         val catW = Cat.widthFor(px)
         val catH = Cat.heightFor(px)
         val catBox = RectF(
