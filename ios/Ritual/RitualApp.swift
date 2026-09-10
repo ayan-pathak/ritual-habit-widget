@@ -56,7 +56,7 @@ struct RitualApp: App {
     /// unprompted again — a second ritual asks for itself when it is wanted.
     private func leaveWelcome() {
         route = .home
-        if !unlock.unlocked && !onboarding.sawPaywall {
+        if !unlock.isUnlocked && !onboarding.sawPaywall {
             onboarding.markSawPaywall()
             showingPaywall = true
         }
