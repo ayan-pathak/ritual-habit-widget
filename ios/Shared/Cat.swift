@@ -1,164 +1,83 @@
 import CoreGraphics
 import UIKit
 
-/// What Mochi is doing, derived from the streak - never chosen for decoration.
+/// What Mochi is doing, derived from the streak — never chosen for decoration.
 enum Mood {
     case awake, pleased, resting, letDown
 }
 
 /**
- Mochi, a 40x32 bitmap.
+ Mochi, four drawn portraits.
 
- Only the brow, eye and mouth rows change between moods, so the silhouette
- never shifts - that is what keeps a pixel mascot from looking redrawn each
- time. The 20x18 original is three parts, and they are the character: ears, a
- wide rounded head, and a narrower neck under it. Nothing here changes that.
+ The four moods are one illustration with a different face, exported at a
+ single registration: the head sits on the same pixels in every one, so the
+ silhouette never shifts and he never looks redrawn between moods. That was
+ the rule when he was a 20x18 grid and it is still the rule now.
 
- The head is an ellipse biased low with a gaussian bulge at cheek level, so the
- face is widest where the muzzle is and the line curves *under* it into the
- chin. A rounded rectangle chamfers there; this does not, which is the whole
- difference between a puffy cheek and a hard jaw. The ears taper to a single
- pixel at the tip.
+ The art lives once, in the Android resources, and `bootstrap.sh` stages it
+ into `Resources/` — the same arrangement Archivo has, and for the same
+ reason: a second byte-identical copy is a copy that can drift. Both this
+ target and the widget extension get their own bundle copy at build time.
 
- The extra pixels go into detail and never into changing the shape: an iris
- with a dark rim, a lit arc along its bottom and a catchlight; blush that falls
- off into the coat rather than ending on a hard edge; a fan of three whiskers
- either side, drawn in mid grey so they read on the accent block and on ink
- alike; ears with a pink inner held a pixel off the outer rim. The rule the
- original was built on is unchanged, and it is the rule that matters: one
- silhouette, and only the face moves.
+ They are bitmaps rather than a vector because of the Android side of the
+ port: a widget there can only be handed a `Bitmap`, so the app and the widget
+ can only draw the same pixels if the source *is* pixels. Keeping iOS on the
+ same four files is what keeps the two platforms from drifting.
  */
 enum Cat {
 
-    static let cols = 40
-    static let rows = 32
+    /// The exported art, in pixels. Every mood is this size and registered alike.
+    static let artWidth: CGFloat = 480
+    static let artHeight: CGFloat = 496
 
-    private static let base = [
-        "...........K................K...........",
-        "..........KLK..............KLK..........",
-        "..........KPK.....KKKK.....KPK..........",
-        ".........KLPLKKKKKLLLLKKKKKGPGK.........",
-        ".........KPPPLLLLLGGGGLLLGGPPPK.........",
-        "........KPPPPPGGGGGGGGGGGGPPPPPK........",
-        ".......KLLLLLLGGGGGGGGGGGGLLLLLSK.......",
-        ".......KKLLLLLLGGGGGGGGGGLLLLLLKK.......",
-        ".........KLGGGGGGGGGGGGGGGGGGGK.........",
-        ".........KLGGGGGGGGGGGGGGGGGGGK.........",
-        ".........KLGGGGGGGGGGGGGGGGGGGK.........",
-        "........KLGGGGGGGGGGGGGGGGGGGGSK........",
-        "........KLGGGGGGGGGGGGGGGGGGGGGK........",
-        ".......KLRRRGGGGGGGGGGGGGGGGRRRSK.......",
-        ".......KHHHHRGGGGGGGGGGGGGGRHHHHK.......",
-        "..S...KRHHHHHGGGGGGGGGGGGGGHHHHHRK....S.",
-        "..SSS.KRHHHHRGGGGGKKKKGGGGGRHHHHRK.SSS..",
-        "....SSKGGRRRGGGGGHPPPPHGGGGGRRRGGKS.....",
-        "...SSSKGGGGGGGGGMMMPPMMMGGGGGGGGSKSSS...",
-        ".SSS...KGGGGGGGMMMMMMMMMMGGGGGGSK...SSS.",
-        ".....SS.KGGGGGGGMMMMMMMMGGGGGGSKSSS.....",
-        "...SS....KSGGGGGGMMMMMMGGGGGGSK....SS...",
-        "..S.......KKSGGGGGGGGGGGGGGSKK.......S..",
-        "............KGGGGGGGGGGGGGGK............",
-        "............KGGGGGGGGGGGGGGK............",
-        "............KGGGGGGGGGGGGGGK............",
-        "............KGGGGGGGGGGGGGGK............",
-        "............KGGGGGGGGGGGGGGK............",
-        "............KGGGGGGGGGGGGGGK............",
-        "............KGGGGGGGGGGGGGGK............",
-        "............KGGGGGGGGGGGGGGK............",
-        "............KKKKKKKKKKKKKKKK............"
-    ]
+    /// Width over height, so a caller can size him from either one.
+    static let aspect = artWidth / artHeight
 
-    private static func rowsFor(_ mood: Mood) -> [String] {
-        var r = base
+    /// Width Mochi occupies when he is drawn `height` tall.
+    static func widthFor(_ height: CGFloat) -> CGFloat { height * aspect }
+
+    private static var cache: [String: UIImage] = [:]
+
+    private static func name(_ mood: Mood) -> String {
         switch mood {
-        case .awake:
-            r[8] = ".........KLGKKKKKGGGGGGKKKKKGGK........."
-            r[9] = ".........KLKDEEEDKGGGGKDEEEDKGK........."
-            r[10] = ".........KLKEWBBEKGGGGKEWBBEKGK........."
-            r[11] = "........KLGKEBBBEKGGGGKEBBBEKGSK........"
-            r[12] = "........KLGKDAAADKGGGGKDAAADKGGK........"
-            r[13] = ".......KLRRRKKKKKGGGGGGKKKKKRRRSK......."
-            r[19] = ".SSS...KGGGGGGGMMMKMMKMMMGGGGGGSK...SSS."
-            r[20] = ".....SS.KGGGGGGGMMMKKMMMGGGGGGSKSSS....."
-        case .pleased:
-            r[10] = ".........KLGGKKKGGGGGGGGKKKGGGK........."
-            r[11] = "........KLGGKGGGKGGGGGGKGGGKGGSK........"
-            r[12] = "........KLGKKGGGKKGGGGKKGGGKKGGK........"
-            r[19] = ".SSS...KGGGGGGGMMKKMMKKMMGGGGGGSK...SSS."
-            r[20] = ".....SS.KGGGGGGGMMMKKMMMGGGGGGSKSSS....."
-        case .resting:
-            r[11] = "........KLGKKKKKKKGGGGKKKKKKKGSK........"
-            r[12] = "........KLGGKKKKKGGGGGGKKKKKGGGK........"
-        case .letDown:
-            r[5] = "........KPPPPPGKKKGGGGGKKKPPPPPK........"
-            r[6] = ".......KLLLLLKKKGGGGGGGGGKKKLLLSK......."
-            r[7] = ".......KKLLLKKKGGGGGGGGGGLKKKLLKK......."
-            r[8] = ".........KLGKKKKKGGGGGGKKKKKGGK........."
-            r[9] = ".........KLKKKKKKKGGGGKKKKKKKGK........."
-            r[10] = ".........KLKEBBBEKGGGGKEBBBEKGK........."
-            r[11] = "........KLGKEBBBEKGGGGKEBBBEKGSK........"
-            r[12] = "........KLGKDAAADKGGGGKDAAADKGGK........"
-            r[13] = ".......KLRRRKKKKKGGGGGGKKKKKRRRSK......."
-            r[19] = ".SSS...KGGGGGGGMMMMKKMMMMGGGGGGSK...SSS."
-            r[20] = ".....SS.KGGGGGGGMKKMMKKMGGGGGGSKSSS....."
-        }
-        return r
-    }
-
-    private static func colorOf(_ ch: Character) -> ARGB {
-        switch ch {
-        case "K": return 0xFF12120F   // outline
-        case "L": return 0xFFA8A89E   // coat, lit rim
-        case "G": return 0xFF8A8A80   // coat
-        case "S": return 0xFF6E6E66   // coat, shaded rim - and the whiskers
-        case "P": return 0xFFE0A3A3   // ear pink, nose
-        case "H": return 0xFFD69B96   // blushed cheek
-        case "R": return 0xFFAE968C   // blush, falling off into the coat
-        case "M": return 0xFFE8E3D2   // muzzle
-        case "E": return 0xFFC9F73F   // iris - carries the brand colour
-        case "A": return 0xFFE6FC9C   // iris, lit along the bottom
-        case "D": return 0xFF84A828   // iris, rim
-        case "B": return 0xFF12120F   // pupil
-        case "W": return 0xFFF4F2EA   // catchlight
-        default: return 0
+        case .awake: return "mochi_awake"
+        case .pleased: return "mochi_pleased"
+        case .resting: return "mochi_resting"
+        case .letDown: return "mochi_let_down"
         }
     }
 
-    /// Width this cat occupies when each pixel is `px` wide.
-    static func widthFor(_ px: CGFloat) -> CGFloat { CGFloat(cols) * px }
-
-    /// Height this cat occupies when each pixel is `px` wide.
-    static func heightFor(_ px: CGFloat) -> CGFloat { CGFloat(rows) * px }
+    /// The portrait for a mood, or nil if it did not ship — never a crash.
+    static func image(_ mood: Mood) -> UIImage? {
+        let key = name(mood)
+        if let hit = cache[key] { return hit }
+        guard let img = UIImage(named: key) else { return nil }
+        cache[key] = img
+        return img
+    }
 
     /**
-     Draws Mochi with his top-left at (`left`, `top`), one bitmap pixel per
-     `px` points. Pixels are drawn a hair oversized so no seams show between
-     them at fractional scales.
+     Draws Mochi into the box whose top-left is (`left`, `top`) and whose
+     height is `height`.
      */
-    static func draw(in ctx: CGContext, left: CGFloat, top: CGFloat, px: CGFloat, mood: Mood) {
-        let bleed: CGFloat = 0.5
-        let grid = rowsFor(mood)
-        for y in 0..<rows {
-            let row = Array(grid[y])
-            for x in 0..<cols {
-                let c = colorOf(row[x])
-                if c == 0 { continue }
-                ctx.setFillColor(c.cgColor)
-                ctx.fill(CGRect(
-                    x: left + CGFloat(x) * px,
-                    y: top + CGFloat(y) * px,
-                    width: px + bleed,
-                    height: px + bleed
-                ))
-            }
-        }
+    static func draw(in ctx: CGContext, left: CGFloat, top: CGFloat, height: CGFloat, mood: Mood) {
+        guard let cg = image(mood)?.cgImage else { return }
+        let rect = CGRect(x: left, y: top, width: widthFor(height), height: height)
+        // The context is y-down here, as CoreGraphics images are not, so flip
+        // about the rect rather than drawing him upside down.
+        ctx.saveGState()
+        ctx.translateBy(x: 0, y: rect.midY)
+        ctx.scaleBy(x: 1, y: -1)
+        ctx.translateBy(x: 0, y: -rect.midY)
+        ctx.draw(cg, in: rect)
+        ctx.restoreGState()
     }
 
     /// A standalone image of Mochi, for the places SwiftUI wants one.
-    static func image(px: CGFloat, mood: Mood) -> UIImage {
-        let size = CGSize(width: widthFor(px), height: heightFor(px))
+    static func image(height: CGFloat, mood: Mood) -> UIImage {
+        let size = CGSize(width: widthFor(height), height: height)
         return UIGraphicsImageRenderer(size: size).image { ctx in
-            draw(in: ctx.cgContext, left: 0, top: 0, px: px, mood: mood)
+            draw(in: ctx.cgContext, left: 0, top: 0, height: height, mood: mood)
         }
     }
 

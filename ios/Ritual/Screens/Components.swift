@@ -43,14 +43,14 @@ struct RitualCard: View {
 struct MochiTile: View {
     let mood: Mood
     let tile: Color
-    var pixel: CGFloat = 1.6
+    var height: CGFloat = 48
     var corner: CGFloat = 14
     var inset: CGFloat = 8
 
     var body: some View {
-        Image(uiImage: Cat.image(px: pixel, mood: mood))
+        Image(uiImage: Cat.image(height: height, mood: mood))
             .resizable()
-            .frame(width: Cat.widthFor(pixel), height: Cat.heightFor(pixel))
+            .frame(width: Cat.widthFor(height), height: height)
             .padding(.horizontal, inset)
             .padding(.vertical, inset * 0.8)
             .background(tile)

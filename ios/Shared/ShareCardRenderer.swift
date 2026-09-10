@@ -66,9 +66,8 @@ enum ShareCardRenderer {
                           at: CGPoint(x: block.minX + pad, y: block.minY + s(492)), spec: unit)
 
         // ── Mochi ───────────────────────────────────────────────────────────
-        let px = s(5.5)
-        let catW = Cat.widthFor(px)
-        let catH = Cat.heightFor(px)
+        let catH = s(176)
+        let catW = Cat.widthFor(catH)
         let catBox = CGRect(
             x: block.maxX - pad - catW - s(38),
             y: block.minY + s(250),
@@ -76,7 +75,7 @@ enum ShareCardRenderer {
             height: catH + s(38)
         )
         fill(ctx, catBox, s(34), model.doneToday ? Palette.ink : Palette.paper)
-        Cat.draw(in: ctx, left: catBox.midX - catW / 2, top: catBox.midY - catH / 2, px: px, mood: model.mood)
+        Cat.draw(in: ctx, left: catBox.midX - catW / 2, top: catBox.midY - catH / 2, height: catH, mood: model.mood)
 
         // ── The year ────────────────────────────────────────────────────────
         let cols = GridGeo.colsFor(model.year)

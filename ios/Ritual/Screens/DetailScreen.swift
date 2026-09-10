@@ -38,7 +38,7 @@ struct DetailScreen: View {
                         Text(habit.name).displayStyle(34)
                     }
                     Spacer()
-                    MochiTile(mood: model.mood, tile: Color(accent.block), pixel: 1.52, corner: 18, inset: 11)
+                    MochiTile(mood: model.mood, tile: Color(accent.block), height: 48, corner: 18, inset: 11)
                 }
                 .padding(.top, 18)
 

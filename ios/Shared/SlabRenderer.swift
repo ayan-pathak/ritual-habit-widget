@@ -129,9 +129,8 @@ enum SlabRenderer {
             var textRight = w - pad
 
             if cfg.cat {
-                let px = dp(0.96)
-                let catW = Cat.widthFor(px)
-                let catH = Cat.heightFor(px)
+                let catH = dp(30)
+                let catW = Cat.widthFor(catH)
                 let boxW = catW + dp(11)
                 let boxH = catH + dp(9)
                 let boxL = w - pad - boxW
@@ -141,7 +140,7 @@ enum SlabRenderer {
                     in: ctx,
                     left: box.midX - catW / 2,
                     top: box.midY - catH / 2,
-                    px: px,
+                    height: catH,
                     mood: model.mood
                 )
                 textRight = boxL - dp(10)
