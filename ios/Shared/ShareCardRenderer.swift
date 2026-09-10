@@ -66,7 +66,7 @@ enum ShareCardRenderer {
                           at: CGPoint(x: block.minX + pad, y: block.minY + s(492)), spec: unit)
 
         // ── Mochi ───────────────────────────────────────────────────────────
-        let px = s(6.9)
+        let px = s(5.5)
         let catW = Cat.widthFor(px)
         let catH = Cat.heightFor(px)
         let catBox = CGRect(

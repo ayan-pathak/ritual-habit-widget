@@ -43,7 +43,7 @@ struct RitualCard: View {
 struct MochiTile: View {
     let mood: Mood
     let tile: Color
-    var pixel: CGFloat = 2
+    var pixel: CGFloat = 1.6
     var corner: CGFloat = 14
     var inset: CGFloat = 8
 

@@ -119,7 +119,7 @@ struct AccountView: View {
     private var signedIn: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 14) {
-                MochiTile(mood: .pleased, tile: Theme.paper, pixel: 1.3, corner: 14, inset: 9)
+                MochiTile(mood: .pleased, tile: Theme.paper, pixel: 1.04, corner: 14, inset: 9)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Mirrored").displayStyle(19)
                     Text("Every change on this phone is written up as it happens.")

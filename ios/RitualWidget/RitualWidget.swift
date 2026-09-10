@@ -146,9 +146,9 @@ private struct MochiTileImage: View {
     let mood: Mood
 
     var body: some View {
-        Image(uiImage: Cat.image(px: 1.9, mood: mood))
+        Image(uiImage: Cat.image(px: 1.52, mood: mood))
             .resizable()
-            .frame(width: Cat.widthFor(1.9), height: Cat.heightFor(1.9))
+            .frame(width: Cat.widthFor(1.52), height: Cat.heightFor(1.52))
     }
 }
 

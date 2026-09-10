@@ -129,7 +129,7 @@ enum SlabRenderer {
             var textRight = w - pad
 
             if cfg.cat {
-                let px = dp(1.2)
+                let px = dp(0.96)
                 let catW = Cat.widthFor(px)
                 let catH = Cat.heightFor(px)
                 let boxW = catW + dp(11)

@@ -1,92 +1,106 @@
 import CoreGraphics
 import UIKit
 
-/// What Mochi is doing, derived from the streak — never chosen for decoration.
+/// What Mochi is doing, derived from the streak - never chosen for decoration.
 enum Mood {
     case awake, pleased, resting, letDown
 }
 
 /**
- Mochi, a 32x28 bitmap.
+ Mochi, a 40x32 bitmap.
 
- Only the eye and mouth rows change between moods, so the silhouette never
- shifts — that is what keeps a pixel mascot from looking redrawn each time.
- The 20x18 original is three parts, and they are the character: ears, a wide
- rounded head, and a narrower neck under it. 32x28 is 1.6x of that, so every
- landmark lands where it always did.
+ Only the brow, eye and mouth rows change between moods, so the silhouette
+ never shifts - that is what keeps a pixel mascot from looking redrawn each
+ time. The 20x18 original is three parts, and they are the character: ears, a
+ wide rounded head, and a narrower neck under it. Nothing here changes that.
 
- Below the cheeks the silhouette's width eases into the neck on a cosine, which
- has zero slope at both ends — so the jaw leaves the cheek and meets the neck
- as one curve, rather than the flat shelf and square corner a union of two
- rectangles gives you. The ears come to a point, one pixel at the tip.
+ The head is an ellipse biased low with a gaussian bulge at cheek level, so the
+ face is widest where the muzzle is and the line curves *under* it into the
+ chin. A rounded rectangle chamfers there; this does not, which is the whole
+ difference between a puffy cheek and a hard jaw. The ears taper to a single
+ pixel at the tip.
 
- The extra pixels go into shading, the inside of the ears, blushed cheeks, and
- eyes big enough to be cute — set below the midline of the head, which is the
- whole trick — and never into changing the shape. The rule the original was
- built on is unchanged, and it is the rule that matters: one silhouette, and
- only the eye and mouth rows move.
+ The extra pixels go into detail and never into changing the shape: an iris
+ with a dark rim, a lit arc along its bottom and a catchlight; blush that falls
+ off into the coat rather than ending on a hard edge; a fan of three whiskers
+ either side, drawn in mid grey so they read on the accent block and on ink
+ alike; ears with a pink inner held a pixel off the outer rim. The rule the
+ original was built on is unchanged, and it is the rule that matters: one
+ silhouette, and only the face moves.
  */
 enum Cat {
 
-    static let cols = 32
-    static let rows = 28
+    static let cols = 40
+    static let rows = 32
 
     private static let base = [
-        "................................",
-        ".......K................K.......",
-        "......KPK..............KPK......",
-        ".....KPPPK............KPPPK.....",
-        ".....KPPPPKKKKKKKKKKKKPPPPK.....",
-        ".....KPPPPGGGGGGGGGGGGPPPPK.....",
-        "....KGGLLLLLLLLLLLLLGGGGGGGK....",
-        "...KGGLLLLLLLLLLLLLGGGGGGGGSK...",
-        "..KGGLLLLLLLLLLLLGGGGGGGGGGGSK..",
-        "..KGLLLLLLLLLLLLGGGGGGGGGGGGGK..",
-        "..KGLLLLLLLLLLLGGGGGGGGGGGGGGK..",
-        "..KGLLLLLLLLLLGGGGGGGGGGGGGGGK..",
-        "..KGLLLLLLLLGGGGGGGGGGGGGGGGGK..",
-        "..KGLLLLLLLGGGGGGGGGGGGGGGGGGK..",
-        "..KGLLLLLLGGGGGGGGGGGGGGGGGGGK..",
-        "..KGLLLLGGGGGGGGGGGGGGGGGGGGGK..",
-        "..KGGHHHGGGGGGGGGGGGGGGGHHHGSK..",
-        "...KGHHHGGGGGGGGGGGGGGGGHHHSK...",
-        "....KGGGGGGGGGPPPPGGGGGGGGSK....",
-        ".....KKGGGGGGGGPPGGGGGGGSKK.....",
-        ".......KGGGGGGGGGGGGGGGSK.......",
-        "........KSGGGGGGGGGGGGSK........",
-        ".........KGGGGGGGGGGGGK.........",
-        ".........KGGGGGGGGGGGGK.........",
-        ".........KGGGGGGGGGGGGK.........",
-        ".........KGGGGGGGGGGGGK.........",
-        ".........KGGGGGGGGGGGGK.........",
-        ".........KKKKKKKKKKKKKK........."
+        "...........K................K...........",
+        "..........KLK..............KLK..........",
+        "..........KPK.....KKKK.....KPK..........",
+        ".........KLPLKKKKKLLLLKKKKKGPGK.........",
+        ".........KPPPLLLLLGGGGLLLGGPPPK.........",
+        "........KPPPPPGGGGGGGGGGGGPPPPPK........",
+        ".......KLLLLLLGGGGGGGGGGGGLLLLLSK.......",
+        ".......KKLLLLLLGGGGGGGGGGLLLLLLKK.......",
+        ".........KLGGGGGGGGGGGGGGGGGGGK.........",
+        ".........KLGGGGGGGGGGGGGGGGGGGK.........",
+        ".........KLGGGGGGGGGGGGGGGGGGGK.........",
+        "........KLGGGGGGGGGGGGGGGGGGGGSK........",
+        "........KLGGGGGGGGGGGGGGGGGGGGGK........",
+        ".......KLRRRGGGGGGGGGGGGGGGGRRRSK.......",
+        ".......KHHHHRGGGGGGGGGGGGGGRHHHHK.......",
+        "..S...KRHHHHHGGGGGGGGGGGGGGHHHHHRK....S.",
+        "..SSS.KRHHHHRGGGGGKKKKGGGGGRHHHHRK.SSS..",
+        "....SSKGGRRRGGGGGHPPPPHGGGGGRRRGGKS.....",
+        "...SSSKGGGGGGGGGMMMPPMMMGGGGGGGGSKSSS...",
+        ".SSS...KGGGGGGGMMMMMMMMMMGGGGGGSK...SSS.",
+        ".....SS.KGGGGGGGMMMMMMMMGGGGGGSKSSS.....",
+        "...SS....KSGGGGGGMMMMMMGGGGGGSK....SS...",
+        "..S.......KKSGGGGGGGGGGGGGGSKK.......S..",
+        "............KGGGGGGGGGGGGGGK............",
+        "............KGGGGGGGGGGGGGGK............",
+        "............KGGGGGGGGGGGGGGK............",
+        "............KGGGGGGGGGGGGGGK............",
+        "............KGGGGGGGGGGGGGGK............",
+        "............KGGGGGGGGGGGGGGK............",
+        "............KGGGGGGGGGGGGGGK............",
+        "............KGGGGGGGGGGGGGGK............",
+        "............KKKKKKKKKKKKKKKK............"
     ]
 
     private static func rowsFor(_ mood: Mood) -> [String] {
         var r = base
         switch mood {
         case .awake:
-            r[12] = "..KGLLLLEEEEEGGGGGGEEEEEGGGGGK.."
-            r[13] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
-            r[14] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
-            r[15] = "..KGLLLLWEEEEGGGGGGWEEEEGGGGGK.."
-            r[16] = "..KGGHHHGEEEGGGGGGGGEEEGHHHGSK.."
+            r[8] = ".........KLGKKKKKGGGGGGKKKKKGGK........."
+            r[9] = ".........KLKDEEEDKGGGGKDEEEDKGK........."
+            r[10] = ".........KLKEWBBEKGGGGKEWBBEKGK........."
+            r[11] = "........KLGKEBBBEKGGGGKEBBBEKGSK........"
+            r[12] = "........KLGKDAAADKGGGGKDAAADKGGK........"
+            r[13] = ".......KLRRRKKKKKGGGGGGKKKKKRRRSK......."
+            r[19] = ".SSS...KGGGGGGGMMMKMMKMMMGGGGGGSK...SSS."
+            r[20] = ".....SS.KGGGGGGGMMMKKMMMGGGGGGSKSSS....."
         case .pleased:
-            r[13] = "..KGLLLLLKKKGGGGGGGGKKKGGGGGGK.."
-            r[14] = "..KGLLLKKLGGKKGGGGKKGGGKKGGGGK.."
-            r[20] = ".......KGGGGGKGGGGKGGGGSK......."
-            r[21] = "........KSGGGGKKKKGGGGSK........"
+            r[10] = ".........KLGGKKKGGGGGGGGKKKGGGK........."
+            r[11] = "........KLGGKGGGKGGGGGGKGGGKGGSK........"
+            r[12] = "........KLGKKGGGKKGGGGKKGGGKKGGK........"
+            r[19] = ".SSS...KGGGGGGGMMKKMMKKMMGGGGGGSK...SSS."
+            r[20] = ".....SS.KGGGGGGGMMMKKMMMGGGGGGSKSSS....."
         case .resting:
-            r[14] = "..KGLLLLKKKKKGGGGGGKKKKKGGGGGK.."
-            r[15] = "..KGLLLLGKKGGGGGGGGGKKGGGGGGGK.."
+            r[11] = "........KLGKKKKKKKGGGGKKKKKKKGSK........"
+            r[12] = "........KLGGKKKKKGGGGGGKKKKKGGGK........"
         case .letDown:
-            r[10] = "..KGLLKKLLLLLLLGGGGGGGGGKKGGGK.."
-            r[11] = "..KGLLLLLKKKKLGGGGGKKKKGGGGGGK.."
-            r[13] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
-            r[14] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
-            r[15] = "..KGLLLLEEEEEGGGGGGEEEEEGGGGGK.."
-            r[20] = ".......KGGGGGGKKKKGGGGGSK......."
-            r[21] = "........KSGGGKGGGGKGGGSK........"
+            r[5] = "........KPPPPPGKKKGGGGGKKKPPPPPK........"
+            r[6] = ".......KLLLLLKKKGGGGGGGGGKKKLLLSK......."
+            r[7] = ".......KKLLLKKKGGGGGGGGGGLKKKLLKK......."
+            r[8] = ".........KLGKKKKKGGGGGGKKKKKGGK........."
+            r[9] = ".........KLKKKKKKKGGGGKKKKKKKGK........."
+            r[10] = ".........KLKEBBBEKGGGGKEBBBEKGK........."
+            r[11] = "........KLGKEBBBEKGGGGKEBBBEKGSK........"
+            r[12] = "........KLGKDAAADKGGGGKDAAADKGGK........"
+            r[13] = ".......KLRRRKKKKKGGGGGGKKKKKRRRSK......."
+            r[19] = ".SSS...KGGGGGGGMMMMKKMMMMGGGGGGSK...SSS."
+            r[20] = ".....SS.KGGGGGGGMKKMMKKMGGGGGGSKSSS....."
         }
         return r
     }
@@ -94,12 +108,16 @@ enum Cat {
     private static func colorOf(_ ch: Character) -> ARGB {
         switch ch {
         case "K": return 0xFF12120F   // outline
-        case "L": return 0xFFA8A89E   // coat, lit side
+        case "L": return 0xFFA8A89E   // coat, lit rim
         case "G": return 0xFF8A8A80   // coat
-        case "S": return 0xFF6E6E66   // coat, shaded rim
+        case "S": return 0xFF6E6E66   // coat, shaded rim - and the whiskers
         case "P": return 0xFFE0A3A3   // ear pink, nose
         case "H": return 0xFFD69B96   // blushed cheek
-        case "E": return 0xFFCFE85F   // eye — carries the brand colour
+        case "R": return 0xFFAE968C   // blush, falling off into the coat
+        case "M": return 0xFFE8E3D2   // muzzle
+        case "E": return 0xFFC9F73F   // iris - carries the brand colour
+        case "A": return 0xFFE6FC9C   // iris, lit along the bottom
+        case "D": return 0xFF84A828   // iris, rim
         case "B": return 0xFF12120F   // pupil
         case "W": return 0xFFF4F2EA   // catchlight
         default: return 0
