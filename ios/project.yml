@@ -1,0 +1,70 @@
+# Generated into an .xcodeproj by XcodeGen at build time.
+#
+# The project file itself is not checked in: it is entirely derived from this
+# spec, and a generated pbxproj is a merge conflict waiting to happen. Run
+# `xcodegen generate` in this directory, then open Ritual.xcodeproj.
+
+name: Ritual
+
+options:
+  bundleIdPrefix: com.ayan
+  createIntermediateGroups: true
+  deploymentTarget:
+    iOS: "17.0"
+
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    TARGETED_DEVICE_FAMILY: "1,2"
+    CODE_SIGN_STYLE: Automatic
+    ENABLE_USER_SCRIPT_SANDBOXING: YES
+    SWIFT_EMIT_LOC_STRINGS: YES
+
+targets:
+
+  Ritual:
+    type: application
+    platform: iOS
+    sources:
+      - path: Shared
+      - path: Ritual
+      - path: Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ayan.ritual
+        PRODUCT_NAME: Ritual
+        INFOPLIST_FILE: Ritual/Info.plist
+        CODE_SIGN_ENTITLEMENTS: Ritual/Ritual.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+    dependencies:
+      - target: RitualWidgetExtension
+        embed: true
+
+  RitualWidgetExtension:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Shared
+      - path: RitualWidget
+      - path: Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.ayan.ritual.widget
+        PRODUCT_NAME: RitualWidget
+        INFOPLIST_FILE: RitualWidget/Info.plist
+        CODE_SIGN_ENTITLEMENTS: RitualWidget/RitualWidget.entitlements
+        GENERATE_INFOPLIST_FILE: NO
+        SKIP_INSTALL: YES
+
+schemes:
+  Ritual:
+    build:
+      targets:
+        Ritual: all
+        RitualWidgetExtension: all
+    run:
+      config: Debug
+    archive:
+      config: Release
