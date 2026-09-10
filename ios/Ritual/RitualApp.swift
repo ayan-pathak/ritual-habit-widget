@@ -3,6 +3,7 @@ import SwiftUI
 import WidgetKit
 
 enum Route: Equatable {
+    case welcome
     case home
     case detail(String)
     case create
@@ -15,7 +16,8 @@ struct RitualApp: App {
     @StateObject private var store = HabitStore.shared
     @StateObject private var unlock = Unlock.shared
     @StateObject private var account = Account.shared
-    @State private var route: Route = .home
+    @StateObject private var onboarding = Onboarding.shared
+    @State private var route: Route = RitualApp.firstRoute()
     @State private var showingPaywall = false
     @Environment(\.scenePhase) private var scenePhase
 
@@ -33,6 +35,30 @@ struct RitualApp: App {
         // write lands on disk first and is pushed after.
         HabitStore.shared.onChanged = {
             Task { @MainActor in CloudSync.shared.pushAll() }
+        }
+    }
+
+    /**
+     Where a launch lands.
+
+     The sign-in step is only in the way while all three are true: there is a
+     Firebase configuration to sign in to, nobody is signed in on this device,
+     and nobody has said they would rather not be. Any one of those failing and
+     the app opens on the grid, which is what it is for.
+     */
+    private static func firstRoute() -> Route {
+        let account = Account.shared
+        return account.available && account.uid == nil && !Onboarding.shared.skippedSignIn
+            ? .welcome : .home
+    }
+
+    /// The unlock is offered once, on the way out of the welcome, and never
+    /// unprompted again — a second ritual asks for itself when it is wanted.
+    private func leaveWelcome() {
+        route = .home
+        if !unlock.unlocked && !onboarding.sawPaywall {
+            onboarding.markSawPaywall()
+            showingPaywall = true
         }
     }
 
@@ -70,6 +96,16 @@ struct RitualApp: App {
     @ViewBuilder
     private var content: some View {
         switch route {
+        case .welcome:
+            WelcomeView(
+                account: account,
+                onSignedIn: { leaveWelcome() },
+                onSkip: {
+                    onboarding.skipSignIn()
+                    leaveWelcome()
+                }
+            )
+
         case .home:
             HomeScreen(
                 store: store,
