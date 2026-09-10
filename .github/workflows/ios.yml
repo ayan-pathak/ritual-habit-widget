@@ -43,6 +43,22 @@ jobs:
       - name: Stage the font
         run: ./ios/bootstrap.sh
 
+      - name: Stage the Firebase config, when there is one
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          # GoogleService-Info.plist is per-project and never checked in, so
+          # the only way it reaches a build made here is a repository secret.
+          # With no secret this is a no-op: FirebaseApp.configure() is skipped
+          # and the app runs with no cloud to reach, which is the same path a
+          # signed-out device takes.
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > ios/Resources/GoogleService-Info.plist
+            echo "Firebase configured: sign-in and sync are live in this build."
+          else
+            echo "No GOOGLE_SERVICE_INFO_PLIST secret. Building without a cloud."
+          fi
+
       - name: Generate the project
         working-directory: ios
         run: xcodegen generate
