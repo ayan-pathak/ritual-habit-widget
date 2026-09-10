@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +35,7 @@ import com.ayan.ritual.cloud.Account
 import com.ayan.ritual.cloud.CloudSync
 import com.ayan.ritual.data.Onboarding
 import com.ayan.ritual.render.Mood
+import kotlinx.coroutines.launch
 
 /**
  * The first thing a new install shows: sign in, or say you would rather not.
@@ -49,8 +51,18 @@ import com.ayan.ritual.render.Mood
 @Composable
 fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     val busy by Account.busyState
     val error by Account.errorState
+    val googleReady = remember { Account.googleAvailable(context) }
+
+    // Whoever they came in as, the mirror starts on the same uid.
+    val landed: (Boolean) -> Unit = { ok ->
+        if (ok) {
+            Account.uid?.let { CloudSync.start(context, it) }
+            onSignedIn()
+        }
+    }
 
     var address by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -91,7 +103,42 @@ fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {
             style = Body
         )
 
-        Spacer(Modifier.height(24.dp))
+        if (googleReady) {
+            Spacer(Modifier.height(22.dp))
+            InkPill(
+                label = "Continue with Google",
+                onClick = {
+                    scope.launch {
+                        val activity = context.findActivity() ?: return@launch
+                        landed(Account.signInWithGoogle(activity))
+                    }
+                },
+                modifier = Modifier.fillMaxWidth(),
+                background = Paper,
+                content = Ink,
+                border = Ink
+            )
+        }
+
+        Spacer(Modifier.height(10.dp))
+        InkPill(
+            label = "Continue with Apple",
+            onClick = { context.findActivity()?.let { Account.signInWithApple(it, landed) } },
+            modifier = Modifier.fillMaxWidth(),
+            background = Paper,
+            content = Ink,
+            border = Ink
+        )
+
+        Spacer(Modifier.height(22.dp))
+        Text(
+            "or use an email",
+            style = Body.copy(fontSize = 12.sp, color = InkFaint),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(Modifier.height(18.dp))
         CapsLabel("Email")
         Spacer(Modifier.height(8.dp))
         Field(
@@ -120,14 +167,8 @@ fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {
         InkPill(
             label = if (busy) "Working…" else if (creating) "Create account" else "Sign in",
             onClick = {
-                val done: (Boolean) -> Unit = { ok ->
-                    if (ok) {
-                        Account.uid?.let { CloudSync.start(context, it) }
-                        onSignedIn()
-                    }
-                }
-                if (creating) Account.createAccount(address, password, done)
-                else Account.signIn(address, password, done)
+                if (creating) Account.createAccount(address, password, landed)
+                else Account.signIn(address, password, landed)
             },
             modifier = Modifier.fillMaxWidth()
         )

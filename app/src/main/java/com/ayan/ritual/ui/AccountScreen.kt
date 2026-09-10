@@ -24,6 +24,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import com.ayan.ritual.cloud.Account
 import com.ayan.ritual.cloud.CloudSync
 import com.ayan.ritual.render.Mood
+import kotlinx.coroutines.launch
 
 /**
  * The account, which is only ever about one thing: carrying a practice from
@@ -54,6 +56,8 @@ import com.ayan.ritual.render.Mood
 @Composable
 fun AccountScreen(onBack: () -> Unit) {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val googleReady = remember { Account.googleAvailable(context) }
     val uid by Account.uidState
     val email by Account.emailState
     val busy by Account.busyState
@@ -97,7 +101,44 @@ fun AccountScreen(onBack: () -> Unit) {
         }
 
         if (uid == null) {
+            val landed: (Boolean) -> Unit = { ok ->
+                if (ok) Account.uid?.let { CloudSync.start(context, it) }
+            }
             Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp)) {
+                if (googleReady) {
+                    InkPill(
+                        label = "Continue with Google",
+                        onClick = {
+                            scope.launch {
+                                val activity = context.findActivity() ?: return@launch
+                                landed(Account.signInWithGoogle(activity))
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        background = Paper,
+                        content = Ink,
+                        border = Ink
+                    )
+                    Spacer(Modifier.height(10.dp))
+                }
+                InkPill(
+                    label = "Continue with Apple",
+                    onClick = { context.findActivity()?.let { Account.signInWithApple(it, landed) } },
+                    modifier = Modifier.fillMaxWidth(),
+                    background = Paper,
+                    content = Ink,
+                    border = Ink
+                )
+
+                Spacer(Modifier.height(22.dp))
+                Text(
+                    "or use an email",
+                    style = Body.copy(fontSize = 12.sp, color = InkFaint),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(18.dp))
+
                 CapsLabel("Email")
                 Spacer(Modifier.height(8.dp))
                 Field(
@@ -126,11 +167,8 @@ fun AccountScreen(onBack: () -> Unit) {
                 InkPill(
                     label = if (busy) "Working…" else if (creating) "Create account" else "Sign in",
                     onClick = {
-                        val done: (Boolean) -> Unit = { ok ->
-                            if (ok) Account.uid?.let { CloudSync.start(context, it) }
-                        }
-                        if (creating) Account.createAccount(address, password, done)
-                        else Account.signIn(address, password, done)
+                        if (creating) Account.createAccount(address, password, landed)
+                        else Account.signIn(address, password, landed)
                     },
                     modifier = Modifier.fillMaxWidth()
                 )

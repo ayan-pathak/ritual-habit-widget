@@ -1,15 +1,28 @@
 package com.ayan.ritual.cloud
 
+import android.app.Activity
+import android.content.Context
 import androidx.compose.runtime.mutableStateOf
+import androidx.credentials.CredentialManager
+import androidx.credentials.GetCredentialRequest
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.OAuthProvider
+import kotlinx.coroutines.tasks.await
 
 /**
  * Who this device is signed in as, if anyone.
  *
- * Email and password rather than Google or Apple, because the point of an
- * account here is moving a practice from one phone to another — and email is
- * the only sign-in that works the same on both platforms. The rest can be
- * added later without changing what a Ritual account *is*.
+ * Three ways in — Google, Apple, and an email and password — and they all
+ * land on the same uid, which is the only thing the rest of the app knows
+ * about. What a Ritual account *is* does not change with how you opened it.
+ *
+ * Each is offered only when it can actually work: Google needs the web client
+ * id the google-services plugin generates, and both federated providers need
+ * a Firebase project. Email is the floor, because it is the one that behaves
+ * identically on both platforms.
  *
  * Signing in is entirely optional. Ritual works with no account at all, on
  * device, exactly as it did before; nothing here may become load-bearing for
@@ -78,6 +91,78 @@ object Account {
                 if (!task.isSuccessful) _error.value = readable(task.exception?.message)
                 onDone(task.isSuccessful)
             }
+    }
+
+    /**
+     * Whether a Google button can do anything.
+     *
+     * The web client id is generated into resources by the google-services
+     * plugin, which only runs when there is a google-services.json — so this
+     * is looked up by name rather than referenced as R.string, which would not
+     * compile in a checkout without one.
+     */
+    fun googleAvailable(context: Context): Boolean = webClientId(context) != null
+
+    private fun webClientId(context: Context): String? {
+        val id = context.resources.getIdentifier(
+            "default_web_client_id", "string", context.packageName
+        )
+        return if (id == 0) null else context.getString(id)
+    }
+
+    /**
+     * Google, through Credential Manager rather than the retired GoogleSignIn
+     * client — one sheet, which also offers a saved password or a passkey.
+     *
+     * Cancelling is not an error: the sheet is dismissed by tapping outside
+     * it, which people do constantly, and a red line under it every time
+     * would read as a fault rather than a choice.
+     */
+    suspend fun signInWithGoogle(activity: Activity): Boolean {
+        val instance = auth ?: return false
+        val serverClientId = webClientId(activity) ?: run {
+            _error.value = "This build has no Google client id."
+            return false
+        }
+        _busy.value = true
+        _error.value = null
+        return try {
+            val request = GetCredentialRequest.Builder()
+                .addCredentialOption(GetSignInWithGoogleOption.Builder(serverClientId).build())
+                .build()
+            val response = CredentialManager.create(activity).getCredential(activity, request)
+            val token = GoogleIdTokenCredential.createFrom(response.credential.data).idToken
+            instance.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
+            true
+        } catch (cancelled: androidx.credentials.exceptions.GetCredentialCancellationException) {
+            false
+        } catch (failure: Exception) {
+            _error.value = readable(failure.message)
+            false
+        } finally {
+            _busy.value = false
+        }
+    }
+
+    /**
+     * Apple, which on Android is Firebase's own web flow rather than a native
+     * sheet. pendingAuthResult picks the flow back up when the process was
+     * killed while the browser was in front.
+     */
+    fun signInWithApple(activity: Activity, onDone: (Boolean) -> Unit = {}) {
+        val instance = auth ?: return onDone(false)
+        _busy.value = true
+        _error.value = null
+        val provider = OAuthProvider.newBuilder("apple.com")
+            .setScopes(listOf("email", "name"))
+            .build()
+        val task = instance.pendingAuthResult
+            ?: instance.startActivityForSignInWithProvider(activity, provider)
+        task.addOnCompleteListener { done ->
+            _busy.value = false
+            if (!done.isSuccessful) _error.value = readable(done.exception?.message)
+            onDone(done.isSuccessful)
+        }
     }
 
     fun signOut() {

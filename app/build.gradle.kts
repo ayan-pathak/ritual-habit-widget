@@ -23,10 +23,30 @@ android {
         versionName = "1.0"
     }
 
+    // Google Sign-In matches on package name plus signing fingerprint, and a
+    // runner generates a fresh debug keystore on every build — a different
+    // fingerprint each time, so sign-in would fail on every CI build. This key
+    // is checked in so the fingerprint is fixed and can be registered once.
+    //
+    // It is a development key and nothing more. It is not secret, it must
+    // never sign a Play release, and Play App Signing gives its own
+    // fingerprint to register alongside this one when the app ships.
+    signingConfigs {
+        create("dev") {
+            storeFile = rootProject.file("keystore/ritual-dev.jks")
+            storePassword = "ritualdev"
+            keyAlias = "ritual"
+            keyPassword = "ritualdev"
+        }
+    }
+
     buildTypes {
+        debug {
+            signingConfig = signingConfigs.getByName("dev")
+        }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("dev")
         }
     }
 
@@ -61,4 +81,11 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
+    // Google sign-in goes through Credential Manager rather than the retired
+    // GoogleSignIn client: one sheet, and it offers passkeys and saved
+    // passwords in the same place.
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.8.1")
 }
