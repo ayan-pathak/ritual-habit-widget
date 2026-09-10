@@ -19,4 +19,7 @@ design2/*.html
 
 # Kotlin compiler scratch
 .kotlin/
+
+# Bytecode cache from tools/mochi.py
+__pycache__/
 google-services.json
