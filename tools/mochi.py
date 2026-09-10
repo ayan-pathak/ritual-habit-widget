@@ -10,11 +10,13 @@ The face is placed by hand. Procedural shading can carry a coat; it cannot
 draw an eye worth looking at.
 
     python3 tools/mochi.py --swift    # the grid section of ios/Shared/Cat.swift
+    python3 tools/mochi.py --kotlin   # the same, for render/Cat.kt
     python3 tools/mochi.py --png OUT  # a sheet of all four moods, to look at
 
-Paste the --swift output between `static let cols` and `colorOf` in
-ios/Shared/Cat.swift. Nothing reads this at build time: it is the source the
-bitmap was drawn from, kept so the next change is an edit and not a re-pixel.
+Paste the output between the dimensions and `colorOf` in the file it names.
+Nothing reads this at build time: it is the source the bitmap was drawn from,
+kept so the next change is an edit and not a re-pixel. The two platforms draw
+the same cat, so regenerate both or neither.
 """
 import math, struct, sys, zlib
 
@@ -328,9 +330,34 @@ def swift():
     return "\n".join(out)
 
 
+KOTLIN_MOOD = {'awake': 'AWAKE', 'pleased': 'PLEASED',
+               'resting': 'RESTING', 'letDown': 'LET_DOWN'}
+
+
+def kotlin():
+    b, m = trimmed()
+    out = ['    const val COLS = %d' % len(b[0]),
+           '    const val ROWS = %d' % len(b), '',
+           '    private val BASE = arrayOf(']
+    out += ['        "%s"%s' % (r, ',' if i < len(b) - 1 else '')
+            for i, r in enumerate(b)]
+    out += ['    )', '',
+            '    private fun rowsFor(mood: Mood): Array<String> {',
+            '        val r = BASE.copyOf()', '        when (mood) {']
+    for name in ORDER:
+        rows = [i for i in range(len(b)) if m[name][i] != b[i]]
+        out.append('            Mood.%s -> {' % KOTLIN_MOOD[name])
+        out += ['                r[%d] = "%s"' % (i, m[name][i]) for i in rows]
+        out.append('            }')
+    out += ['        }', '        return r', '    }']
+    return "\n".join(out)
+
+
 if __name__ == '__main__':
     if '--swift' in sys.argv:
         print(swift())
+    elif '--kotlin' in sys.argv:
+        print(kotlin())
     elif '--png' in sys.argv:
         b, m = trimmed()
         png(sys.argv[sys.argv.index('--png') + 1], [m[n] for n in ORDER])
