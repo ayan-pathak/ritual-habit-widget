@@ -11,9 +11,14 @@ enum Mood {
 
  Only the eye and mouth rows change between moods, so the silhouette never
  shifts — that is what keeps a pixel mascot from looking redrawn each time.
- The 20x18 original is three parts, and they are the character: two straight
- tufts for ears, a wide rounded head, and a narrower neck under it with a flat
- chin. 32x28 is 1.6x of that, so every landmark lands where it always did.
+ The 20x18 original is three parts, and they are the character: ears, a wide
+ rounded head, and a narrower neck under it. 32x28 is 1.6x of that, so every
+ landmark lands where it always did.
+
+ Below the cheeks the silhouette's width eases into the neck on a cosine, which
+ has zero slope at both ends — so the jaw leaves the cheek and meets the neck
+ as one curve, rather than the flat shelf and square corner a union of two
+ rectangles gives you. The ears come to a point, one pixel at the tip.
 
  The extra pixels go into shading, the inside of the ears, blushed cheeks, and
  eyes big enough to be cute — set below the midline of the head, which is the
@@ -28,12 +33,12 @@ enum Cat {
 
     private static let base = [
         "................................",
-        ".....KKKKK............KKKKK.....",
-        ".....KSSSK............KSSSK.....",
+        ".......K................K.......",
+        "......KPK..............KPK......",
         ".....KPPPK............KPPPK.....",
-        ".....KPPPGKKKKKKKKKKKKGPPPK.....",
-        ".....KPPPGGGGGGGGGGGGGGPPPK.....",
-        "....KGPPPLLLLLLLLLLLGGGPPPGK....",
+        ".....KPPPPKKKKKKKKKKKKPPPPK.....",
+        ".....KPPPPGGGGGGGGGGGGPPPPK.....",
+        "....KGGLLLLLLLLLLLLLGGGGGGGK....",
         "...KGGLLLLLLLLLLLLLGGGGGGGGSK...",
         "..KGGLLLLLLLLLLLLGGGGGGGGGGGSK..",
         "..KGLLLLLLLLLLLLGGGGGGGGGGGGGK..",
@@ -43,13 +48,13 @@ enum Cat {
         "..KGLLLLLLLGGGGGGGGGGGGGGGGGGK..",
         "..KGLLLLLLGGGGGGGGGGGGGGGGGGGK..",
         "..KGLLLLGGGGGGGGGGGGGGGGGGGGGK..",
-        "..KGLHHHGGGGGGGGGGGGGGGGHHHGGK..",
-        "..KGLHHHGGGGGGGGGGGGGGGGHHHGGK..",
-        "..KGGGGGGGGGGGPPPPGGGGGGGGGGSK..",
-        "...KGGGGGGGGGGGPPGGGGGGGGGGSK...",
-        "....KGGGGGGGGGGGGGGGGGGGGGSK....",
-        ".....KGGGGGGGGGGGGGGGGGGGSK.....",
-        "......KKKSGGGGGGGGGGGGSKKK......",
+        "..KGGHHHGGGGGGGGGGGGGGGGHHHGSK..",
+        "...KGHHHGGGGGGGGGGGGGGGGHHHSK...",
+        "....KGGGGGGGGGPPPPGGGGGGGGSK....",
+        ".....KKGGGGGGGGPPGGGGGGGSKK.....",
+        ".......KGGGGGGGGGGGGGGGSK.......",
+        "........KSGGGGGGGGGGGGSK........",
+        ".........KGGGGGGGGGGGGK.........",
         ".........KGGGGGGGGGGGGK.........",
         ".........KGGGGGGGGGGGGK.........",
         ".........KGGGGGGGGGGGGK.........",
@@ -65,12 +70,12 @@ enum Cat {
             r[13] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
             r[14] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
             r[15] = "..KGLLLLWEEEEGGGGGGWEEEEGGGGGK.."
-            r[16] = "..KGLHHHGEEEGGGGGGGGEEEGHHHGGK.."
+            r[16] = "..KGGHHHGEEEGGGGGGGGEEEGHHHGSK.."
         case .pleased:
             r[13] = "..KGLLLLLKKKGGGGGGGGKKKGGGGGGK.."
             r[14] = "..KGLLLKKLGGKKGGGGKKGGGKKGGGGK.."
-            r[20] = "....KGGGGGGGGKGGGGKGGGGGGGSK...."
-            r[21] = ".....KGGGGGGGGKKKKGGGGGGGSK....."
+            r[20] = ".......KGGGGGKGGGGKGGGGSK......."
+            r[21] = "........KSGGGGKKKKGGGGSK........"
         case .resting:
             r[14] = "..KGLLLLKKKKKGGGGGGKKKKKGGGGGK.."
             r[15] = "..KGLLLLGKKGGGGGGGGGKKGGGGGGGK.."
@@ -80,8 +85,8 @@ enum Cat {
             r[13] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
             r[14] = "..KGLLLLEBBEEGGGGGGEBBEEGGGGGK.."
             r[15] = "..KGLLLLEEEEEGGGGGGEEEEEGGGGGK.."
-            r[20] = "....KGGGGGGGGGKKKKGGGGGGGGSK...."
-            r[21] = ".....KGGGGGGGKGGGGKGGGGGGSK....."
+            r[20] = ".......KGGGGGGKKKKGGGGGSK......."
+            r[21] = "........KSGGGKGGGGKGGGSK........"
         }
         return r
     }
