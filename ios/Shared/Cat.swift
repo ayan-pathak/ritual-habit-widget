@@ -55,23 +55,24 @@ enum Cat {
         var r = base
         switch mood {
         case .awake:
-            r[11] = "....KGLLLWEEGGGGGGGEEWGGGGGK...."
-            r[12] = "....KGLLGEBEGGGGGGGEBEGGGGGK...."
-            r[13] = "....KGGGGEEEGGGGGGGEEEGGGGGK...."
+            r[11] = "....KGLLWEEEGGGGGGWEEEGGGGGK...."
+            r[12] = "....KGLLEBBEGGGGGGEBBEGGGGGK...."
+            r[13] = "....KGGGEEEEGGGGGGEEEEGGGGGK...."
         case .pleased:
-            r[11] = "....KGLLLKGKGGGGGGGKGKGGGGGK...."
-            r[12] = "....KGLLGGKGGGGGGGGGKGGGGGGK...."
-            r[19] = "......KGGGGGGKKKKKKGGGGGGK......"
-            r[20] = "......KGGGGGKGGGGGGKGGGGGK......"
+            r[11] = "....KGLLLKKKGGGGGGGKKKGGGGGK...."
+            r[12] = "....KGLKKGGGKKGGGKKGGGKKGGGK...."
+            r[18] = "......KGGGGKMMMMMMMMKGGGGK......"
+            r[19] = "......KGGGGGKKKKKKKKGGGGGK......"
+            r[20] = "......KGGGGGGGKKKKGGGGGGGK......"
         case .resting:
-            r[12] = "....KGLLGKKKGGGGGGGKKKGGGGGK...."
+            r[12] = "....KGLLKKKKGGGGGGKKKKGGGGGK...."
         case .letDown:
+            r[9] = "....KGLKKLLLGGGGGGGGGGKKGGGK...."
             r[10] = "....KGLLLKKKGGGGGGGKKKGGGGGK...."
-            r[11] = "....KGLLLWEEGGGGGGGEEWGGGGGK...."
-            r[12] = "....KGLLGEBEGGGGGGGEBEGGGGGK...."
-            r[13] = "....KGGGGEEEGGGGGGGEEEGGGGGK...."
-            r[18] = "......KGGGGGKMMMMMMKGGGGGK......"
-            r[19] = "......KGGGGGGKKKKKKGGGGGGK......"
+            r[11] = "....KGLLEBBEGGGGGGEBBEGGGGGK...."
+            r[12] = "....KGLLEEEEGGGGGGEEEEGGGGGK...."
+            r[18] = "......KGGGGGMKKKKKKMGGGGGK......"
+            r[19] = "......KGGGGGKGMMMMGKGGGGGK......"
         }
         return r
     }
