@@ -51,6 +51,9 @@ jobs:
         working-directory: ios
         run: |
           set -o pipefail
+          # xcodebuild's own output is a few hundred thousand characters of
+          # compiler invocations with the diagnostics buried in it, so keep the
+          # whole thing on disk and put only the diagnostics on the console.
           xcodebuild \
             -project Ritual.xcodeproj \
             -scheme Ritual \
@@ -59,7 +62,10 @@ jobs:
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath build \
             CODE_SIGNING_ALLOWED=NO \
-            build
+            build > xcodebuild.log 2>&1 || status=$?
+          grep -E '(error|warning):' xcodebuild.log | sort -u || true
+          tail -40 xcodebuild.log
+          exit "${status:-0}"
 
       - name: Package the app
         id: stage

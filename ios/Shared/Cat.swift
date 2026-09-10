@@ -15,9 +15,9 @@ enum Mood {
  mood: the silhouette never shifts and he never looks redrawn between them.
  That was the rule when he was a 20x18 grid and it is still the rule.
 
- The paths live in `MochiArt.swift`, generated from `art/mochi/*.svg` by that
- same script — so the shapes iOS draws and the shapes Android draws come out
- of one conversion and cannot drift.
+ The paths live in `MochiArt.swift`, generated out of the drawings in
+ `art/mochi` by that same script — so the shapes iOS draws and the shapes
+ Android draws come out of one conversion and cannot drift.
 
  They are replayed rather than rasterised because he is drawn at sizes an
  order of magnitude apart — 30pt in the widget header, 176px on the story
