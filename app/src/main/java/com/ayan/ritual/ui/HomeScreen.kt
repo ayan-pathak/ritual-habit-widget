@@ -83,7 +83,7 @@ fun HomeScreen(
                 MochiTile(
                     mood = headerMood,
                     tile = if (allDone) Lime else Paper,
-                    pixel = 0.75.dp,
+                    height = 24.dp,
                     corner = 999.dp,
                     inset = 7.dp,
                     modifier = Modifier
@@ -182,7 +182,7 @@ private fun EmptyState(onCreate: () -> Unit) {
                 Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                MochiTile(Mood.AWAKE, Paper, pixel = 2.dp, corner = 18.dp, inset = 14.dp)
+                MochiTile(Mood.AWAKE, Paper, height = 64.dp, corner = 18.dp, inset = 14.dp)
                 Spacer(Modifier.height(20.dp))
                 Text(
                     "Nothing to keep yet.",

@@ -40,9 +40,11 @@ Type is **Archivo** — one variable TTF in `res/font/`, pinned to weights 500/6
 
 ## Mochi
 
-`render/Cat.kt`. A 40×32 bitmap where **only the brow, eye and mouth rows change between moods** — the silhouette never shifts, which is what keeps a pixel mascot from looking redrawn each time.
+`render/Cat.kt`. Four drawn portraits — one illustration with a different face — in `res/drawable-nodpi/mochi_*.png`. They are exported at a single registration, so **the head sits on the same pixels in every mood** and the silhouette never shifts. That was the rule when he was a 20×18 grid and it is still the rule.
 
-The bitmap is generated: `tools/mochi.py` computes the silhouette (an ellipse biased low plus a gaussian bulge at cheek level, so the face is widest at the muzzle and the line curves *under* it into the chin) and places the face by hand. `--kotlin` and `--swift` print the grid section for each platform, `--png` a sheet of all four moods. Edit the cat there and paste, rather than moving pixels in the source.
+They are bitmaps rather than a vector for the architectural reason: the widget can only be handed a `Bitmap` through `RemoteViews.setImageViewBitmap`, so the app and the widget can only draw the same pixels if the source *is* pixels. iOS ships the same four files.
+
+`Cat.load(context)` must run before `Cat.draw`, for the same reason `Fonts.load` does. Size him by height — `Cat.draw(canvas, left, top, height, mood)` — and `Cat.widthFor` gives the rest.
 
 His mood is derived from streak state (`Cat.moodFor`), never chosen for decoration: awake when today is unmarked, pleased once marked, let down the morning after a break.
 

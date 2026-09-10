@@ -103,7 +103,7 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
             MochiTile(
                 mood = model.mood,
                 tile = Color(accent.block),
-                pixel = 1.5.dp,
+                height = 48.dp,
                 corner = 18.dp,
                 inset = 11.dp
             )

@@ -159,7 +159,7 @@ fun AccountScreen(onBack: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        MochiTile(Mood.PLEASED, Paper, pixel = 1.dp, corner = 14.dp, inset = 9.dp)
+                        MochiTile(Mood.PLEASED, Paper, height = 32.dp, corner = 14.dp, inset = 9.dp)
                         Column {
                             Text("Mirrored", style = Display.copy(fontSize = 19.sp, lineHeight = 20.sp))
                             Spacer(Modifier.height(4.dp))

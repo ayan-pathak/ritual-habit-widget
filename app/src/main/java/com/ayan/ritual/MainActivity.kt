@@ -14,6 +14,7 @@ import com.ayan.ritual.billing.Unlock
 import com.ayan.ritual.cloud.Account
 import com.ayan.ritual.cloud.CloudSync
 import com.ayan.ritual.data.HabitStore
+import com.ayan.ritual.render.Cat
 import com.ayan.ritual.render.Fonts
 import com.ayan.ritual.ui.CreateScreen
 import com.ayan.ritual.ui.DetailScreen
@@ -40,6 +41,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         HabitStore.ensureLoaded(this)
         Fonts.load(this)
+        Cat.load(this)
         Unlock.start(this)
         Account.start()
 

@@ -86,15 +86,14 @@ fun RitualCard(
 fun MochiTile(
     mood: Mood,
     tile: Color,
-    pixel: Dp,
+    height: Dp,
     modifier: Modifier = Modifier,
     corner: Dp = 14.dp,
     inset: Dp = 8.dp
 ) {
     val density = LocalDensity.current
-    val px = with(density) { pixel.toPx() }
-    val w = with(density) { (Cat.widthFor(px)).toDp() }
-    val h = with(density) { (Cat.heightFor(px)).toDp() }
+    val px = with(density) { height.toPx() }
+    val w = with(density) { Cat.widthFor(px).toDp() }
     Box(
         modifier
             .clip(RoundedCornerShape(corner))
@@ -102,11 +101,11 @@ fun MochiTile(
             .padding(horizontal = inset, vertical = inset * 0.8f),
         contentAlignment = Alignment.Center
     ) {
-        BoxWithConstraints(Modifier.size(w, h)) {
+        BoxWithConstraints(Modifier.size(w, height)) {
             val bmp = remember(mood, px) {
                 val b = android.graphics.Bitmap.createBitmap(
                     Cat.widthFor(px).toInt().coerceAtLeast(1),
-                    Cat.heightFor(px).toInt().coerceAtLeast(1),
+                    px.toInt().coerceAtLeast(1),
                     android.graphics.Bitmap.Config.ARGB_8888
                 )
                 Cat.draw(android.graphics.Canvas(b), 0f, 0f, px, mood)

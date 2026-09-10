@@ -62,9 +62,8 @@ object ShareCardRenderer {
         )
 
         // ── Mochi ───────────────────────────────────────────────────────────
-        val px = s(5.5f)
-        val catW = Cat.widthFor(px)
-        val catH = Cat.heightFor(px)
+        val catH = s(176f)
+        val catW = Cat.widthFor(catH)
         val catBox = RectF(
             block.right - pad - catW - s(38f),
             block.top + s(250f),
@@ -73,7 +72,7 @@ object ShareCardRenderer {
         )
         p.color = if (model.doneToday) Palette.INK else Palette.PAPER
         canvas.drawRoundRect(catBox, s(34f), s(34f), p)
-        Cat.draw(canvas, catBox.centerX() - catW / 2f, catBox.centerY() - catH / 2f, px, model.mood)
+        Cat.draw(canvas, catBox.centerX() - catW / 2f, catBox.centerY() - catH / 2f, catH, model.mood)
 
         // ── The year ────────────────────────────────────────────────────────
         val cols = GridGeo.colsFor(model.year)
