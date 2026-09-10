@@ -12,6 +12,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Stage the Firebase config, when there is one
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          # google-services.json is per-project and never checked in, so the
+          # only way it reaches a build made here is a repository secret. With
+          # no secret this is a no-op and the app runs with no cloud to reach,
+          # which is the same path a signed-out device takes.
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
+            echo "Firebase configured: sign-in and sync are live in this build."
+          else
+            echo "No GOOGLE_SERVICES_JSON secret. Building without a cloud."
+          fi
+
       - name: Check the generated Mochi art matches art/mochi/*.svg
         run: python3 tools/mochi.py --check
 
