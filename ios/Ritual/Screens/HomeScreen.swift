@@ -27,7 +27,7 @@ struct HomeScreen: View {
                     MochiTile(
                         mood: allDone ? .pleased : .awake,
                         tile: allDone ? Theme.lime : Theme.paper,
-                        pixel: 1.5,
+                        pixel: 0.95,
                         corner: 999,
                         inset: 7
                     )
@@ -85,7 +85,7 @@ private struct EmptyState: View {
     var body: some View {
         VStack(spacing: 16) {
             VStack(spacing: 0) {
-                MochiTile(mood: .awake, tile: Theme.paper, pixel: 4, corner: 18, inset: 14)
+                MochiTile(mood: .awake, tile: Theme.paper, pixel: 2.5, corner: 18, inset: 14)
                 Text("Nothing to keep yet.")
                     .displayStyle(24)
                     .multilineTextAlignment(.center)

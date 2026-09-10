@@ -24,3 +24,5 @@ design2/*.html
 ios/Resources/
 ios/Ritual.xcodeproj/
 ios/build/
+ios/Ritual/Info.plist
+ios/RitualWidget/Info.plist

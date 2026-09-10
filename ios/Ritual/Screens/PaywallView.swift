@@ -30,7 +30,7 @@ struct PaywallView: View {
                 .padding(.top, 14)
 
                 VStack(alignment: .center, spacing: 18) {
-                    MochiTile(mood: .pleased, tile: Theme.paper, pixel: 4, corner: 18, inset: 14)
+                    MochiTile(mood: .pleased, tile: Theme.paper, pixel: 2.5, corner: 18, inset: 14)
                     Text("Keep more than one.")
                         .displayStyle(28)
                         .multilineTextAlignment(.center)

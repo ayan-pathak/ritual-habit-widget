@@ -31,13 +31,26 @@ targets:
       - path: Shared
       - path: Ritual
       - path: Resources
+    # The Info.plists are generated rather than hand-written: XcodeGen fills in
+    # the CFBundle* keys Xcode injects for you, and the App Intents metadata
+    # step refuses to parse a plist that is missing them.
+    info:
+      path: Ritual/Info.plist
+      properties:
+        CFBundleDisplayName: Ritual
+        UILaunchScreen: {}
+        UIUserInterfaceStyle: Light
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        UIAppFonts: [Archivo.ttf]
+        CFBundleURLTypes:
+          - CFBundleURLName: com.ayan.ritual
+            CFBundleURLSchemes: [ritual]
+        LSApplicationQueriesSchemes: [instagram-stories, instagram]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ayan.ritual
         PRODUCT_NAME: Ritual
-        INFOPLIST_FILE: Ritual/Info.plist
         CODE_SIGN_ENTITLEMENTS: Ritual/Ritual.entitlements
-        GENERATE_INFOPLIST_FILE: NO
     dependencies:
       - target: RitualWidgetExtension
         embed: true
@@ -49,13 +62,18 @@ targets:
       - path: Shared
       - path: RitualWidget
       - path: Resources
+    info:
+      path: RitualWidget/Info.plist
+      properties:
+        CFBundleDisplayName: Ritual
+        UIAppFonts: [Archivo.ttf]
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.ayan.ritual.widget
         PRODUCT_NAME: RitualWidget
-        INFOPLIST_FILE: RitualWidget/Info.plist
         CODE_SIGN_ENTITLEMENTS: RitualWidget/RitualWidget.entitlements
-        GENERATE_INFOPLIST_FILE: NO
         SKIP_INSTALL: YES
 
 schemes:

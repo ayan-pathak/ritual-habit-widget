@@ -7,56 +7,71 @@ enum Mood {
 }
 
 /**
- Mochi, a 20x18 bitmap.
+ Mochi, a 32x28 bitmap.
 
  Only the eye and mouth rows change between moods, so the silhouette never
  shifts — that is what keeps a pixel mascot from looking redrawn each time.
+ The extra resolution over the 20x18 original buys him a lit side and a shaded
+ one, pink inside the ears, a cream muzzle and feet; the rule that the outline
+ never moves is unchanged, and it is the rule that matters.
  */
 enum Cat {
 
-    static let cols = 20
-    static let rows = 18
+    static let cols = 32
+    static let rows = 28
 
     private static let base = [
-        "....KK........KK....",
-        "...KDGK......KGDK...",
-        "...KGPK......KPGK...",
-        "..KGGPGKKKKKKGPGGK..",
-        "..KGGGGGGGGGGGGGGK..",
-        ".KGGGGGGGGGGGGGGGGK.",
-        ".KGGGGGGGGGGGGGGGGK.",
-        ".KGEEEGGGGGGGGEEEGK.",
-        ".KGEBEGGGGGGGGEBEGK.",
-        ".KGEEEGGGGGGGGEEEGK.",
-        ".KGGGGGGGPPGGGGGGGK.",
-        ".KGGGGGGKPPKGGGGGGK.",
-        "..KGGGGGGKKGGGGGGK..",
-        "..KKGGGGGGGGGGGGKK..",
-        "....KGGGGGGGGGGK....",
-        "....KGGGGGGGGGGK....",
-        "....KGGGGGGGGGGK....",
-        "....KKKKKKKKKKKK...."
+        "................................",
+        ".......K................K.......",
+        "......KGK..............KGK......",
+        "......KGGKKKKKKKKKKKKKKGGK......",
+        ".....KGPLGGGGGGGGGGGGGGGPGK.....",
+        "....KGPPPLLLLLLLLGGGGGGPPPGK....",
+        "....KPPPPLLLLLLLGGGGGGGPPPPK....",
+        ".....KGLLLLLLLGGGGGGGGGGGGK.....",
+        "....KGLLLLLLLGGGGGGGGGGGGGSK....",
+        "....KGLLLLLLGGGGGGGGGGGGGGGK....",
+        "....KGLLLLGGGGGGGGGGGGGGGGGK....",
+        "....KGLLLGGGGGGGGGGGGGGGGGGK....",
+        "....KGLLGGGGGGGGGGGGGGGGGGGK....",
+        "....KGGGGGGGGGGGGGGGGGGGGGGK....",
+        "....KGGGGGGGGGGGGGGGGGGGGGSK....",
+        ".....KGGGGGGMMPPPPMMGGGGGGK.....",
+        ".....KGGGGGGMMMPPMMMGGGGGSK.....",
+        "......KGGGGMMMMMMMMMMGGGGK......",
+        "......KGGGGGMMMMMMMMGGGGGK......",
+        "......KGGGGGGGMMMMGGGGGGGK......",
+        "......KGGGGGGGGGGGGGGGGGGK......",
+        "......KGGGGGGGGGGGGGGGGGGK......",
+        "......KGGGGGGGGGGGGGGGGGGK......",
+        "......KGGGGGGGGGGGGGGGGGGK......",
+        "......KGGSKKSGGGGGGSKKSGGK......",
+        "......KGGK..KGGGGGGK..KGGK......",
+        "......KSGK..KGGGGGGK..KGSK......",
+        ".......KKK..KKKKKKKK..KKK......."
     ]
 
     private static func rowsFor(_ mood: Mood) -> [String] {
         var r = base
         switch mood {
         case .awake:
-            break
+            r[11] = "....KGLLLWEEGGGGGGGEEWGGGGGK...."
+            r[12] = "....KGLLGEBEGGGGGGGEBEGGGGGK...."
+            r[13] = "....KGGGGEEEGGGGGGGEEEGGGGGK...."
         case .pleased:
-            r[7] = ".KGGKGGGGGGGGGGKGGK."
-            r[8] = ".KGKGKGGGGGGGGKGKGK."
-            r[9] = ".KGGGGGGGGGGGGGGGGK."
-            r[11] = ".KGGGGGKKPPKKGGGGGK."
+            r[11] = "....KGLLLKGKGGGGGGGKGKGGGGGK...."
+            r[12] = "....KGLLGGKGGGGGGGGGKGGGGGGK...."
+            r[19] = "......KGGGGGGKKKKKKGGGGGGK......"
+            r[20] = "......KGGGGGKGGGGGGKGGGGGK......"
         case .resting:
-            r[7] = ".KGGGGGGGGGGGGGGGGK."
-            r[8] = ".KGKKKGGGGGGGGKKKGK."
-            r[9] = ".KGGGGGGGGGGGGGGGGK."
+            r[12] = "....KGLLGKKKGGGGGGGKKKGGGGGK...."
         case .letDown:
-            r[7] = ".KGKGKGGGGGGGGKGKGK."
-            r[8] = ".KGGKGGGGGGGGGGKGGK."
-            r[9] = ".KGGGGGGGGGGGGGGGGK."
-            r[12] = "..KGGGGKGGGGKGGGGK.."
+            r[10] = "....KGLLLKKKGGGGGGGKKKGGGGGK...."
+            r[11] = "....KGLLLWEEGGGGGGGEEWGGGGGK...."
+            r[12] = "....KGLLGEBEGGGGGGGEBEGGGGGK...."
+            r[13] = "....KGGGGEEEGGGGGGGEEEGGGGGK...."
+            r[18] = "......KGGGGGKMMMMMMKGGGGGK......"
+            r[19] = "......KGGGGGGKKKKKKGGGGGGK......"
         }
         return r
     }
@@ -64,11 +79,14 @@ enum Cat {
     private static func colorOf(_ ch: Character) -> ARGB {
         switch ch {
         case "K": return 0xFF12120F   // outline
-        case "D": return 0xFF56564E   // ear shadow
+        case "L": return 0xFFA8A89E   // coat, lit side
         case "G": return 0xFF8A8A80   // coat
+        case "S": return 0xFF6E6E66   // coat, shaded rim
+        case "M": return 0xFFE4E1D4   // muzzle
         case "P": return 0xFFE0A3A3   // ear pink, nose
         case "E": return 0xFFCFE85F   // eye — carries the brand colour
         case "B": return 0xFF12120F   // pupil
+        case "W": return 0xFFF4F2EA   // catchlight
         default: return 0
         }
     }
