@@ -1,370 +1,247 @@
-"""Mochi, generated.
+"""Turns the four Mochi drawings into vector art both platforms can draw.
 
-The silhouette is computed - an ellipse biased low plus a gaussian bulge at
-cheek level, so the face is widest where the muzzle is and the line curves
-*under* it into the chin. A rounded rectangle chamfers there; this does not,
-and that is the whole difference between a puffy cheek and a hard jaw. Coat
-shading, the ears, the blush and the whiskers fall out of the same geometry.
+`art/mochi/*.svg` is the source. This emits, from the same parse so the two
+cannot drift:
 
-The face is placed by hand. Procedural shading can carry a coat; it cannot
-draw an eye worth looking at.
+    app/src/main/res/drawable/mochi_*.xml   Android VectorDrawable
+    ios/Shared/MochiArt.swift               the same paths, for CoreGraphics
 
-    python3 tools/mochi.py --swift    # the grid section of ios/Shared/Cat.swift
-    python3 tools/mochi.py --kotlin   # the same, for render/Cat.kt
-    python3 tools/mochi.py --png OUT  # a sheet of all four moods, to look at
+    python3 tools/mochi.py            # write both
+    python3 tools/mochi.py --check    # re-emit and compare, for CI
 
-Paste the output between the dimensions and `colorOf` in the file it names.
-Nothing reads this at build time: it is the source the bitmap was drawn from,
-kept so the next change is an edit and not a re-pixel. The two platforms draw
-the same cat, so regenerate both or neither.
+The four files are one 2x2 sheet. They carry identical geometry and differ
+only in their viewBox, which windows onto a quadrant — so each mood's origin
+comes from its own file, and paths that fall outside that window are dropped
+rather than shipped four times over. NUDGE is the last bit of registration on
+top of that: the art sits a little differently inside each quadrant, and
+lining it up is what puts the head on the same pixels in all four. That is
+the one rule Mochi has always been drawn to.
+
+The exports only ever use absolute M/L/C/z and translate(0,0), which is why
+the path data survives being carried across once it is shifted. Anything else
+in a future export will raise here rather than being silently dropped.
 """
-import math, struct, sys, zlib
+import os
+import re
+import sys
 
-W, H = 40, 36
-CX = 19.5
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ART = os.path.join(ROOT, 'art', 'mochi')
 
-SKULL_Y, SKULL_R, HEAD_RX = 17.5, 11.6, 11.4
-CHEEK_Y, CHEEK_BULGE, CHEEK_SPREAD = 21.0, 2.8, 4.2
-NECK_HW, NECK_T, NECK_B = 7.5, 27, 35
-EAR_CENTRES = (11, 28)
-EAR_T, EAR_B = 4, 11
-
-
-def head_half(y):
-    t = (y - SKULL_Y) / SKULL_R
-    if abs(t) > 1:
-        return 0.0
-    hw = HEAD_RX * (1 - abs(t) ** 2.5) ** (1 / 2.5)
-    return hw + CHEEK_BULGE * math.exp(-((y - CHEEK_Y) / CHEEK_SPREAD) ** 2)
-
-
-def ear_half(y):
-    if not (EAR_T <= y <= EAR_B):
-        return None
-    return 0.45 + (y - EAR_T) * 0.62
-
-
-def filled(x, y):
-    if not (0 <= x < W and 0 <= y < H):
-        return False
-    if abs(x - CX) <= head_half(y):
-        return True
-    if NECK_T <= y <= NECK_B and abs(x - CX) <= NECK_HW:
-        return True
-    h = ear_half(y)
-    return h is not None and any(abs(x - c) <= h for c in EAR_CENTRES)
-
-
-def build():
-    g = [[' '] * W for _ in range(H)]
-    for y in range(H):
-        for x in range(W):
-            if filled(x, y):
-                g[y][x] = 'G'
-
-    # Coat shading: light from the upper left, a shaded rim opposite it.
-    for y in range(H):
-        for x in range(W):
-            if g[y][x] != 'G':
-                continue
-            d = 9.0
-            for dy in range(-4, 5):
-                for dx in range(-4, 5):
-                    if not filled(x + dx, y + dy):
-                        d = min(d, math.hypot(dx, dy))
-            nx, ny = (x - CX) / 17.0, (y - 17.0) / 15.0
-            light = -nx * 0.64 - ny * 0.8
-            if d <= 1.7 and light < -0.05:
-                g[y][x] = 'S'
-            elif d <= 2.2 and light > 0.30:
-                g[y][x] = 'L'
-
-    # Ears: a pink inner that tapers with the point, held off the outer edge by
-    # a pixel of coat so the ear keeps a rim all the way up.
-    for c in EAR_CENTRES:
-        for y in range(EAR_T, EAR_B + 1):
-            h = ear_half(y)
-            if h is None:
-                continue
-            inner = h - 1.35
-            if inner < 0.2:
-                continue
-            for x in range(int(math.ceil(c - inner)), int(c + inner) + 1):
-                if g[y][x] in ('G', 'L', 'S'):
-                    g[y][x] = 'P' if y > EAR_T + 1 else 'H'
-        # A tuft of pale fur at the mouth of the ear.
-        for y in (EAR_B - 1, EAR_B):
-            for x in range(c - 5, c + 6):
-                if g[y][x] in ('P', 'H'):
-                    g[y][x] = 'L'
-
-    def paint(y, xs, ch, over=('G', 'L', 'S', 'M', 'H', 'P')):
-        for x in xs:
-            if 0 <= x < W and g[y][x] in over:
-                g[y][x] = ch
-
-    # Muzzle: a cream pad under the nose, wider than tall.
-    for y in range(H):
-        for x in range(W):
-            if g[y][x] not in ('G', 'L', 'S'):
-                continue
-            dx, dy = (x - CX) / 4.6, (y - 23.0) / 2.6
-            if dx * dx + dy * dy <= 1.0:
-                g[y][x] = 'M'
-
-    # Cheeks: blush out where the face is widest, falling off into the coat.
-    for cx in (9.8, 29.2):
-        for y in range(16, 23):
-            for x in range(W):
-                if g[y][x] not in ('G', 'L', 'S'):
-                    continue
-                r = ((x - cx) / 2.4) ** 2 + ((y - 19.0) / 1.7) ** 2
-                if r <= 1.0:
-                    g[y][x] = 'H'
-                elif r <= 1.75:
-                    g[y][x] = 'R'
-
-    # Nose, and the philtrum under it.
-    paint(20, range(18, 22), 'K')
-    paint(21, range(18, 22), 'P')
-    paint(22, range(19, 21), 'P')
-    for x in (17, 22):
-        if g[21][x] == 'M':
-            g[21][x] = 'H'
-
-    # Whiskers fan out past the cheek, so they never break the outline they
-      # cross. Mid grey, which reads on cream and on ink alike.
-    WHISKERS = (
-        ((5.5, 21.0), (1.5, 19.4)),
-        ((5.5, 22.4), (1.2, 22.6)),
-        ((6.5, 23.8), (2.2, 25.6)),
-    )
-    for (x0, y0), (x1, y1) in WHISKERS:
-        n = int(abs(x0 - x1) * 2)
-        for i in range(n + 1):
-            t = i / n
-            px_, py_ = x0 + (x1 - x0) * t, y0 + (y1 - y0) * t
-            for sx in (px_, 2 * CX - px_):
-                x, y = int(round(sx)), int(round(py_))
-                if 0 <= x < W and 0 <= y < H and g[y][x] == ' ':
-                    g[y][x] = 'S'
-
-    out = [row[:] for row in g]
-    for y in range(H):
-        for x in range(W):
-            if g[y][x] in (' ', 'S') and not (g[y][x] == 'S' and filled(x, y)):
-                continue
-            for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
-                ax, ay = x + dx, y + dy
-                if not (0 <= ax < W and 0 <= ay < H) or not filled(ax, ay):
-                    out[y][x] = 'K'
-                    break
-    return ["".join(r).replace(' ', '.') for r in out]
-
-
-base = build()
-
-
-def put(row, xs, ch):
-    r = list(row)
-    for x in xs:
-        if 0 <= x < W and r[x] != '.':
-            r[x] = ch
-    return "".join(r)
-
-
-EL, ER = 14, 25                    # eye centres
-EY = 12                            # top row of the open eye
-
-
-def stamp(rows, sprite, top, cx, flip=False):
-    """Paints a sprite (a list of strings, '.' transparent) centred on cx."""
-    half = (len(sprite[0]) - 1) // 2
-    for j, line in enumerate(sprite):
-        cells = line[::-1] if flip else line
-        row = list(rows[top + j])
-        for i, ch in enumerate(cells):
-            x = cx - half + i
-            if ch != '.' and 0 <= x < W and row[x] != '.':
-                row[x] = ch
-        rows[top + j] = "".join(row)
-
-
-def both(rows, sprite, top):
-    # Not mirrored: the coat is lit from the upper left, so both catchlights
-    # belong on the same side.
-    stamp(rows, sprite, top, EL)
-    stamp(rows, sprite, top, ER)
-
-
-# An open eye: lash line, a dark rim inside it, a lime iris ringing a wide
-# pupil, a catchlight top left and a lit arc along the bottom of the iris.
-EYE_OPEN = [
-    ".KKKKK.",
-    "KDEEEDK",
-    "KEWBBEK",
-    "KEBBBEK",
-    "KDAAADK",
-    ".KKKKK.",
-]
-# Half lidded: the same eye with the lid pulled down over the top of it.
-EYE_TIRED = [
-    ".KKKKK.",
-    "KKKKKKK",
-    "KEBBBEK",
-    "KEBBBEK",
-    "KDAAADK",
-    ".KKKKK.",
-]
-EYE_HAPPY = ["..KKK..", ".K...K.", "KK...KK"]
-EYE_SHUT = ["KKKKKKK", ".KKKKK."]
-# The inner end rides up. That, not the mouth, is what reads as let down.
-BROW_SAD = ["...KKK", ".KKK..", "KKK..."]
-
-# A smile is a cup: the corners sit above the middle. Turn it over for a frown.
-MOUTH_NEUTRAL = {23: [18, 21], 24: [19, 20]}
-MOUTH_SMILE = {23: [17, 18, 21, 22], 24: [19, 20]}
-MOUTH_FROWN = {23: [19, 20], 24: [17, 18, 21, 22]}
-
-
-def mouth(rows, spec):
-    for y, xs in spec.items():
-        rows[y] = put(rows[y], xs, 'K')
-
-
-def mood(name):
-    r = base[:]
-    if name == 'awake':
-        both(r, EYE_OPEN, EY)
-        mouth(r, MOUTH_NEUTRAL)
-    elif name == 'pleased':
-        both(r, EYE_HAPPY, EY + 2)
-        mouth(r, MOUTH_SMILE)
-    elif name == 'resting':
-        both(r, EYE_SHUT, EY + 3)
-    elif name == 'letDown':
-        stamp(r, BROW_SAD, EY - 3, EL)
-        stamp(r, BROW_SAD, EY - 3, ER, flip=True)
-        both(r, EYE_TIRED, EY)
-        mouth(r, MOUTH_FROWN)
-    return r
-
-
-MOODS = {n: mood(n) for n in ('awake', 'pleased', 'resting', 'letDown')}
-
-COLOURS = {
-    'K': (0x12, 0x12, 0x0F),
-    'L': (0xA8, 0xA8, 0x9E),
-    'G': (0x8A, 0x8A, 0x80),
-    'S': (0x6E, 0x6E, 0x66),
-    'P': (0xE0, 0xA3, 0xA3),
-    'H': (0xD6, 0x9B, 0x96),
-    'R': (0xAE, 0x96, 0x8C),
-    'M': (0xE8, 0xE3, 0xD2),
-    'E': (0xC9, 0xF7, 0x3F),
-    'A': (0xE6, 0xFC, 0x9C),
-    'D': (0x84, 0xA8, 0x28),
-    'B': (0x12, 0x12, 0x0F),
-    'V': (0xC6, 0xC3, 0xB7),
-    'W': (0xF4, 0xF2, 0xEA),
+# What each quadrant is cropped to, inside its own viewBox, and how far the
+# art sits from that viewBox's corner. Measured off a render of each file.
+VIEW_W, VIEW_H = 883.12, 913.06
+NUDGE = {
+    'awake':    (27.60, 33.14),
+    'pleased':  (47.84, 33.14),
+    'resting':  (29.44, 38.66),
+    'let_down': (47.84, 38.66),
 }
+MOODS = ('awake', 'pleased', 'resting', 'let_down')
+
+NUM = re.compile(r'-?\d*\.?\d+(?:[eE][-+]?\d+)?')
 
 
-def png(path, grids, scale=9, bg=(0xE7, 0xE3, 0xD4), gapx=3):
-    gw = len(grids[0][0]) * scale
-    tw = len(grids) * gw + (len(grids) - 1) * gapx * scale
-    th = len(grids[0]) * scale
-    rows = []
-    for y in range(th):
-        line = bytearray([0])
-        for x in range(tw):
-            col = bg
-            for gi, g in enumerate(grids):
-                left = gi * (gw + gapx * scale)
-                if left <= x < left + gw:
-                    ch = g[y // scale][(x - left) // scale]
-                    if ch != '.':
-                        col = COLOURS.get(ch, bg)
-            line += bytes(col)
-        rows.append(bytes(line))
-    raw = b"".join(rows)
-
-    def chunk(tag, data):
-        c = tag + data
-        return struct.pack(">I", len(data)) + c + struct.pack(">I", zlib.crc32(c))
-
-    out = (b"\x89PNG\r\n\x1a\n"
-           + chunk(b"IHDR", struct.pack(">IIBBBBB", tw, th, 8, 2, 0, 0, 0))
-           + chunk(b"IDAT", zlib.compress(raw, 9))
-           + chunk(b"IEND", b""))
-    open(path, "wb").write(out)
+def rgb_of(text):
+    r, g, b = (int(v) for v in NUM.findall(text)[:3])
+    return r, g, b
 
 
-CH = {'K': '#', 'L': '+', 'G': '.', 'S': ',', 'P': 'p', 'H': 'h', 'R': 'r',
-      'M': 'o', 'E': 'O', 'A': 'a', 'D': 'd', 'B': '@', 'W': '*', '.': ' '}
-ORDER = ('awake', 'pleased', 'resting', 'letDown')
+def argb(text, alpha=1.0):
+    """'rgb(1,2,3)' plus an alpha, as #AARRGGBB."""
+    r, g, b = rgb_of(text)
+    return '#%02X%02X%02X%02X' % (round(max(0.0, min(1.0, alpha)) * 255), r, g, b)
 
 
-def trimmed():
-    """The grids with the empty rows above the ears dropped."""
-    top = next(i for i, r in enumerate(base) if set(r) != {'.'})
-    bot = max(i for i, r in enumerate(base) if set(r) != {'.'})
-    return base[top:bot + 1], {k: v[top:bot + 1] for k, v in MOODS.items()}
+def fmt(v):
+    return ('%.3f' % v).rstrip('0').rstrip('.') or '0'
+
+
+def shift(d, ox, oy):
+    """Moves absolute path data by (-ox, -oy). M, L and C take x,y pairs."""
+    out, i, n = [], 0, len(d)
+    while i < n:
+        c = d[i]
+        if c in 'MLC':
+            coords = {'M': 2, 'L': 2, 'C': 6}[c]
+            vals = []
+            i += 1
+            for k in range(coords):
+                m = NUM.search(d, i)
+                if m is None:
+                    raise ValueError('%s wants %d numbers' % (c, coords))
+                vals.append(float(m.group(0)) - (ox if k % 2 == 0 else oy))
+                i = m.end()
+            out.append(c + ' '.join(fmt(v) for v in vals))
+        elif c in 'zZ':
+            out.append('Z')
+            i += 1
+        elif c in ' ,\t\r\n':
+            i += 1
+        else:
+            raise ValueError('unsupported path command %r — this converter only '
+                             'handles absolute M/L/C/z' % c)
+    return ''.join(out)
+
+
+def bbox(d):
+    """A conservative box for absolute M/L/C data — control points included."""
+    xs = [float(v) for v in NUM.findall(d)]
+    if not xs:
+        return None
+    return min(xs[0::2]), min(xs[1::2]), max(xs[0::2]), max(xs[1::2])
+
+
+def parse(mood):
+    """One mood as (paths, gradients), windowed onto its quadrant and registered."""
+    src = open(os.path.join(ART, mood + '.svg'), encoding='utf-8-sig').read()
+    vb = [float(v) for v in NUM.findall(
+        re.search(r'viewBox="([^"]+)"', src).group(1))]
+    nx, ny = NUDGE[mood]
+    ox, oy = vb[0] + nx, vb[1] + ny
+
+    for t in set(re.findall(r'transform="([^"]*)"', src)):
+        if re.sub(r'[\s]', '', t) != 'translate(0,0)':
+            raise ValueError('unsupported transform %r — bake it into the path '
+                             'data before exporting' % t)
+
+    grads = {}
+    for m in re.finditer(r'<linearGradient\b([^>]*)>(.*?)</linearGradient>', src, re.S):
+        head, body = m.group(1), m.group(2)
+        gid = re.search(r'id="([^"]+)"', head).group(1)
+        x1, y1, x2, y2 = (float(re.search(r'\b%s="([^"]+)"' % k, head).group(1))
+                          for k in ('x1', 'y1', 'x2', 'y2'))
+        stops = []
+        for st in re.finditer(r'<stop\b([^>]*)/>', body):
+            a = st.group(1)
+            op = re.search(r'stop-opacity="([^"]+)"', a)
+            stops.append((float(re.search(r'offset="([^"]+)"', a).group(1)),
+                          re.search(r'stop-color="([^"]+)"', a).group(1),
+                          float(op.group(1)) if op else 1.0))
+        grads[gid] = (x1 - ox, y1 - oy, x2 - ox, y2 - oy, sorted(stops))
+
+    paths = []
+    for m in re.finditer(r'<path\b([^>]*?)/?>', src):
+        a = m.group(1)
+        dm = re.search(r'\bd="([^"]*)"', a)
+        fm = re.search(r'\bfill="([^"]*)"', a)
+        if not dm or not fm or fm.group(1) == 'none':
+            continue
+        om = re.search(r'\bopacity="([^"]*)"', a)
+        # The sheet holds all four cats; keep only what this window shows.
+        box = bbox(dm.group(1))
+        if box and (box[2] < ox or box[0] > ox + VIEW_W
+                    or box[3] < oy or box[1] > oy + VIEW_H):
+            continue
+        paths.append((shift(dm.group(1), ox, oy), fm.group(1),
+                      float(om.group(1)) if om else 1.0))
+    return paths, grads
+
+
+def vector_drawable(mood):
+    paths, grads = parse(mood)
+    out = ['<?xml version="1.0" encoding="utf-8"?>',
+           '<!-- Generated by tools/mochi.py from art/mochi/%s.svg. Do not edit. -->' % mood,
+           '<vector xmlns:android="http://schemas.android.com/apk/res/android"',
+           '    xmlns:aapt="http://schemas.android.com/aapt"',
+           '    android:width="120dp"',
+           '    android:height="124dp"',
+           '    android:viewportWidth="%s"' % fmt(VIEW_W),
+           '    android:viewportHeight="%s">' % fmt(VIEW_H)]
+    for d, fill, alpha in paths:
+        gid = re.match(r'url\(#(\w+)\)', fill)
+        if gid is None:
+            line = '    <path android:fillColor="%s" android:pathData="%s"' % (
+                argb(fill), d)
+            if alpha < 1.0:
+                line += '\n        android:fillAlpha="%s"' % fmt(alpha)
+            out.append(line + '/>')
+            continue
+        x1, y1, x2, y2, stops = grads[gid.group(1)]
+        out.append('    <path android:pathData="%s">' % d)
+        if alpha < 1.0:
+            out[-1] = '    <path android:fillAlpha="%s" android:pathData="%s">' % (fmt(alpha), d)
+        out += ['        <aapt:attr name="android:fillColor">',
+                '            <gradient android:type="linear"',
+                '                android:startX="%s" android:startY="%s"' % (fmt(x1), fmt(y1)),
+                '                android:endX="%s" android:endY="%s">' % (fmt(x2), fmt(y2))]
+        for off, col, op in stops:
+            out.append('                <item android:offset="%s" android:color="%s"/>'
+                       % (fmt(off), argb(col, op)))
+        out += ['            </gradient>', '        </aapt:attr>', '    </path>']
+    out.append('</vector>')
+    return '\n'.join(out) + '\n'
 
 
 def swift():
-    b, m = trimmed()
-    out = ['    static let cols = %d' % len(b[0]),
-           '    static let rows = %d' % len(b), '',
-           '    private static let base = [']
-    out += ['        "%s"%s' % (r, ',' if i < len(b) - 1 else '')
-            for i, r in enumerate(b)]
-    out += ['    ]', '',
-            '    private static func rowsFor(_ mood: Mood) -> [String] {',
-            '        var r = base', '        switch mood {']
-    for name in ORDER:
-        out.append('        case .%s:' % name)
-        out += ['            r[%d] = "%s"' % (i, m[name][i])
-                for i in range(len(b)) if m[name][i] != b[i]]
-    out += ['        }', '        return r', '    }']
-    return "\n".join(out)
+    """One string literal per mood, parsed on the device.
+
+    A Swift array literal of a few hundred tuples is something the type
+    checker takes minutes over; one string it does not look at twice.
+    """
+    blocks = []
+    for mood in MOODS:
+        paths, grads = parse(mood)
+        rows = []
+        for d, fill, alpha in paths:
+            gid = re.match(r'url\(#(\w+)\)', fill)
+            if gid is None:
+                rows.append('S\t%s\t%s\t%s' % (argb(fill)[1:], fmt(alpha), d))
+            else:
+                x1, y1, x2, y2, stops = grads[gid.group(1)]
+                first, last = stops[0], stops[-1]
+                rows.append('G\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' % (
+                    argb(first[1], first[2])[1:], argb(last[1], last[2])[1:],
+                    fmt(x1), fmt(y1), fmt(x2), fmt(y2), fmt(alpha), d))
+        blocks.append((mood, '\n'.join(rows)))
+
+    out = ['import CoreGraphics', '',
+           '// Generated by tools/mochi.py from art/mochi/*.svg. Do not edit.',
+           '//',
+           '// One row per path: either',
+           '//   S <argb> <alpha> <path data>',
+           '// or',
+           '//   G <argb0> <argb1> <x1> <y1> <x2> <y2> <alpha> <path data>',
+           '// tab separated, one path per line. The path data is absolute M/L/C/Z,',
+           '// already registered, in a %s x %s viewport.' % (fmt(VIEW_W), fmt(VIEW_H)),
+           'enum MochiArt {', '',
+           '    static let viewWidth: CGFloat = %s' % fmt(VIEW_W),
+           '    static let viewHeight: CGFloat = %s' % fmt(VIEW_H), '']
+    for mood, body in blocks:
+        name = ''.join(p.capitalize() if i else p
+                       for i, p in enumerate(mood.split('_')))
+        out.append('    static let %s = """\n%s\n"""\n' % (name, body))
+    out.append('}')
+    return '\n'.join(out) + '\n'
 
 
-KOTLIN_MOOD = {'awake': 'AWAKE', 'pleased': 'PLEASED',
-               'resting': 'RESTING', 'letDown': 'LET_DOWN'}
-
-
-def kotlin():
-    b, m = trimmed()
-    out = ['    const val COLS = %d' % len(b[0]),
-           '    const val ROWS = %d' % len(b), '',
-           '    private val BASE = arrayOf(']
-    out += ['        "%s"%s' % (r, ',' if i < len(b) - 1 else '')
-            for i, r in enumerate(b)]
-    out += ['    )', '',
-            '    private fun rowsFor(mood: Mood): Array<String> {',
-            '        val r = BASE.copyOf()', '        when (mood) {']
-    for name in ORDER:
-        rows = [i for i in range(len(b)) if m[name][i] != b[i]]
-        out.append('            Mood.%s -> {' % KOTLIN_MOOD[name])
-        out += ['                r[%d] = "%s"' % (i, m[name][i]) for i in rows]
-        out.append('            }')
-    out += ['        }', '        return r', '    }']
-    return "\n".join(out)
+def targets():
+    t = {os.path.join(ROOT, 'app/src/main/res/drawable/mochi_%s.xml' % m): vector_drawable(m)
+         for m in MOODS}
+    t[os.path.join(ROOT, 'ios/Shared/MochiArt.swift')] = swift()
+    return t
 
 
 if __name__ == '__main__':
-    if '--swift' in sys.argv:
-        print(swift())
-    elif '--kotlin' in sys.argv:
-        print(kotlin())
-    elif '--png' in sys.argv:
-        b, m = trimmed()
-        png(sys.argv[sys.argv.index('--png') + 1], [m[n] for n in ORDER])
-    else:
-        _, m = trimmed()
-        for name in ORDER:
-            print(name)
-            for r in m[name]:
-                print("  " + "".join(CH.get(c, c) for c in r))
-            print()
+    check = '--check' in sys.argv
+    bad = []
+    for path, body in targets().items():
+        rel = os.path.relpath(path, ROOT)
+        # A branch may carry only one of the two platforms; write what is here
+        # rather than conjuring the other one's tree.
+        if not os.path.isdir(os.path.dirname(path)):
+            print('%s  skipped, no such directory' % rel)
+            continue
+        if check:
+            have = open(path).read() if os.path.exists(path) else None
+            if have != body:
+                bad.append(rel)
+            continue
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        open(path, 'w').write(body)
+        print('%s  %d bytes' % (rel, len(body)))
+    if check:
+        if bad:
+            print('stale, re-run tools/mochi.py: ' + ', '.join(bad))
+            sys.exit(1)
+        print('generated art is up to date')

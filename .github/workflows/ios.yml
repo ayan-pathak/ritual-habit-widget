@@ -10,10 +10,14 @@ on:
     branches: ['claude/**']
     paths:
       - 'ios/**'
+      - 'art/mochi/**'
+      - 'tools/mochi.py'
       - '.github/workflows/ios.yml'
   pull_request:
     paths:
       - 'ios/**'
+      - 'art/mochi/**'
+      - 'tools/mochi.py'
       - '.github/workflows/ios.yml'
 
 permissions:
@@ -24,6 +28,9 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
+
+      - name: Check the generated Mochi art matches art/mochi/*.svg
+        run: python3 tools/mochi.py --check
 
       - name: Toolchain
         run: |

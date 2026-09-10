@@ -7,69 +7,174 @@ enum Mood {
 }
 
 /**
- Mochi, four drawn portraits.
+ Mochi, four drawn portraits, as vectors.
 
- The four moods are one illustration with a different face, exported at a
- single registration: the head sits on the same pixels in every one, so the
- silhouette never shifts and he never looks redrawn between moods. That was
- the rule when he was a 20x18 grid and it is still the rule now.
+ The four moods are one drawing with a different face. They come off a 2x2
+ sheet, and `tools/mochi.py` windows each quadrant out of it and registers
+ them against each other, so the head sits on the same coordinates in every
+ mood: the silhouette never shifts and he never looks redrawn between them.
+ That was the rule when he was a 20x18 grid and it is still the rule.
 
- The art lives once, in the Android resources, and `bootstrap.sh` stages it
- into `Resources/` — the same arrangement Archivo has, and for the same
- reason: a second byte-identical copy is a copy that can drift. Both this
- target and the widget extension get their own bundle copy at build time.
+ The paths live in `MochiArt.swift`, generated from `art/mochi/*.svg` by that
+ same script — so the shapes iOS draws and the shapes Android draws come out
+ of one conversion and cannot drift.
 
- They are bitmaps rather than a vector because of the Android side of the
- port: a widget there can only be handed a `Bitmap`, so the app and the widget
- can only draw the same pixels if the source *is* pixels. Keeping iOS on the
- same four files is what keeps the two platforms from drifting.
+ They are replayed rather than rasterised because he is drawn at sizes an
+ order of magnitude apart — 30pt in the widget header, 176px on the story
+ card — and a raster picked for one is wrong for the other.
  */
 enum Cat {
 
-    /// The exported art, in pixels. Every mood is this size and registered alike.
-    static let artWidth: CGFloat = 480
-    static let artHeight: CGFloat = 496
-
     /// Width over height, so a caller can size him from either one.
-    static let aspect = artWidth / artHeight
+    static let aspect = MochiArt.viewWidth / MochiArt.viewHeight
 
     /// Width Mochi occupies when he is drawn `height` tall.
     static func widthFor(_ height: CGFloat) -> CGFloat { height * aspect }
 
-    private static var cache: [String: UIImage] = [:]
+    // ── The art, parsed once ────────────────────────────────────────────────
 
-    private static func name(_ mood: Mood) -> String {
+    private struct Item {
+        let path: CGPath
+        let alpha: CGFloat
+        let solid: CGColor?
+        let gradient: CGGradient?
+        let start: CGPoint
+        let end: CGPoint
+    }
+
+    private static var cache: [String: [Item]] = [:]
+    private static let space = CGColorSpaceCreateDeviceRGB()
+
+    private static func color(_ hex: Substring) -> CGColor {
+        let v = UInt32(hex, radix: 16) ?? 0
+        return CGColor(colorSpace: space, components: [
+            CGFloat((v >> 16) & 0xFF) / 255, CGFloat((v >> 8) & 0xFF) / 255,
+            CGFloat(v & 0xFF) / 255, CGFloat((v >> 24) & 0xFF) / 255
+        ])!
+    }
+
+    private static func source(_ mood: Mood) -> (String, String) {
         switch mood {
-        case .awake: return "mochi_awake"
-        case .pleased: return "mochi_pleased"
-        case .resting: return "mochi_resting"
-        case .letDown: return "mochi_let_down"
+        case .awake: return ("awake", MochiArt.awake)
+        case .pleased: return ("pleased", MochiArt.pleased)
+        case .resting: return ("resting", MochiArt.resting)
+        case .letDown: return ("letDown", MochiArt.letDown)
         }
     }
 
-    /// The portrait for a mood, or nil if it did not ship — never a crash.
-    static func image(_ mood: Mood) -> UIImage? {
-        let key = name(mood)
+    private static func items(_ mood: Mood) -> [Item] {
+        let (key, body) = source(mood)
         if let hit = cache[key] { return hit }
-        guard let img = UIImage(named: key) else { return nil }
-        cache[key] = img
-        return img
+        var out: [Item] = []
+        for line in body.split(separator: "\n", omittingEmptySubsequences: true) {
+            let f = line.split(separator: "\t", omittingEmptySubsequences: false)
+            guard let kind = f.first else { continue }
+            if kind == "S", f.count >= 4 {
+                out.append(Item(path: parse(f[3]), alpha: CGFloat(Double(f[2]) ?? 1),
+                                solid: color(f[1]), gradient: nil,
+                                start: .zero, end: .zero))
+            } else if kind == "G", f.count >= 9 {
+                let stops = [color(f[1]), color(f[2])] as CFArray
+                out.append(Item(
+                    path: parse(f[8]),
+                    alpha: CGFloat(Double(f[7]) ?? 1),
+                    solid: nil,
+                    gradient: CGGradient(colorsSpace: space, colors: stops, locations: [0, 1]),
+                    start: CGPoint(x: Double(f[3]) ?? 0, y: Double(f[4]) ?? 0),
+                    end: CGPoint(x: Double(f[5]) ?? 0, y: Double(f[6]) ?? 0)))
+            }
+        }
+        cache[key] = out
+        return out
     }
 
     /**
+     Absolute `M`/`L`/`C`/`Z` only, which is all the converter ever emits.
+     Scanned over UTF-8 rather than through `String.Index`, because this runs
+     over tens of thousands of numbers the first time a mood is drawn.
+     */
+    private static func parse(_ d: Substring) -> CGPath {
+        let path = CGMutablePath()
+        let b = Array(d.utf8)
+        var i = 0
+        var start = CGPoint.zero
+        var pen = CGPoint.zero
+
+        func number() -> CGFloat {
+            while i < b.count, b[i] == 0x20 || b[i] == 0x2C { i += 1 }   // space, comma
+            var sign: Double = 1
+            if i < b.count, b[i] == 0x2D { sign = -1; i += 1 }           // '-'
+            var whole: Double = 0
+            while i < b.count, b[i] >= 0x30, b[i] <= 0x39 {
+                whole = whole * 10 + Double(b[i] - 0x30); i += 1
+            }
+            if i < b.count, b[i] == 0x2E {                               // '.'
+                i += 1
+                var scale = 0.1
+                while i < b.count, b[i] >= 0x30, b[i] <= 0x39 {
+                    whole += Double(b[i] - 0x30) * scale
+                    scale /= 10
+                    i += 1
+                }
+            }
+            return CGFloat(sign * whole)
+        }
+
+        while i < b.count {
+            switch b[i] {
+            case 0x4D:                                                   // 'M'
+                i += 1
+                pen = CGPoint(x: number(), y: number())
+                start = pen
+                path.move(to: pen)
+            case 0x4C:                                                   // 'L'
+                i += 1
+                pen = CGPoint(x: number(), y: number())
+                path.addLine(to: pen)
+            case 0x43:                                                   // 'C'
+                i += 1
+                let c1 = CGPoint(x: number(), y: number())
+                let c2 = CGPoint(x: number(), y: number())
+                pen = CGPoint(x: number(), y: number())
+                path.addCurve(to: pen, control1: c1, control2: c2)
+            case 0x5A, 0x7A:                                             // 'Z', 'z'
+                i += 1
+                path.closeSubpath()
+                pen = start
+            default:
+                i += 1
+            }
+        }
+        return path.copy()!
+    }
+
+    // ── Drawing ─────────────────────────────────────────────────────────────
+
+    /**
      Draws Mochi into the box whose top-left is (`left`, `top`) and whose
-     height is `height`.
+     height is `height`. The art's own coordinates are y-down, as a UIKit
+     context is, so the whole thing is drawn under one transform and no flip.
      */
     static func draw(in ctx: CGContext, left: CGFloat, top: CGFloat, height: CGFloat, mood: Mood) {
-        guard let cg = image(mood)?.cgImage else { return }
-        let rect = CGRect(x: left, y: top, width: widthFor(height), height: height)
-        // The context is y-down here, as CoreGraphics images are not, so flip
-        // about the rect rather than drawing him upside down.
         ctx.saveGState()
-        ctx.translateBy(x: 0, y: rect.midY)
-        ctx.scaleBy(x: 1, y: -1)
-        ctx.translateBy(x: 0, y: -rect.midY)
-        ctx.draw(cg, in: rect)
+        ctx.translateBy(x: left, y: top)
+        ctx.scaleBy(x: widthFor(height) / MochiArt.viewWidth, y: height / MochiArt.viewHeight)
+        for item in items(mood) {
+            ctx.saveGState()
+            if item.alpha < 1 { ctx.setAlpha(item.alpha) }
+            if let solid = item.solid {
+                ctx.addPath(item.path)
+                ctx.setFillColor(solid)
+                ctx.fillPath()
+            } else if let gradient = item.gradient {
+                ctx.addPath(item.path)
+                ctx.clip()
+                ctx.drawLinearGradient(gradient, start: item.start, end: item.end,
+                                       options: [.drawsBeforeStartLocation,
+                                                 .drawsAfterEndLocation])
+            }
+            ctx.restoreGState()
+        }
         ctx.restoreGState()
     }
 

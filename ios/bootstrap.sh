@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# Puts the assets both platforms share where the Xcode targets expect them.
+# Puts the one Archivo we ship where the Xcode targets expect it.
 #
-# Archivo and the four Mochi portraits live once in the repository, under the
-# Android resources, and both platforms use those exact bytes — copying them
-# in beats carrying a second byte-identical copy that can drift.
+# The font lives once in the repository, under the Android resources, and both
+# platforms pin the same variable TTF — copying it in beats carrying a second
+# byte-identical copy that can drift.
+#
+# Mochi needs nothing here: his paths are generated straight into
+# Shared/MochiArt.swift by tools/mochi.py and compile in like any other source.
 set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 mkdir -p "$here/Resources"
 cp "$here/../app/src/main/res/font/archivo.ttf" "$here/Resources/Archivo.ttf"
-for mood in awake pleased resting let_down; do
-  cp "$here/../app/src/main/res/drawable-nodpi/mochi_$mood.png" "$here/Resources/mochi_$mood.png"
-done
-echo "Archivo.ttf and the four Mochi portraits staged in ios/Resources"
+echo "Archivo.ttf staged in ios/Resources"
