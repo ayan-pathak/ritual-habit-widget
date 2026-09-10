@@ -196,37 +196,3 @@ fun AccountScreen(onBack: () -> Unit) {
         Spacer(Modifier.navigationBarsPadding())
     }
 }
-
-@Composable
-private fun Field(
-    value: String,
-    onValueChange: (String) -> Unit,
-    placeholder: String,
-    keyboard: KeyboardOptions,
-    secret: Boolean = false
-) {
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(Paper)
-            .padding(horizontal = 18.dp, vertical = 16.dp)
-    ) {
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            singleLine = true,
-            textStyle = Body.copy(fontSize = 16.sp, color = Ink),
-            cursorBrush = SolidColor(Ink),
-            keyboardOptions = keyboard,
-            visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
-            modifier = Modifier.fillMaxWidth(),
-            decorationBox = { inner ->
-                if (value.isEmpty()) {
-                    Text(placeholder, style = Body.copy(fontSize = 16.sp, color = InkFaint))
-                }
-                inner()
-            }
-        )
-    }
-}

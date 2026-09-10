@@ -38,6 +38,11 @@ import com.ayan.ritual.render.Cat
 import com.ayan.ritual.render.Mood
 import com.ayan.ritual.render.SlabModel
 import com.ayan.ritual.render.SlabRenderer
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 
 /**
  * A rendered card, sized to its box. The bitmap is cached against the model so
@@ -230,5 +235,43 @@ fun ColourTiles(
                     )
             )
         }
+    }
+}
+
+/**
+ * The one text field in the app. Paper on cream, no outline, and no label
+ * inside it — the caps label above does that job.
+ */
+@Composable
+fun Field(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    keyboard: KeyboardOptions,
+    secret: Boolean = false
+) {
+    Box(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(18.dp))
+            .background(Paper)
+            .padding(horizontal = 18.dp, vertical = 16.dp)
+    ) {
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            singleLine = true,
+            textStyle = Body.copy(fontSize = 16.sp, color = Ink),
+            cursorBrush = SolidColor(Ink),
+            keyboardOptions = keyboard,
+            visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
+            modifier = Modifier.fillMaxWidth(),
+            decorationBox = { inner ->
+                if (value.isEmpty()) {
+                    Text(placeholder, style = Body.copy(fontSize = 16.sp, color = InkFaint))
+                }
+                inner()
+            }
+        )
     }
 }

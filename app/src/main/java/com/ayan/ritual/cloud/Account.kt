@@ -31,6 +31,16 @@ object Account {
 
     val signedIn: Boolean get() = _uid.value != null
 
+    /**
+     * Whether there is a Firebase project to sign in to at all.
+     *
+     * `google-services.json` is per-installation configuration and is not in
+     * the repository, so a build made without one has no auth to offer. That
+     * build must still be a working app — so callers ask this before putting
+     * a sign-in step in anybody's way.
+     */
+    val available: Boolean get() = auth != null
+
     private var auth: FirebaseAuth? = null
     private var listening = false
 
