@@ -1,45 +1,43 @@
 package com.ayan.ritual.render
 
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.RectF
+import android.graphics.drawable.Drawable
+import androidx.core.content.res.ResourcesCompat
 import com.ayan.ritual.R
+import kotlin.math.roundToInt
 
 /** What Mochi is doing, derived from the streak — never chosen for decoration. */
 enum class Mood { AWAKE, PLEASED, RESTING, LET_DOWN }
 
 /**
- * Mochi, four drawn portraits.
+ * Mochi, four drawn portraits, as vectors.
  *
- * The four moods are one illustration with a different face, exported at a
- * single registration: the head sits on the same pixels in every one, so the
- * silhouette never shifts and he never looks redrawn between moods. That was
- * the rule when he was a 20x18 grid and it is still the rule now.
+ * The four moods are one drawing with a different face. They come off a 2x2
+ * sheet, and `tools/mochi.py` windows each quadrant out of it and registers
+ * them against each other, so the head sits on the same coordinates in every
+ * mood: the silhouette never shifts and he never looks redrawn between them.
+ * That was the rule when he was a 20x18 grid and it is still the rule.
  *
- * They ship as bitmaps rather than as a vector, and the reason is the
- * architectural one: the widget can only be handed a `Bitmap` through
- * `RemoteViews.setImageViewBitmap`, so the app and the widget can only draw
- * the same pixels if the source *is* pixels. One PNG per mood, drawn into
- * whatever Canvas asks for it, is the same art on both surfaces by
- * construction — and the same art iOS draws, from the same four files.
+ * They are `VectorDrawable`s rather than PNGs because he is drawn at sizes an
+ * order of magnitude apart — 30dp in the widget header, 176px on the story
+ * card — and a raster picked for one is wrong for the other. A vector is
+ * resolved at whatever size the Canvas asks for, so the widget bitmap and the
+ * share card are both drawn at their own full resolution.
  *
  * [load] must run before [draw], like [Fonts.load] — the widget receiver can
  * start the process cold.
  */
 object Cat {
 
-    /** The exported art, in pixels. Every mood is this size and registered alike. */
-    const val ART_W = 480
-    const val ART_H = 496
+    /** The viewport the art was generated in. Only its ratio matters here. */
+    private const val VIEW_W = 883.12f
+    private const val VIEW_H = 913.06f
 
     /** Width over height, so a caller can size him from either one. */
-    const val ASPECT = ART_W.toFloat() / ART_H.toFloat()
+    const val ASPECT = VIEW_W / VIEW_H
 
-    private val paint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
-    private val cache = HashMap<Mood, Bitmap>(4)
+    private val cache = HashMap<Mood, Drawable>(4)
     private var app: Context? = null
 
     fun load(context: Context) {
@@ -51,19 +49,18 @@ object Cat {
 
     /**
      * Draws Mochi into the box whose top-left is ([left], [top]) and whose
-     * height is [height]. A missing bitmap draws nothing rather than taking
-     * the widget down with it.
+     * height is [height]. A drawable that failed to load draws nothing rather
+     * than taking the widget down with it.
      */
     fun draw(canvas: Canvas, left: Float, top: Float, height: Float, mood: Mood) {
-        val bmp = bitmap(mood) ?: return
-        canvas.drawBitmap(
-            bmp, null,
-            RectF(left, top, left + widthFor(height), top + height),
-            paint
-        )
+        val art = drawable(mood) ?: return
+        val l = left.roundToInt()
+        val t = top.roundToInt()
+        art.setBounds(l, t, l + widthFor(height).roundToInt(), t + height.roundToInt())
+        art.draw(canvas)
     }
 
-    private fun bitmap(mood: Mood): Bitmap? {
+    private fun drawable(mood: Mood): Drawable? {
         cache[mood]?.let { return it }
         val res = app?.resources ?: return null
         val id = when (mood) {
@@ -72,9 +69,13 @@ object Cat {
             Mood.RESTING -> R.drawable.mochi_resting
             Mood.LET_DOWN -> R.drawable.mochi_let_down
         }
-        val bmp = runCatching { BitmapFactory.decodeResource(res, id) }.getOrNull() ?: return null
-        cache[mood] = bmp
-        return bmp
+        val art = runCatching { ResourcesCompat.getDrawable(res, id, null) }.getOrNull()
+            ?: return null
+        // Each mood is drawn at several sizes; without this they would share
+        // one Drawable state and fight over the bounds.
+        val own = art.mutate()
+        cache[mood] = own
+        return own
     }
 
     /** The mood the app should show given today's state and the running streak. */

@@ -40,9 +40,11 @@ Type is **Archivo** — one variable TTF in `res/font/`, pinned to weights 500/6
 
 ## Mochi
 
-`render/Cat.kt`. Four drawn portraits — one illustration with a different face — in `res/drawable-nodpi/mochi_*.png`. They are exported at a single registration, so **the head sits on the same pixels in every mood** and the silhouette never shifts. That was the rule when he was a 20×18 grid and it is still the rule.
+`render/Cat.kt`. Four drawn portraits — one drawing with a different face — as `VectorDrawable`s in `res/drawable/mochi_*.xml`.
 
-They are bitmaps rather than a vector for the architectural reason: the widget can only be handed a `Bitmap` through `RemoteViews.setImageViewBitmap`, so the app and the widget can only draw the same pixels if the source *is* pixels. iOS ships the same four files.
+`art/mochi/*.svg` is the source, and `tools/mochi.py` converts it. The four SVGs are one 2×2 sheet: identical geometry, differing only in the `viewBox` that windows onto a quadrant. The converter windows each quadrant out, drops the paths that fall outside it, and registers the four against each other, so **the head sits on the same coordinates in every mood** and the silhouette never shifts. `--check` re-emits and compares, which is what CI runs. Edit the SVGs and regenerate; never hand-edit the XML.
+
+They are vectors rather than PNGs because he is drawn at sizes an order of magnitude apart — 30dp in the widget header, 176px on the story card — and a raster picked for one is wrong for the other.
 
 `Cat.load(context)` must run before `Cat.draw`, for the same reason `Fonts.load` does. Size him by height — `Cat.draw(canvas, left, top, height, mood)` — and `Cat.widthFor` gives the rest.
 
