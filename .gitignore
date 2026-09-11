@@ -23,3 +23,6 @@ design2/*.html
 # Bytecode cache from tools/mochi.py
 __pycache__/
 google-services.json
+
+# The Play upload key, when CI writes it from a secret. Never checked in.
+keystore/upload.jks

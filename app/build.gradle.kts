@@ -19,8 +19,10 @@ android {
         applicationId = "com.ayan.ritual"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // Play rejects a second upload at the same versionCode, so CI passes
+        // its run number in. A local build has no reason to care.
+        versionCode = (findProperty("ritualVersionCode") as String?)?.toInt() ?: 1
+        versionName = (findProperty("ritualVersionName") as String?) ?: "1.0"
     }
 
     // Google Sign-In matches on package name plus signing fingerprint, and a
@@ -38,6 +40,22 @@ android {
             keyAlias = "ritual"
             keyPassword = "ritualdev"
         }
+
+        // The key Play is told to trust for uploads. It cannot be the dev key:
+        // that one is in a public repository, so anyone could sign an artifact
+        // with it. CI writes this out of a secret and it never lands on disk
+        // anywhere else. Without the secret there is no such config, and the
+        // bundle falls back to the dev key — fine for a first look at the
+        // billing flow, not fine for anything that stays.
+        val uploadStore = rootProject.file("keystore/upload.jks")
+        if (uploadStore.exists()) {
+            create("upload") {
+                storeFile = uploadStore
+                storePassword = System.getenv("UPLOAD_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("UPLOAD_KEY_ALIAS") ?: "upload"
+                keyPassword = System.getenv("UPLOAD_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
@@ -46,7 +64,8 @@ android {
         }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("dev")
+            signingConfig = signingConfigs.findByName("upload")
+                ?: signingConfigs.getByName("dev")
         }
     }
 
