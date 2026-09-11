@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ayan.ritual.billing.Unlock
 import com.ayan.ritual.data.Habit
 import com.ayan.ritual.render.ACCENTS
 import com.ayan.ritual.render.Cat
@@ -41,8 +43,14 @@ import java.time.Year
 fun HomeScreen(
     habits: List<Habit>,
     onOpen: (Habit) -> Unit,
-    onCreate: () -> Unit
+    onCreate: () -> Unit,
+    onPaywall: () -> Unit = {},
+    onAccount: () -> Unit = {}
 ) {
+    val unlocked by Unlock.unlockedState
+    val canCreate = unlocked || habits.size < Unlock.FREE_LIMIT
+    val startRitual = { if (canCreate) onCreate() else onPaywall() }
+
     val today = LocalDate.now()
     val year = today.year
     val yearLen = Year.of(year).length()
@@ -75,9 +83,12 @@ fun HomeScreen(
                 MochiTile(
                     mood = headerMood,
                     tile = if (allDone) Lime else Paper,
-                    pixel = 1.5.dp,
+                    height = 24.dp,
                     corner = 999.dp,
-                    inset = 7.dp
+                    inset = 7.dp,
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(999.dp))
+                        .clickable(onClick = onAccount)
                 )
             }
         }
@@ -122,8 +133,8 @@ fun HomeScreen(
                         .padding(start = 20.dp, end = 20.dp, top = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
-                    InkPill("New ritual", onCreate, Modifier.weight(1f))
-                    RoundButton(onClick = onCreate) {
+                    InkPill("New ritual", startRitual, Modifier.weight(1f))
+                    RoundButton(onClick = startRitual) {
                         androidx.compose.foundation.Canvas(Modifier.size(20.dp)) {
                             val s = size.width * 0.3f
                             val g = size.width * 0.14f
@@ -139,6 +150,16 @@ fun HomeScreen(
                             }
                         }
                     }
+                }
+                if (!canCreate) {
+                    Text(
+                        "One ritual is free. Unlock the rest for ${Unlock.price ?: "$4.99"}, once.",
+                        style = Body.copy(fontSize = 12.sp, color = InkFaint),
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp)
+                    )
                 }
                 Spacer(Modifier.height(12.dp))
                 Spacer(Modifier.navigationBarsPadding())
@@ -161,7 +182,7 @@ private fun EmptyState(onCreate: () -> Unit) {
                 Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                MochiTile(Mood.AWAKE, Paper, pixel = 4.dp, corner = 18.dp, inset = 14.dp)
+                MochiTile(Mood.AWAKE, Paper, height = 64.dp, corner = 18.dp, inset = 14.dp)
                 Spacer(Modifier.height(20.dp))
                 Text(
                     "Nothing to keep yet.",

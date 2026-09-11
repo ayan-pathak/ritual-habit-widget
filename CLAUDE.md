@@ -40,7 +40,13 @@ Type is **Archivo** — one variable TTF in `res/font/`, pinned to weights 500/6
 
 ## Mochi
 
-`render/Cat.kt`. A 20×18 bitmap where **only the eye and mouth rows change between moods** — the silhouette never shifts, which is what keeps a pixel mascot from looking redrawn each time.
+`render/Cat.kt`. Four drawn portraits — one drawing with a different face — as `VectorDrawable`s in `res/drawable/mochi_*.xml`.
+
+`art/mochi/*.svg` is the source, and `tools/mochi.py` converts it. The four SVGs are one 2×2 sheet: identical geometry, differing only in the `viewBox` that windows onto a quadrant. The converter windows each quadrant out, drops the paths that fall outside it, and registers the four against each other, so **the head sits on the same coordinates in every mood** and the silhouette never shifts. `--check` re-emits and compares, which is what CI runs. Edit the SVGs and regenerate; never hand-edit the XML.
+
+They are vectors rather than PNGs because he is drawn at sizes an order of magnitude apart — 30dp in the widget header, 176px on the story card — and a raster picked for one is wrong for the other.
+
+`Cat.load(context)` must run before `Cat.draw`, for the same reason `Fonts.load` does. Size him by height — `Cat.draw(canvas, left, top, height, mood)` — and `Cat.widthFor` gives the rest.
 
 His mood is derived from streak state (`Cat.moodFor`), never chosen for decoration: awake when today is unmarked, pleased once marked, let down the morning after a break.
 

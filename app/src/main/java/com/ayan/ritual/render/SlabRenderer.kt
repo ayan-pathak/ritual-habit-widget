@@ -118,9 +118,8 @@ object SlabRenderer {
             var textRight = w - pad
 
             if (cfg.cat) {
-                val px = dp(1.9f)
-                val catW = Cat.widthFor(px)
-                val catH = Cat.heightFor(px)
+                val catH = dp(30f)
+                val catW = Cat.widthFor(catH)
                 val boxW = catW + dp(11f)
                 val boxH = catH + dp(9f)
                 val boxL = w - pad - boxW
@@ -131,7 +130,7 @@ object SlabRenderer {
                     canvas,
                     box.centerX() - catW / 2f,
                     box.centerY() - catH / 2f,
-                    px,
+                    catH,
                     model.mood
                 )
                 textRight = boxL - dp(10f)

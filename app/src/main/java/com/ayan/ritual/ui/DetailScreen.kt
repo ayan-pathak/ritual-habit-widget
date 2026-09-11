@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.data.Habit
+import com.ayan.ritual.cloud.CloudSync
 import com.ayan.ritual.data.HabitStore
 import com.ayan.ritual.render.MONTH_INITIALS
 import com.ayan.ritual.render.accentAt
@@ -102,7 +103,7 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
             MochiTile(
                 mood = model.mood,
                 tile = Color(accent.block),
-                pixel = 3.dp,
+                height = 48.dp,
                 corner = 18.dp,
                 inset = 11.dp
             )
@@ -236,6 +237,7 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
                 InkPill(
                     label = "Delete forever",
                     onClick = {
+                        CloudSync.markDeleted(habit.id)
                         HabitStore.delete(context, habit.id)
                         RitualWidgetProvider.refreshAll(context)
                         onBack()

@@ -1,110 +1,81 @@
 package com.ayan.ritual.render
 
+import android.content.Context
 import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.RectF
+import android.graphics.drawable.Drawable
+import androidx.core.content.res.ResourcesCompat
+import com.ayan.ritual.R
+import kotlin.math.roundToInt
 
 /** What Mochi is doing, derived from the streak — never chosen for decoration. */
 enum class Mood { AWAKE, PLEASED, RESTING, LET_DOWN }
 
 /**
- * Mochi, a 20x18 bitmap.
+ * Mochi, four drawn portraits, as vectors.
  *
- * Only the eye and mouth rows change between moods, so the silhouette never
- * shifts — that is what keeps a pixel mascot from looking redrawn each time.
+ * The four moods are one drawing with a different face. They come off a 2x2
+ * sheet, and `tools/mochi.py` windows each quadrant out of it and registers
+ * them against each other, so the head sits on the same coordinates in every
+ * mood: the silhouette never shifts and he never looks redrawn between them.
+ * That was the rule when he was a 20x18 grid and it is still the rule.
+ *
+ * They are `VectorDrawable`s rather than PNGs because he is drawn at sizes an
+ * order of magnitude apart — 30dp in the widget header, 176px on the story
+ * card — and a raster picked for one is wrong for the other. A vector is
+ * resolved at whatever size the Canvas asks for, so the widget bitmap and the
+ * share card are both drawn at their own full resolution.
+ *
+ * [load] must run before [draw], like [Fonts.load] — the widget receiver can
+ * start the process cold.
  */
 object Cat {
 
-    const val COLS = 20
-    const val ROWS = 18
+    /** The viewport the art was generated in. Only its ratio matters here. */
+    private const val VIEW_W = 883.12f
+    private const val VIEW_H = 913.06f
 
-    private val BASE = arrayOf(
-        "....KK........KK....",
-        "...KDGK......KGDK...",
-        "...KGPK......KPGK...",
-        "..KGGPGKKKKKKGPGGK..",
-        "..KGGGGGGGGGGGGGGK..",
-        ".KGGGGGGGGGGGGGGGGK.",
-        ".KGGGGGGGGGGGGGGGGK.",
-        ".KGEEEGGGGGGGGEEEGK.",
-        ".KGEBEGGGGGGGGEBEGK.",
-        ".KGEEEGGGGGGGGEEEGK.",
-        ".KGGGGGGGPPGGGGGGGK.",
-        ".KGGGGGGKPPKGGGGGGK.",
-        "..KGGGGGGKKGGGGGGK..",
-        "..KKGGGGGGGGGGGGKK..",
-        "....KGGGGGGGGGGK....",
-        "....KGGGGGGGGGGK....",
-        "....KGGGGGGGGGGK....",
-        "....KKKKKKKKKKKK...."
-    )
+    /** Width over height, so a caller can size him from either one. */
+    const val ASPECT = VIEW_W / VIEW_H
 
-    private fun rowsFor(mood: Mood): Array<String> {
-        val r = BASE.copyOf()
-        when (mood) {
-            Mood.AWAKE -> Unit
-            Mood.PLEASED -> {
-                r[7] = ".KGGKGGGGGGGGGGKGGK."
-                r[8] = ".KGKGKGGGGGGGGKGKGK."
-                r[9] = ".KGGGGGGGGGGGGGGGGK."
-                r[11] = ".KGGGGGKKPPKKGGGGGK."
-            }
-            Mood.RESTING -> {
-                r[7] = ".KGGGGGGGGGGGGGGGGK."
-                r[8] = ".KGKKKGGGGGGGGKKKGK."
-                r[9] = ".KGGGGGGGGGGGGGGGGK."
-            }
-            Mood.LET_DOWN -> {
-                r[7] = ".KGKGKGGGGGGGGKGKGK."
-                r[8] = ".KGGKGGGGGGGGGGKGGK."
-                r[9] = ".KGGGGGGGGGGGGGGGGK."
-                r[12] = "..KGGGGKGGGGKGGGGK.."
-            }
-        }
-        return r
+    private val cache = HashMap<Mood, Drawable>(4)
+    private var app: Context? = null
+
+    fun load(context: Context) {
+        app = context.applicationContext
     }
 
-    private fun colorOf(ch: Char): Int = when (ch) {
-        'K' -> 0xFF12120F.toInt()   // outline
-        'D' -> 0xFF56564E.toInt()   // ear shadow
-        'G' -> 0xFF8A8A80.toInt()   // coat
-        'P' -> 0xFFE0A3A3.toInt()   // ear pink, nose
-        'E' -> 0xFFCFE85F.toInt()   // eye — carries the brand colour
-        'B' -> 0xFF12120F.toInt()   // pupil
-        else -> 0
-    }
-
-    /** Width this cat occupies when each pixel is [px] wide. */
-    fun widthFor(px: Float) = COLS * px
-
-    /** Height this cat occupies when each pixel is [px] wide. */
-    fun heightFor(px: Float) = ROWS * px
+    /** Width Mochi occupies when he is drawn [height] tall. */
+    fun widthFor(height: Float) = height * ASPECT
 
     /**
-     * Draws Mochi with his top-left at [left], [top], one bitmap pixel per
-     * [px] device pixels. Pixels are drawn a hair oversized so no seams show
-     * between them at fractional scales.
+     * Draws Mochi into the box whose top-left is ([left], [top]) and whose
+     * height is [height]. A drawable that failed to load draws nothing rather
+     * than taking the widget down with it.
      */
-    fun draw(canvas: Canvas, left: Float, top: Float, px: Float, mood: Mood) {
-        val paint = Paint()
-        val bleed = 0.5f
-        val rows = rowsFor(mood)
-        val rect = RectF()
-        for (y in 0 until ROWS) {
-            val row = rows[y]
-            for (x in 0 until COLS) {
-                val c = colorOf(row[x])
-                if (c == 0) continue
-                paint.color = c
-                rect.set(
-                    left + x * px,
-                    top + y * px,
-                    left + x * px + px + bleed,
-                    top + y * px + px + bleed
-                )
-                canvas.drawRect(rect, paint)
-            }
+    fun draw(canvas: Canvas, left: Float, top: Float, height: Float, mood: Mood) {
+        val art = drawable(mood) ?: return
+        val l = left.roundToInt()
+        val t = top.roundToInt()
+        art.setBounds(l, t, l + widthFor(height).roundToInt(), t + height.roundToInt())
+        art.draw(canvas)
+    }
+
+    private fun drawable(mood: Mood): Drawable? {
+        cache[mood]?.let { return it }
+        val res = app?.resources ?: return null
+        val id = when (mood) {
+            Mood.AWAKE -> R.drawable.mochi_awake
+            Mood.PLEASED -> R.drawable.mochi_pleased
+            Mood.RESTING -> R.drawable.mochi_resting
+            Mood.LET_DOWN -> R.drawable.mochi_let_down
         }
+        val art = runCatching { ResourcesCompat.getDrawable(res, id, null) }.getOrNull()
+            ?: return null
+        // Each mood is drawn at several sizes; without this they would share
+        // one Drawable state and fight over the bounds.
+        val own = art.mutate()
+        cache[mood] = own
+        return own
     }
 
     /** The mood the app should show given today's state and the running streak. */

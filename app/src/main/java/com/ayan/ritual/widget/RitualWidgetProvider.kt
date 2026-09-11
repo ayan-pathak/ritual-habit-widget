@@ -84,6 +84,7 @@ class RitualWidgetProvider : AppWidgetProvider() {
         fun render(context: Context, manager: AppWidgetManager, widgetId: Int) {
             HabitStore.ensureLoaded(context)
             Fonts.load(context)
+            Cat.load(context)
             val habit = HabitStore.habitForWidget(context, widgetId)
             val views = RemoteViews(context.packageName, R.layout.widget_ritual)
 
