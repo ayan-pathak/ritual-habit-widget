@@ -52,6 +52,14 @@ They are vectors rather than PNGs because he is drawn at sizes an order of magni
 
 His mood is derived from streak state (`Cat.moodFor`), never chosen for decoration: awake when today is unmarked, pleased once marked, let down the morning after a break.
 
+### Motion
+
+`render/MochiMotion.kt` is the beat table and a clock, with no Compose and no `android.graphics` in it, so iOS can run the same timings against its own drawing. `MochiTile` advances it once a frame and moves a rasterised mood rather than redrawing seventy-five paths.
+
+There is no rig and there will not be one without new art: nine of the paths carry head and chest as a single outline, so a head turn or an independent ear flick is not available. What is available is the whole portrait as one body, scaled from the bottom centre so a squash presses him onto the tile instead of shrinking him toward the middle of it.
+
+A beat answers a change of state, exactly as the face does. `MochiTile` picks it from the mood it is handed: `MARK` when it turns pleased, `MISS` when it turns let down, `SETTLE` otherwise, and never on the first composition, so opening a screen does not start him hopping. `UNLOCK` is the one beat no mood implies, so the paywall passes its own `MochiMotion` and plays it. Breathing and blinking run underneath all of it, and stop when the device has animations turned off.
+
 ## Sharing
 
 `share/StoryShare.kt` renders a 1080×1920 card (`render/ShareCardRenderer.kt`) and hands it to Instagram's `ADD_TO_STORY` intent, falling back to the system share sheet when Instagram is absent or too old. Files go through a `FileProvider` rooted at `cacheDir/share`, cleared on every share.

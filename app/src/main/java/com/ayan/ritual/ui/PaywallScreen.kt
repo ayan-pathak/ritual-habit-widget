@@ -22,7 +22,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,6 +35,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.billing.Unlock
+import com.ayan.ritual.render.Beat
+import com.ayan.ritual.render.MochiMotion
+import kotlinx.coroutines.delay
 import com.ayan.ritual.render.Mood
 
 private val INCLUDED = listOf(
@@ -41,6 +46,9 @@ private val INCLUDED = listOf(
     "Every year you have kept, in the archive",
     "Story cards without a watermark"
 )
+
+/** Long enough for the two bounces of [Beat.UNLOCK] to finish. */
+private const val UNLOCK_HOLD_MS = 900L
 
 /**
  * The wall, and the only one in the app.
@@ -55,7 +63,16 @@ fun PaywallScreen(onClose: () -> Unit) {
     val unlocked by Unlock.unlockedState
     val price = Unlock.price ?: "$4.99"
 
-    if (unlocked) onClose()
+    // The purchase lands and Mochi answers it before the screen goes: closing
+    // on the same frame the money clears is the one moment worth holding.
+    val mochi = remember { MochiMotion(Mood.PLEASED) }
+    LaunchedEffect(unlocked) {
+        if (unlocked) {
+            mochi.play(Beat.UNLOCK, Mood.PLEASED)
+            delay(UNLOCK_HOLD_MS)
+            onClose()
+        }
+    }
 
     Column(
         Modifier
@@ -88,7 +105,7 @@ fun PaywallScreen(onClose: () -> Unit) {
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            MochiTile(Mood.PLEASED, Paper, height = 64.dp, corner = 18.dp, inset = 14.dp)
+            MochiTile(Mood.PLEASED, Paper, height = 64.dp, corner = 18.dp, inset = 14.dp, motion = mochi)
             Spacer(Modifier.height(18.dp))
             Text(
                 "Keep more than one.",
