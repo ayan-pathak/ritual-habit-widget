@@ -85,6 +85,12 @@ val InkFaint: Color get() = Look.ink.copy(alpha = 0.20f)
 val Lime = Color(0xFFC9F73F)
 val Red = Color(0xFFE5331C)
 
+// What goes on a fixed colour. A Lime card is the same Lime in both themes,
+// so anything printed on it has to be the ink that was chosen against Lime —
+// following [Ink] would put cream type on a highlighter in dark mode.
+val OnLime = Color(0xFF12120F)
+val OnLimeSoft = Color(0xB312120F)
+
 val Archivo = FontFamily(
     Font(R.font.archivo_medium, FontWeight.Medium),
     Font(R.font.archivo_semibold, FontWeight.SemiBold),

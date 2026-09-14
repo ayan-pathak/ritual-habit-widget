@@ -77,7 +77,7 @@ fun WelcomeScreen(onSignedIn: () -> Unit) {
                 Spacer(Modifier.height(16.dp))
                 Text(
                     "A year is a grid\nof empty squares.",
-                    style = Display.copy(fontSize = 26.sp, lineHeight = 28.sp),
+                    style = Display.copy(fontSize = 26.sp, lineHeight = 28.sp, color = OnLime),
                     textAlign = TextAlign.Center
                 )
             }

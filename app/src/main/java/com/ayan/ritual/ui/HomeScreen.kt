@@ -195,13 +195,13 @@ private fun EmptyState(onCreate: () -> Unit) {
                 Spacer(Modifier.height(20.dp))
                 Text(
                     "Nothing to keep yet.",
-                    style = Display.copy(fontSize = 24.sp, lineHeight = 27.sp),
+                    style = Display.copy(fontSize = 24.sp, lineHeight = 27.sp, color = OnLime),
                     textAlign = TextAlign.Center
                 )
                 Spacer(Modifier.height(10.dp))
                 Text(
                     "Name one practice. Every day you keep it fills a square.",
-                    style = Body.copy(color = Color(0xB312120F)),
+                    style = Body.copy(color = OnLimeSoft),
                     textAlign = TextAlign.Center
                 )
             }

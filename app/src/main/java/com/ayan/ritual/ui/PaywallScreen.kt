@@ -109,13 +109,13 @@ fun PaywallScreen(onClose: () -> Unit) {
             Spacer(Modifier.height(18.dp))
             Text(
                 "Keep your progress,\nforever.",
-                style = Display.copy(fontSize = 28.sp, lineHeight = 30.sp),
+                style = Display.copy(fontSize = 28.sp, lineHeight = 30.sp, color = OnLime),
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(10.dp))
             Text(
                 "Your first ritual is free forever. Unlock the rest once, and every square you have filled stays yours for good.",
-                style = Body.copy(color = androidx.compose.ui.graphics.Color(0xB312120F)),
+                style = Body.copy(color = OnLimeSoft),
                 textAlign = TextAlign.Center
             )
         }

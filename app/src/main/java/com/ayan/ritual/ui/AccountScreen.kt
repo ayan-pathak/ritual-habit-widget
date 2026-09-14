@@ -100,11 +100,11 @@ fun AccountScreen(onBack: () -> Unit) {
                     ) {
                         MochiTile(Mood.PLEASED, Color.Transparent, height = 40.dp, inset = 0.dp)
                         Column {
-                            Text("Mirrored", style = Display.copy(fontSize = 19.sp, lineHeight = 20.sp))
+                            Text("Mirrored", style = Display.copy(fontSize = 19.sp, lineHeight = 20.sp, color = OnLime))
                             Spacer(Modifier.height(4.dp))
                             Text(
                                 "Last written just now",
-                                style = Body.copy(fontSize = 12.sp)
+                                style = Body.copy(fontSize = 12.sp, color = OnLimeSoft)
                             )
                         }
                     }

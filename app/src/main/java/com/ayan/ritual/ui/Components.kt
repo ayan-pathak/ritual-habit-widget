@@ -329,7 +329,9 @@ fun ColourTiles(
                     .clip(RoundedCornerShape(15.dp))
                     .background(Color(accent.block))
                     .then(
-                        if (selected) Modifier.border(BorderStroke(2.5.dp, Ink), RoundedCornerShape(15.dp))
+                        // Fixed ink: the swatch is a fixed colour, so the ring
+                        // that marks it has to be the ink chosen against it.
+                        if (selected) Modifier.border(BorderStroke(2.5.dp, OnLime), RoundedCornerShape(15.dp))
                         else Modifier
                     )
                     .clickable(
