@@ -72,7 +72,6 @@ class WidgetConfigActivity : ComponentActivity() {
 
         HabitStore.ensureLoaded(this)
         com.ayan.ritual.render.Fonts.load(this)
-        com.ayan.ritual.render.Cat.load(this)
 
         setContent {
             RitualTheme {

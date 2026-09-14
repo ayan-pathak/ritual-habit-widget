@@ -15,7 +15,6 @@ import com.ayan.ritual.cloud.Account
 import com.ayan.ritual.cloud.CloudSync
 import com.ayan.ritual.data.HabitStore
 import com.ayan.ritual.data.Onboarding
-import com.ayan.ritual.render.Cat
 import com.ayan.ritual.render.Fonts
 import com.ayan.ritual.ui.CreateScreen
 import com.ayan.ritual.ui.DetailScreen
@@ -45,7 +44,6 @@ class MainActivity : ComponentActivity() {
         HabitStore.ensureLoaded(this)
         Onboarding.load(this)
         Fonts.load(this)
-        Cat.load(this)
         Unlock.start(this)
         Account.start()
 

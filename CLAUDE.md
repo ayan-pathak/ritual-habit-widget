@@ -40,13 +40,15 @@ Type is **Archivo** — one variable TTF in `res/font/`, pinned to weights 500/6
 
 ## Mochi
 
-`render/Cat.kt`. Four drawn portraits — one drawing with a different face — as `VectorDrawable`s in `res/drawable/mochi_*.xml`.
+`render/Cat.kt`. Four drawn portraits, one drawing with a different face, replayed as `Path`s from the generated `render/MochiArt.kt`.
 
-`art/mochi/*.svg` is the source, and `tools/mochi.py` converts it. The four SVGs are one 2×2 sheet: identical geometry, differing only in the `viewBox` that windows onto a quadrant. The converter windows each quadrant out, drops the paths that fall outside it, and registers the four against each other, so **the head sits on the same coordinates in every mood** and the silhouette never shifts. `--check` re-emits and compares, which is what CI runs. Edit the SVGs and regenerate; never hand-edit the XML.
+**Why not a `VectorDrawable`.** The drawing is built from shapes that abut rather than overlap, so each antialiases its own edge and the background shows through every boundary as a hairline. Covering it means growing each shape by half a pixel of stroke in its own colour, and it has to be half a *device* pixel: the seam is one device pixel wide however far the art is scaled. A `VectorDrawable`'s stroke is in viewport units and scales with the drawing, so a width that closes the seam at 30dp is a fat outline at 176px. Replaying the paths lets `Cat.draw` set `strokeWidth = 1f / scale` from the scale in hand. The adaptive icon is the one exception: it is a drawable and cannot do that, so `tools/mochi.py` bakes `ICON_SEAM` for the 48–192px an icon is actually drawn at.
+
+`art/mochi/*.svg` is the source, and `tools/mochi.py` converts it. The four SVGs are one 2×2 sheet: identical geometry, differing only in the `viewBox` that windows onto a quadrant. The converter windows each quadrant out, drops the paths that fall outside it, and registers the four against each other, so **the head sits on the same coordinates in every mood** and the silhouette never shifts. One parse feeds both platforms: `MochiArt.kt` for Android, `ios/Shared/MochiArt.swift` for iOS, plus the adaptive-icon foreground, so the two can never draw different shapes. `--check` re-emits and compares, which is what CI runs. Edit the SVGs and regenerate; never hand-edit the generated files.
 
 They are vectors rather than PNGs because he is drawn at sizes an order of magnitude apart — 30dp in the widget header, 176px on the story card — and a raster picked for one is wrong for the other.
 
-`Cat.load(context)` must run before `Cat.draw`, for the same reason `Fonts.load` does. Size him by height — `Cat.draw(canvas, left, top, height, mood)` — and `Cat.widthFor` gives the rest.
+`Cat` needs no loading: the art is embedded, and each mood is parsed on first draw and cached. Size him by height, `Cat.draw(canvas, left, top, height, mood)`, and `Cat.widthFor` gives the rest.
 
 His mood is derived from streak state (`Cat.moodFor`), never chosen for decoration: awake when today is unmarked, pleased once marked, let down the morning after a break.
 
