@@ -1,6 +1,9 @@
 package com.ayan.ritual.ui
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -125,6 +128,41 @@ fun AccountScreen(onBack: () -> Unit) {
                     textAlign = TextAlign.Center,
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
+        }
+
+        // The tour asked this once; this is where it is changed afterwards.
+        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 30.dp)) {
+            CapsLabel("Appearance")
+            Spacer(Modifier.height(10.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Appearance.entries.forEach { value ->
+                    val on = Look.appearance == value
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(if (on) Ink else Color.Transparent)
+                            .then(
+                                if (on) Modifier
+                                else Modifier.border(
+                                    BorderStroke(1.5.dp, InkFaint), RoundedCornerShape(999.dp)
+                                )
+                            )
+                            .clickable { Look.set(value) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            if (value == Appearance.LIGHT) "Light" else "Dark",
+                            style = Caps.copy(
+                                fontSize = 12.sp,
+                                letterSpacing = 0.sp,
+                                color = if (on) OnInk else InkSoft
+                            )
+                        )
+                    }
+                }
             }
         }
 

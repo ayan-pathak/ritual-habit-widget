@@ -98,10 +98,17 @@ object HabitStore {
         ensureLoaded(context)
         val habit = _habits.value.firstOrNull { it.id == id } ?: return null
         val day = date.toEpochDay()
+        val marking = !habit.done.contains(day)
         val next = habit.copy(
-            done = if (habit.done.contains(day)) habit.done - day else habit.done + day
+            done = if (marking) habit.done + day else habit.done - day
         )
         update(context, next)
+        // The widget marks days too, and it can start the process cold, so the
+        // clock on the unlock offer is started here rather than in the UI.
+        if (marking) {
+            Onboarding.load(context)
+            Onboarding.rememberFirstMark(date)
+        }
         return next
     }
 

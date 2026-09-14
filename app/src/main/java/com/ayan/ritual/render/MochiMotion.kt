@@ -29,7 +29,7 @@ enum class Beat { MARK, MISS, UNLOCK, SETTLE }
  */
 class MochiMotion(mood: Mood = Mood.RESTING) {
 
-    /** The face to draw this frame. A blink shows through as [Mood.RESTING]. */
+    /** The face to draw this frame, including whatever the idle is doing. */
     var mood: Mood = mood
         private set
 
@@ -45,7 +45,7 @@ class MochiMotion(mood: Mood = Mood.RESTING) {
     var offsetY: Float = 0f
         private set
 
-    /** Breathing and blinking. Off for a still frame, or for reduced motion. */
+    /** Breathing and glancing. Off for a still frame, or for reduced motion. */
     var idle: Boolean = true
 
     // ── The beats ───────────────────────────────────────────────────────
@@ -109,8 +109,8 @@ class MochiMotion(mood: Mood = Mood.RESTING) {
     private var poseT = 0f
 
     private var clock = 0f
-    private var blinkAt = 2.4f
-    private var blinkUntil = -1f
+    private var glanceAt = 2.4f
+    private var glanceUntil = -1f
     private var resting = mood
     private var faceUnderBlink = mood
 
@@ -149,13 +149,13 @@ class MochiMotion(mood: Mood = Mood.RESTING) {
             val s = sin(clock * (2f * PI.toFloat() / BREATH_SECONDS))
             breatheY = 1f + s * 0.012f
             breatheX = 1f - s * 0.006f
-            blink()
+            glance()
         }
 
         scaleX = poseX * breatheX
         scaleY = poseY * breatheY
         offsetY = poseT
-        mood = if (clock < blinkUntil) Mood.RESTING else faceUnderBlink
+        mood = (if (clock < glanceUntil) faceUnderBlink.glance else null) ?: faceUnderBlink
     }
 
     private fun step(dt: Float) {
@@ -182,18 +182,26 @@ class MochiMotion(mood: Mood = Mood.RESTING) {
         }
     }
 
-    private fun blink() {
-        // Only a face with open eyes can blink, and the two the app shows do
-        // not have any. He never blinks mid-beat either: a shut eye during a
-        // hop reads as a flinch.
-        if (!faceUnderBlink.opensEyes || segments != null || clock < blinkAt) return
-        blinkUntil = clock + BLINK_SECONDS
-        blinkAt = clock + 2.8f + Random.nextFloat() * 3.7f
+    /**
+     * The idle glance: an open-eyed face blinks, a shut-eyed one looks up.
+     *
+     * Both are the same mechanic pointed in opposite directions, and both are
+     * held off mid-beat — a shut eye during a hop reads as a flinch, and eyes
+     * snapping open during one reads as alarm.
+     */
+    private fun glance() {
+        val to = faceUnderBlink.glance
+        if (to == null || segments != null || clock < glanceAt) return
+        // A blink is over before you see it. Opening your eyes is a look, and
+        // a look has to last long enough to be returned.
+        glanceUntil = clock + if (faceUnderBlink.opensEyes) BLINK_SECONDS else PEEK_SECONDS
+        glanceAt = glanceUntil + 2.6f + Random.nextFloat() * 3.9f
     }
 
     private companion object {
         const val BREATH_SECONDS = 3.4f
         const val BLINK_SECONDS = 0.11f
+        const val PEEK_SECONDS = 1.5f
 
         val easeIn: (Float) -> Float = { t -> t * t * t }
         val easeOut: (Float) -> Float = { t -> 1f - (1f - t).pow(3) }

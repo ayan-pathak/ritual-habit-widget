@@ -10,7 +10,23 @@ import android.graphics.Shader
 enum class Mood {
     AWAKE, PLEASED, RESTING, LET_DOWN;
 
-    /** Whether this face has eyes to shut, which is what makes a blink read. */
+    /**
+     * The face this one flicks to for a moment while it is idling, or null
+     * for a face that holds.
+     *
+     * A shut-eyed face cannot blink, so the calm one does the opposite and
+     * opens its eyes now and then — which is where the wide-eyed drawing
+     * earns its place back. The grin holds, because a cat that has just been
+     * given its day is not looking around.
+     */
+    val glance: Mood?
+        get() = when (this) {
+            RESTING -> AWAKE
+            AWAKE, LET_DOWN -> RESTING
+            PLEASED -> null
+        }
+
+    /** Whether this face has eyes to shut. Opening them takes longer. */
     val opensEyes: Boolean get() = this == AWAKE || this == LET_DOWN
 }
 

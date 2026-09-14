@@ -22,11 +22,14 @@ import com.ayan.ritual.ui.AccountScreen
 import com.ayan.ritual.ui.HomeScreen
 import com.ayan.ritual.ui.PaywallScreen
 import com.ayan.ritual.ui.RitualTheme
+import com.ayan.ritual.ui.TourScreen
 import com.ayan.ritual.ui.WelcomeScreen
 import com.ayan.ritual.widget.RitualWidgetProvider
+import java.time.LocalDate
 
 sealed interface Route {
     data object Welcome : Route
+    data object Tour : Route
     data object Home : Route
     data class Detail(val habitId: String) : Route
     data object Create : Route
@@ -43,6 +46,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         HabitStore.ensureLoaded(this)
         Onboarding.load(this)
+        com.ayan.ritual.ui.Look.load(this)
         Fonts.load(this)
         Unlock.start(this)
         Account.start()
@@ -83,28 +87,27 @@ class MainActivity : ComponentActivity() {
 /**
  * Where a launch lands.
  *
- * Sign-in is now the way in rather than an offer on the way past, so a launch
- * stops here whenever there is a Firebase project to sign in to and nobody is
- * signed in. Without one — a checkout with no google-services.json — there is
- * nothing to sign in to and the app opens on the grid.
+ * Three gates, in the order they were passed. Sign-in is the way in rather
+ * than an offer on the way past, so a launch stops there whenever there is a
+ * Firebase project and nobody is signed in; without one — a checkout with no
+ * google-services.json — there is nothing to sign in to and it falls through.
+ * Then the tour, once. Then the unlock, but only on a launch that finds a
+ * streak already worth keeping, which is the whole point of not asking
+ * sooner.
  */
-private fun firstRoute(): Route =
-    if (Account.available && !Account.signedIn) Route.Welcome else Route.Home
+private fun firstRoute(): Route = when {
+    Account.available && !Account.signedIn -> Route.Welcome
+    !Onboarding.sawTour -> Route.Tour
+    Onboarding.unlockIsWorthMentioning(LocalDate.now()) && !Unlock.unlocked -> {
+        Onboarding.markSawPaywall()
+        Route.Paywall
+    }
+    else -> Route.Home
+}
 
 @Composable
 private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
     var route by remember { mutableStateOf(firstRoute()) }
-
-    // The unlock is offered once, on the way out of the welcome, and never
-    // unprompted again — a second ritual asks for itself when it is wanted.
-    fun leaveWelcome() {
-        route = if (!Unlock.unlocked && !Onboarding.sawPaywall) {
-            Onboarding.markSawPaywall()
-            Route.Paywall
-        } else {
-            Route.Home
-        }
-    }
 
     // A tap on the widget lands straight on that habit.
     remember(openHabitId) {
@@ -118,7 +121,11 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
     val habits by HabitStore.habitsState
 
     when (val r = route) {
-        is Route.Welcome -> WelcomeScreen(onSignedIn = { leaveWelcome() })
+        is Route.Welcome -> WelcomeScreen(
+            onSignedIn = { route = if (!Onboarding.sawTour) Route.Tour else Route.Home }
+        )
+
+        is Route.Tour -> TourScreen(onDone = { route = Route.Home })
 
         is Route.Home -> HomeScreen(
             habits = habits,

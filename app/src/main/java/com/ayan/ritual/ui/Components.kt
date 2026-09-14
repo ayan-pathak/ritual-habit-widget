@@ -70,6 +70,7 @@ fun RitualCard(
     modifier: Modifier = Modifier,
     header: Boolean = true,
     footer: Boolean = true,
+    action: Boolean = false,
     cat: Boolean = true,
     quarterRuler: Boolean = false,
     cornerDp: Float = 24f,
@@ -79,13 +80,14 @@ fun RitualCard(
     BoxWithConstraints(modifier.fillMaxWidth().height(height)) {
         val wPx = constraints.maxWidth
         val hPx = with(density) { height.roundToPx() }
-        val bitmap = remember(wPx, hPx, model, header, footer, cat, quarterRuler, padDp) {
+        val bitmap = remember(wPx, hPx, model, header, footer, action, cat, quarterRuler, padDp) {
             SlabRenderer.render(
                 wPx, hPx, model,
                 SlabRenderer.Config(
                     density = density.density,
                     header = header,
                     footer = footer,
+                    action = action,
                     cat = cat,
                     quarterRuler = quarterRuler,
                     cornerDp = cornerDp,

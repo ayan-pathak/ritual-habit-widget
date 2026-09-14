@@ -39,6 +39,12 @@ import com.ayan.ritual.render.accentAt
 import java.time.LocalDate
 import java.time.Year
 
+/**
+ * The one gutter every block on this screen sits against, so the wordmark,
+ * the headline, the cards and the buttons all share a single left edge.
+ */
+private val GUTTER = 20.dp
+
 @Composable
 fun HomeScreen(
     habits: List<Habit>,
@@ -72,7 +78,7 @@ fun HomeScreen(
             Row(
                 Modifier
                     .fillMaxWidth()
-                    .padding(start = 20.dp, end = 20.dp, top = 18.dp),
+                    .padding(start = GUTTER, end = GUTTER, top = 20.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
@@ -96,7 +102,7 @@ fun HomeScreen(
         }
 
         item {
-            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 22.dp)) {
+            Column(Modifier.padding(start = GUTTER, end = GUTTER, top = 24.dp)) {
                 Text("$remaining squares\nleft this year", style = Display)
                 Row(
                     Modifier.padding(top = 14.dp),
@@ -118,7 +124,7 @@ fun HomeScreen(
             items(habits, key = { it.id }) { habit ->
                 Box(
                     Modifier
-                        .padding(horizontal = 20.dp)
+                        .padding(horizontal = GUTTER)
                         .padding(top = 16.dp)
                         .fillMaxWidth()
                         .clip(RoundedCornerShape(24.dp))
@@ -132,7 +138,7 @@ fun HomeScreen(
                 Row(
                     Modifier
                         .fillMaxWidth()
-                        .padding(start = 20.dp, end = 20.dp, top = 24.dp),
+                        .padding(start = GUTTER, end = GUTTER, top = 24.dp),
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     InkPill("New ritual", startRitual, Modifier.weight(1f))
@@ -154,13 +160,14 @@ fun HomeScreen(
                     }
                 }
                 if (!canCreate) {
+                    // Left-aligned like everything else on this screen: it is a
+                    // note about the button above it, not a caption under it.
                     Text(
                         "One ritual is free. Unlock the rest for ${Unlock.price ?: "$4.99"}, once.",
                         style = Body.copy(fontSize = 12.sp, color = InkFaint),
-                        textAlign = TextAlign.Center,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 12.dp)
+                            .padding(start = GUTTER, end = GUTTER, top = 12.dp)
                     )
                 }
                 Spacer(Modifier.height(12.dp))
@@ -172,7 +179,7 @@ fun HomeScreen(
 
 @Composable
 private fun EmptyState(onCreate: () -> Unit) {
-    Column(Modifier.padding(horizontal = 20.dp, vertical = 28.dp)) {
+    Column(Modifier.padding(horizontal = GUTTER, vertical = 24.dp)) {
         Box(
             Modifier
                 .fillMaxWidth()
