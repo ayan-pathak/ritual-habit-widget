@@ -272,10 +272,16 @@ private fun LookChoice(label: String, value: Appearance, modifier: Modifier = Mo
 private fun demoModel(marked: Boolean): SlabModel {
     val today = LocalDate.now()
     val year = today.year
+    val doy = today.dayOfYear
+    // A year that looks lived in rather than sampled: kept from January with
+    // the gaps a real one has, and a run at the end for the card to be proud
+    // of. The break before that run is what makes the streak number true.
     val done = buildSet {
-        for (back in 1..58) if ((back * 7) % 11 != 0) add(today.dayOfYear - back)
-        if (marked) add(today.dayOfYear)
-    }.filter { it >= 1 }.toSet()
+        for (d in 1 until doy) if ((d * 7) % 9 != 0 && (d * 5) % 14 != 0) add(d)
+        for (d in (doy - 9).coerceAtLeast(1) until doy) add(d)
+        remove((doy - 10).coerceAtLeast(1))
+        if (marked) add(doy)
+    }
     return SlabModel(
         title = "Read before sleep",
         slot = "Evening",
@@ -283,7 +289,7 @@ private fun demoModel(marked: Boolean): SlabModel {
         year = year,
         today = today,
         doneDaysOfYear = done,
-        streak = 9,
+        streak = if (marked) 10 else 9,
         totalDone = done.size,
         remaining = Habit.remainingIn(year, today),
         doneToday = marked,
