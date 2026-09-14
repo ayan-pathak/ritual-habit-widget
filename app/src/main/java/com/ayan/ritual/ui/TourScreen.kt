@@ -10,6 +10,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -168,19 +169,19 @@ private val PANELS: List<Panel> = listOf(
     Panel(
         caps = "One gesture",
         title = "Name it.\nThen keep it.",
-        body = "A ritual is a name and a colour. Every day you keep it, one square fills in, and the card turns to ink to say so.",
+        body = "A name and a colour. Every day you keep it, one square fills in, and the card turns to ink to say so.",
         art = { CardArt(marked = false) }
     ),
     Panel(
         caps = "On your home screen",
         title = "Never open\nthe app.",
-        body = "The widget is the whole product. Your year sits on the home screen, and the pill marks today without the app opening.",
+        body = "Your year sits on the home screen, and the pill marks today without the app opening.",
         art = { PhoneHomeScreen() }
     ),
     Panel(
         caps = "When it is worth showing",
         title = "A year,\nas a story.",
-        body = "Any ritual becomes a story card, with the grid you actually filled on it. No watermark, nothing to sign up for.",
+        body = "The grid you actually filled, sized for a story. No watermark, nothing to sign up for.",
         art = { StoryArt() }
     )
 )
@@ -190,11 +191,12 @@ private fun TellPanel(panel: Panel) {
     Column(Modifier.fillMaxWidth()) {
         CapsLabel(panel.caps)
         Spacer(Modifier.height(8.dp))
-        Text(panel.title, style = Display.copy(fontSize = 32.sp, lineHeight = 34.sp))
-        Spacer(Modifier.height(12.dp))
-        Text(panel.body, style = Body)
-        Spacer(Modifier.height(26.dp))
+        Text(panel.title, style = Display.copy(fontSize = 28.sp, lineHeight = 30.sp))
+        Spacer(Modifier.height(10.dp))
+        Text(panel.body, style = Body.copy(fontSize = 13.sp, lineHeight = 19.sp))
+        Spacer(Modifier.height(22.dp))
         panel.art()
+        Spacer(Modifier.height(24.dp))
     }
 }
 
@@ -303,91 +305,77 @@ private fun CardArt(marked: Boolean) {
 }
 
 /**
- * The widget where it lives: a phone, a wallpaper, and the card sitting among
- * everything else on a home screen.
+ * The widget where it lives: the top of a home screen, at the size it really is.
  *
- * The card inside is the real [SlabRenderer] output at a scaled density, so
- * this is a photograph of the widget rather than a drawing of one. The icons
- * around it are deliberately blank rounded squares — the point is the shape of
- * the space Ritual takes up next to everything else, and naming anything else
- * on the phone would be someone else's brand in our onboarding.
+ * Cropped rather than shrunk. A whole phone scaled down to fit this panel put
+ * the year's grid at about a pixel a day, which is the one thing on the card
+ * that has to survive — so this is a window onto a real home screen instead,
+ * full width, cut off below. The card inside is the real [SlabRenderer] output
+ * at very nearly its own size.
+ *
+ * The icons around it are blank rounded squares on purpose: the point is the
+ * shape of the space Ritual takes up next to everything else, and naming
+ * anything else on that phone would be someone else's brand in our onboarding.
  */
 @Composable
 private fun PhoneHomeScreen() {
-    val scale = 0.38f
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-        Column(
-            Modifier
-                .size(width = 176.dp, height = 318.dp)
-                .clip(RoundedCornerShape(26.dp))
-                .background(WALLPAPER)
-                .padding(horizontal = 9.dp)
+    // The panel is 353dp across, so treating it as a 353dp-wide phone makes
+    // every dp inside it the dp it would be on the real thing.
+    val widgetWidth = 321.dp
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .height(300.dp)
+            .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp, bottomStart = 4.dp, bottomEnd = 4.dp))
+            .background(WALLPAPER)
+            .padding(horizontal = 16.dp)
+    ) {
+        Row(
+            Modifier.fillMaxWidth().padding(top = 12.dp, start = 6.dp, end = 6.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            // Status bar: the time, and three bars that are not a logo.
-            Row(
-                Modifier.fillMaxWidth().padding(top = 9.dp, start = 4.dp, end = 4.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    "9:41",
-                    style = Caps.copy(fontSize = 8.sp, letterSpacing = 0.sp, color = WALL_INK)
-                )
-                Spacer(Modifier.weight(1f))
-                Canvas(Modifier.size(width = 13.dp, height = 7.dp)) {
-                    val w = size.width / 4.6f
-                    listOf(0.4f, 0.7f, 1f).forEachIndexed { i, tall ->
-                        drawRoundRect(
-                            color = WALL_INK,
-                            topLeft = Offset(i * w * 1.55f, size.height * (1f - tall)),
-                            size = Size(w, size.height * tall),
-                            cornerRadius = CornerRadius(w * 0.35f)
-                        )
-                    }
+            Text("9:41", style = Caps.copy(fontSize = 12.sp, letterSpacing = 0.sp, color = WALL_INK))
+            Spacer(Modifier.weight(1f))
+            Canvas(Modifier.size(width = 19.dp, height = 11.dp)) {
+                val w = size.width / 4.6f
+                listOf(0.45f, 0.72f, 1f).forEachIndexed { i, tall ->
+                    drawRoundRect(
+                        color = WALL_INK,
+                        topLeft = Offset(i * w * 1.55f, size.height * (1f - tall)),
+                        size = Size(w, size.height * tall),
+                        cornerRadius = CornerRadius(w * 0.35f)
+                    )
                 }
             }
-
-            Spacer(Modifier.height(14.dp))
-            IconRow()
-            Spacer(Modifier.height(12.dp))
-
-            // The widget itself, at the size a 4x2 takes on a home screen.
-            RitualCard(
-                model = demoModel(false),
-                height = 74.dp,
-                action = true,
-                cornerDp = 24f,
-                scale = scale
-            )
-
-            Spacer(Modifier.height(12.dp))
-            IconRow()
-            Spacer(Modifier.weight(1f))
-
-            // The dock.
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(WALL_INK.copy(alpha = 0.10f))
-                    .padding(vertical = 7.dp)
-            ) { IconRow(count = 4, size = 26.dp) }
-            Spacer(Modifier.height(10.dp))
         }
+
+        Spacer(Modifier.height(18.dp))
+        IconRow()
+        Spacer(Modifier.height(16.dp))
+
+        RitualCard(
+            model = demoModel(false),
+            height = 156.dp,
+            action = true,
+            cornerDp = 26f,
+            scale = 0.91f
+        )
+
+        Spacer(Modifier.height(16.dp))
+        // Half a row, because a home screen carries on below the fold.
+        IconRow()
     }
 }
 
 /** Blank app icons: the shape of the neighbourhood, not the neighbours. */
 @Composable
-private fun IconRow(count: Int = 4, size: Dp = 30.dp) {
-    Row(
-        Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceEvenly
-    ) {
+private fun IconRow(count: Int = 4, size: Dp = 56.dp) {
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         repeat(count) {
             Box(
                 Modifier
                     .size(size)
-                    .clip(RoundedCornerShape(size * 0.28f))
+                    .clip(RoundedCornerShape(size * 0.26f))
                     .background(WALL_INK.copy(alpha = 0.13f))
             )
         }
@@ -398,31 +386,31 @@ private val WALLPAPER = Color(0xFF3A382F)
 private val WALL_INK = Color(0xFFF2EFE3)
 
 /**
- * The story card itself, at a twentieth of the size.
+ * The story card, at the width of the panel and its own proportions.
  *
- * [ShareCardRenderer] sizes everything off the canvas width, so this is the
- * same composition Instagram gets rather than a sketch of it — down to the
- * wordmark under the block.
+ * 1080 by 1920, not a thumbnail of it: at anything smaller the year collapses
+ * into a smear and the one thing worth showing is gone. It is taller than the
+ * panel, which is why the panel scrolls.
  */
 @Composable
 private fun StoryArt() {
     val density = LocalDensity.current
-    val height = 286.dp
-    val width = height * (ShareCardRenderer.STORY_W.toFloat() / ShareCardRenderer.STORY_H)
-    val model = demoModel(true)
-    val bitmap = remember(model, height) {
-        with(density) {
-            ShareCardRenderer.render(model, width.roundToPx(), height.roundToPx())
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val width = maxWidth
+        val height = width * (ShareCardRenderer.STORY_H.toFloat() / ShareCardRenderer.STORY_W)
+        val model = demoModel(true)
+        val bitmap = remember(model, width) {
+            with(density) {
+                ShareCardRenderer.render(model, width.roundToPx(), height.roundToPx())
+            }
         }
-    }
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
         Image(
             bitmap = bitmap.asImageBitmap(),
             contentDescription = null,
             modifier = Modifier
                 .size(width, height)
-                .clip(RoundedCornerShape(14.dp))
-                .border(BorderStroke(1.dp, InkFaint), RoundedCornerShape(14.dp))
+                .clip(RoundedCornerShape(18.dp))
+                .border(BorderStroke(1.dp, InkFaint), RoundedCornerShape(18.dp))
         )
     }
 }
