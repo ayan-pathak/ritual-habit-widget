@@ -23,8 +23,6 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -86,18 +84,12 @@ fun TourScreen(onDone: () -> Unit) {
 
         // The stage keeps its height across panels, so the pill at the bottom
         // never moves while someone is tapping it four times.
-        Box(
-            Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .verticalScroll(rememberScrollState()),
-            contentAlignment = Alignment.TopStart
-        ) {
+        Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.TopStart) {
             if (step == 0) LookPanel() else TellPanel(PANELS[step - 1])
         }
 
         InkPill(
-            label = if (step == last) "Start keeping days" else "Next",
+            label = if (step == last) "Let\u2019s start a new habit" else "Next",
             onClick = {
                 if (step == last) {
                     Onboarding.markSawTour()
@@ -190,15 +182,18 @@ private val PANELS: List<Panel> = listOf(
 
 @Composable
 private fun TellPanel(panel: Panel) {
-    Column(Modifier.fillMaxWidth()) {
+    Column(Modifier.fillMaxSize()) {
         CapsLabel(panel.caps)
         Spacer(Modifier.height(8.dp))
         Text(panel.title, style = Display.copy(fontSize = 28.sp, lineHeight = 30.sp))
         Spacer(Modifier.height(10.dp))
         Text(panel.body, style = Body.copy(fontSize = 13.sp, lineHeight = 19.sp))
-        Spacer(Modifier.height(22.dp))
-        panel.art()
-        Spacer(Modifier.height(24.dp))
+        Spacer(Modifier.height(20.dp))
+        // Whatever the copy leaves is the picture's, and the picture fits it.
+        Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.TopCenter) {
+            panel.art()
+        }
+        Spacer(Modifier.height(8.dp))
     }
 }
 
@@ -323,11 +318,12 @@ private fun CardArt(marked: Boolean) {
 private fun PhoneHomeScreen() {
     // The panel is 353dp across, so treating it as a 353dp-wide phone makes
     // every dp inside it the dp it would be on the real thing.
-    val widgetWidth = 321.dp
     Column(
         Modifier
             .fillMaxWidth()
-            .height(300.dp)
+            // Tall enough that nothing has to give, and clipped at the bottom
+            // because a home screen carries on below the fold.
+            .height(330.dp)
             .clip(RoundedCornerShape(topStart = 30.dp, topEnd = 30.dp, bottomStart = 4.dp, bottomEnd = 4.dp))
             .background(WALLPAPER)
             .padding(horizontal = 16.dp)
@@ -401,9 +397,12 @@ private val WALL_INK = Color(0xFFF2EFE3)
 @Composable
 private fun StoryArt() {
     val density = LocalDensity.current
-    BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val width = maxWidth
-        val height = width * (ShareCardRenderer.STORY_H.toFloat() / ShareCardRenderer.STORY_W)
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val ratio = ShareCardRenderer.STORY_W.toFloat() / ShareCardRenderer.STORY_H
+        // Whichever runs out first, so the frame is whole and still as large as
+        // the panel allows.
+        val width = minOf(maxWidth, maxHeight * ratio)
+        val height = width / ratio
         val model = demoModel(true)
         val bitmap = remember(model, width) {
             with(density) {
