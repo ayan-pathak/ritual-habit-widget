@@ -414,6 +414,8 @@ private fun StoryArt() {
             Modifier
                 .size(width, height)
                 .clip(RoundedCornerShape(18.dp))
+                // Cream on cream: without an edge the frame vanishes into the page.
+                .border(BorderStroke(1.dp, InkFaint), RoundedCornerShape(18.dp))
         ) {
             Image(
                 bitmap = bitmap.asImageBitmap(),
