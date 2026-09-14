@@ -126,13 +126,9 @@ object SlabRenderer {
                 val box = RectF(boxL, pad - dp(2f), boxL + boxW, pad - dp(2f) + boxH)
                 p.color = if (lit) model.accent.block else Palette.INK
                 canvas.drawRoundRect(box, dp(10f), dp(10f), p)
-                Cat.draw(
-                    canvas,
-                    box.centerX() - catW / 2f,
-                    box.centerY() - catH / 2f,
-                    catH,
-                    model.mood
-                )
+                // Standing on the bottom edge of the box, not floating in the
+                // middle of it: the same rule the app's MochiTile follows.
+                Cat.draw(canvas, box.centerX() - catW / 2f, box.bottom - catH, catH, model.mood)
                 textRight = boxL - dp(10f)
             } else {
                 // No cat: the streak takes the corner instead.

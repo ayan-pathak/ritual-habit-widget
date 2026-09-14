@@ -36,9 +36,9 @@ import com.ayan.ritual.render.Mood
  * The account, which is only ever about one thing: carrying a practice from
  * one phone to the next.
  *
- * Signing in is optional and stays optional. Everything Ritual does works with
- * no account on a device that has never seen a network, and nothing on this
- * screen is a step anyone has to take before keeping a day.
+ * The first launch asks for an account, but nothing after it does: sign out
+ * here and every square stays exactly where it is, on the phone, with no
+ * network involved. This screen is where that is undone and redone.
  */
 @Composable
 fun AccountScreen(onBack: () -> Unit) {
