@@ -74,17 +74,18 @@ fun RitualCard(
     cat: Boolean = true,
     quarterRuler: Boolean = false,
     cornerDp: Float = 24f,
-    padDp: Float = 17f
+    padDp: Float = 17f,
+    scale: Float = 1f
 ) {
     val density = LocalDensity.current
     BoxWithConstraints(modifier.fillMaxWidth().height(height)) {
         val wPx = constraints.maxWidth
         val hPx = with(density) { height.roundToPx() }
-        val bitmap = remember(wPx, hPx, model, header, footer, action, cat, quarterRuler, padDp) {
+        val bitmap = remember(wPx, hPx, model, header, footer, action, cat, quarterRuler, padDp, scale) {
             SlabRenderer.render(
                 wPx, hPx, model,
                 SlabRenderer.Config(
-                    density = density.density,
+                    density = density.density * scale,
                     header = header,
                     footer = footer,
                     action = action,

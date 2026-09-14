@@ -2,7 +2,9 @@ package com.ayan.ritual.ui
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -19,6 +21,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -33,14 +37,16 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.data.Habit
 import com.ayan.ritual.data.Onboarding
 import com.ayan.ritual.render.Mood
+import com.ayan.ritual.render.ShareCardRenderer
 import com.ayan.ritual.render.SlabModel
 import com.ayan.ritual.render.accentAt
 import java.time.LocalDate
@@ -77,7 +83,13 @@ fun TourScreen(onDone: () -> Unit) {
 
         // The stage keeps its height across panels, so the pill at the bottom
         // never moves while someone is tapping it four times.
-        Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.TopStart) {
+        Box(
+            Modifier
+                .fillMaxWidth()
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+            contentAlignment = Alignment.TopStart
+        ) {
             if (step == 0) LookPanel() else TellPanel(PANELS[step - 1])
         }
 
@@ -162,13 +174,13 @@ private val PANELS: List<Panel> = listOf(
     Panel(
         caps = "On your home screen",
         title = "Never open\nthe app.",
-        body = "The widget is the whole product. Your year sits on the home screen and the pill marks today without the app ever opening.",
-        art = { WidgetArt() }
+        body = "The widget is the whole product. Your year sits on the home screen, and the pill marks today without the app opening.",
+        art = { PhoneHomeScreen() }
     ),
     Panel(
         caps = "When it is worth showing",
         title = "A year,\nas a story.",
-        body = "Any ritual becomes a card sized for Instagram Stories, with the grid you actually filled on it. No watermark, no badge, nothing to sign up for.",
+        body = "Any ritual becomes a story card, with the grid you actually filled on it. No watermark, nothing to sign up for.",
         art = { StoryArt() }
     )
 )
@@ -284,66 +296,127 @@ private fun CardArt(marked: Boolean) {
     RitualCard(model = demoModel(marked), height = 172.dp)
 }
 
-/** The card as it sits on a home screen, with the pill it is really tapped by. */
+/**
+ * The widget where it lives: a phone, a wallpaper, and the card sitting among
+ * everything else on a home screen.
+ *
+ * The card inside is the real [SlabRenderer] output at a scaled density, so
+ * this is a photograph of the widget rather than a drawing of one. The icons
+ * around it are deliberately blank rounded squares — the point is the shape of
+ * the space Ritual takes up next to everything else, and naming anything else
+ * on the phone would be someone else's brand in our onboarding.
+ */
 @Composable
-private fun WidgetArt() {
-    Box(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(26.dp))
-            .background(Ink.copy(alpha = 0.86f))
-            .padding(14.dp)
-    ) {
-        RitualCard(model = demoModel(false), height = 158.dp, action = true, footer = true)
-    }
-}
-
-/** The proportion of the thing, rather than the thing: 1080 by 1920. */
-@Composable
-private fun StoryArt() {
+private fun PhoneHomeScreen() {
+    val scale = 0.38f
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
         Column(
             Modifier
-                .size(width = 118.dp, height = 210.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(Lime)
-                .padding(12.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .size(width = 176.dp, height = 318.dp)
+                .clip(RoundedCornerShape(26.dp))
+                .background(WALLPAPER)
+                .padding(horizontal = 9.dp)
         ) {
-            Text("2026", style = Display.copy(fontSize = 15.sp, lineHeight = 16.sp, color = Color(0xFF12120F)))
-            Spacer(Modifier.height(10.dp))
-            Canvas(Modifier.fillMaxWidth().height(96.dp)) {
-                val cell = size.width / 13f
-                val gap = cell * 0.32f
-                val step = cell * 0.76f + gap
-                for (col in 0 until 10) {
-                    for (row in 0 until 7) {
-                        val on = (col * 7 + row) % 4 != 3
+            // Status bar: the time, and three bars that are not a logo.
+            Row(
+                Modifier.fillMaxWidth().padding(top = 9.dp, start = 4.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    "9:41",
+                    style = Caps.copy(fontSize = 8.sp, letterSpacing = 0.sp, color = WALL_INK)
+                )
+                Spacer(Modifier.weight(1f))
+                Canvas(Modifier.size(width = 13.dp, height = 7.dp)) {
+                    val w = size.width / 4.6f
+                    listOf(0.4f, 0.7f, 1f).forEachIndexed { i, tall ->
                         drawRoundRect(
-                            color = Color(0xFF12120F).copy(alpha = if (on) 1f else 0.22f),
-                            topLeft = Offset(col * step, row * step),
-                            size = Size(cell * 0.76f, cell * 0.76f),
-                            cornerRadius = CornerRadius(cell * 0.22f)
+                            color = WALL_INK,
+                            topLeft = Offset(i * w * 1.55f, size.height * (1f - tall)),
+                            size = Size(w, size.height * tall),
+                            cornerRadius = CornerRadius(w * 0.35f)
                         )
                     }
                 }
             }
+
+            Spacer(Modifier.height(14.dp))
+            IconRow()
+            Spacer(Modifier.height(12.dp))
+
+            // The widget itself, at the size a 4x2 takes on a home screen.
+            RitualCard(
+                model = demoModel(false),
+                height = 74.dp,
+                action = true,
+                cornerDp = 24f,
+                scale = scale
+            )
+
+            Spacer(Modifier.height(12.dp))
+            IconRow()
             Spacer(Modifier.weight(1f))
-            Canvas(Modifier.size(26.dp)) {
-                // Instagram's rounded square, ring and corner dot.
-                val w = size.width
-                val ink = Color(0xFF12120F)
-                drawRoundRect(
-                    color = ink,
-                    topLeft = Offset(w * .06f, w * .06f),
-                    size = Size(w * .88f, w * .88f),
-                    cornerRadius = CornerRadius(w * .28f),
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = w * .10f)
-                )
-                drawCircle(ink, radius = w * .21f, center = Offset(w * .5f, w * .5f),
-                    style = androidx.compose.ui.graphics.drawscope.Stroke(width = w * .10f))
-                drawCircle(ink, radius = w * .055f, center = Offset(w * .72f, w * .28f))
-            }
+
+            // The dock.
+            Box(
+                Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(WALL_INK.copy(alpha = 0.10f))
+                    .padding(vertical = 7.dp)
+            ) { IconRow(count = 4, size = 26.dp) }
+            Spacer(Modifier.height(10.dp))
         }
+    }
+}
+
+/** Blank app icons: the shape of the neighbourhood, not the neighbours. */
+@Composable
+private fun IconRow(count: Int = 4, size: Dp = 30.dp) {
+    Row(
+        Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        repeat(count) {
+            Box(
+                Modifier
+                    .size(size)
+                    .clip(RoundedCornerShape(size * 0.28f))
+                    .background(WALL_INK.copy(alpha = 0.13f))
+            )
+        }
+    }
+}
+
+private val WALLPAPER = Color(0xFF3A382F)
+private val WALL_INK = Color(0xFFF2EFE3)
+
+/**
+ * The story card itself, at a twentieth of the size.
+ *
+ * [ShareCardRenderer] sizes everything off the canvas width, so this is the
+ * same composition Instagram gets rather than a sketch of it — down to the
+ * wordmark under the block.
+ */
+@Composable
+private fun StoryArt() {
+    val density = LocalDensity.current
+    val height = 286.dp
+    val width = height * (ShareCardRenderer.STORY_W.toFloat() / ShareCardRenderer.STORY_H)
+    val model = demoModel(true)
+    val bitmap = remember(model, height) {
+        with(density) {
+            ShareCardRenderer.render(model, width.roundToPx(), height.roundToPx())
+        }
+    }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+        Image(
+            bitmap = bitmap.asImageBitmap(),
+            contentDescription = null,
+            modifier = Modifier
+                .size(width, height)
+                .clip(RoundedCornerShape(14.dp))
+                .border(BorderStroke(1.dp, InkFaint), RoundedCornerShape(14.dp))
+        )
     }
 }
