@@ -185,7 +185,7 @@ fun CreateScreen(onDone: (Habit) -> Unit, onBack: () -> Unit) {
                     totalDone = 0,
                     remaining = Habit.remainingIn(today.year, today),
                     doneToday = false,
-                    mood = Mood.AWAKE
+                    mood = Mood.RESTING
                 ),
                 height = 172.dp
             )

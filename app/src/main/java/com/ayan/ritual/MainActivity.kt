@@ -83,14 +83,13 @@ class MainActivity : ComponentActivity() {
 /**
  * Where a launch lands.
  *
- * The sign-in step is only in the way while all three are true: there is a
- * Firebase project to sign in to, nobody is signed in on this device, and
- * nobody has said they would rather not be. Any one of those failing and the
- * app opens on the grid, which is what it is for.
+ * Sign-in is now the way in rather than an offer on the way past, so a launch
+ * stops here whenever there is a Firebase project to sign in to and nobody is
+ * signed in. Without one — a checkout with no google-services.json — there is
+ * nothing to sign in to and the app opens on the grid.
  */
 private fun firstRoute(): Route =
-    if (Account.available && !Account.signedIn && !Onboarding.skippedSignIn) Route.Welcome
-    else Route.Home
+    if (Account.available && !Account.signedIn) Route.Welcome else Route.Home
 
 @Composable
 private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
@@ -119,10 +118,7 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
     val habits by HabitStore.habitsState
 
     when (val r = route) {
-        is Route.Welcome -> WelcomeScreen(
-            onSignedIn = { leaveWelcome() },
-            onSkip = { leaveWelcome() }
-        )
+        is Route.Welcome -> WelcomeScreen(onSignedIn = { leaveWelcome() })
 
         is Route.Home -> HomeScreen(
             habits = habits,

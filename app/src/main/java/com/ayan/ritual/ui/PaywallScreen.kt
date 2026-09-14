@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -43,8 +44,7 @@ import com.ayan.ritual.render.Mood
 private val INCLUDED = listOf(
     "As many rituals as you keep",
     "A widget for each one",
-    "Every year you have kept, in the archive",
-    "Story cards without a watermark"
+    "Every year you have kept, in the archive"
 )
 
 /** Long enough for the two bounces of [Beat.UNLOCK] to finish. */
@@ -105,16 +105,16 @@ fun PaywallScreen(onClose: () -> Unit) {
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            MochiTile(Mood.PLEASED, Paper, height = 64.dp, corner = 18.dp, inset = 14.dp, motion = mochi)
+            MochiTile(Mood.PLEASED, Color.Transparent, height = 72.dp, inset = 0.dp, motion = mochi)
             Spacer(Modifier.height(18.dp))
             Text(
-                "Keep more than one.",
+                "Keep your progress,\nforever.",
                 style = Display.copy(fontSize = 28.sp, lineHeight = 30.sp),
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(10.dp))
             Text(
-                "Your first ritual is free forever. Unlock the rest once, and they are yours for good.",
+                "Your first ritual is free forever. Unlock the rest once, and every square you have filled stays yours for good.",
                 style = Body.copy(color = androidx.compose.ui.graphics.Color(0xB312120F)),
                 textAlign = TextAlign.Center
             )

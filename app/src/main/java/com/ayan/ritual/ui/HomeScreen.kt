@@ -59,7 +59,7 @@ fun HomeScreen(
     // Mochi in the corner speaks for the whole app: pleased once every ritual
     // is marked, awake while any is still open.
     val allDone = habits.isNotEmpty() && habits.all { it.isDone(today) }
-    val headerMood = if (allDone) Mood.PLEASED else Mood.AWAKE
+    val headerMood = if (allDone) Mood.PLEASED else Mood.RESTING
 
     LazyColumn(
         Modifier
@@ -82,7 +82,9 @@ fun HomeScreen(
                 )
                 MochiTile(
                     mood = headerMood,
-                    tile = if (allDone) Lime else Paper,
+                    // Ink, not Paper: a pale cat on a pale badge had no edges
+                    // at 24dp. The card's own cat box has always been ink.
+                    tile = if (allDone) Lime else Ink,
                     height = 24.dp,
                     corner = 999.dp,
                     inset = 7.dp,
@@ -182,7 +184,7 @@ private fun EmptyState(onCreate: () -> Unit) {
                 Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                MochiTile(Mood.AWAKE, Paper, height = 64.dp, corner = 18.dp, inset = 14.dp)
+                MochiTile(Mood.RESTING, Color.Transparent, height = 72.dp, inset = 0.dp)
                 Spacer(Modifier.height(20.dp))
                 Text(
                     "Nothing to keep yet.",

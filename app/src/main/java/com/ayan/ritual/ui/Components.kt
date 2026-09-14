@@ -177,12 +177,16 @@ fun MochiTile(
 
     val frames = remember(px) { HashMap<Mood, ImageBitmap>() }
 
+    // He grows out of the bottom edge rather than floating in the middle of
+    // the tile: a portrait cropped by its own frame reads as a character, and
+    // a portrait centred in one reads as a sticker. The hop then lifts him
+    // clear of that edge, which is the whole point of the hop.
     Box(
         modifier
             .clip(RoundedCornerShape(corner))
             .background(tile)
-            .padding(horizontal = inset, vertical = inset * 0.8f),
-        contentAlignment = Alignment.Center
+            .padding(start = inset, end = inset, top = inset * 0.8f),
+        contentAlignment = Alignment.BottomCenter
     ) {
         Canvas(Modifier.size(w, height)) {
             val face = if (animated) shown else mood

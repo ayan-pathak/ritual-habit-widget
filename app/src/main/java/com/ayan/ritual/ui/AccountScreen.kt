@@ -1,7 +1,6 @@
 package com.ayan.ritual.ui
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,34 +15,22 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.cloud.Account
 import com.ayan.ritual.cloud.CloudSync
 import com.ayan.ritual.render.Mood
-import kotlinx.coroutines.launch
 
 /**
  * The account, which is only ever about one thing: carrying a practice from
@@ -55,17 +42,8 @@ import kotlinx.coroutines.launch
  */
 @Composable
 fun AccountScreen(onBack: () -> Unit) {
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val googleReady = remember { Account.googleAvailable(context) }
     val uid by Account.uidState
     val email by Account.emailState
-    val busy by Account.busyState
-    val error by Account.errorState
-
-    var address by remember { mutableStateOf("") }
-    var password by remember { mutableStateOf("") }
-    var creating by remember { mutableStateOf(false) }
 
     Column(
         Modifier
@@ -101,88 +79,8 @@ fun AccountScreen(onBack: () -> Unit) {
         }
 
         if (uid == null) {
-            val landed: (Boolean) -> Unit = { ok ->
-                if (ok) Account.uid?.let { CloudSync.start(context, it) }
-            }
             Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp)) {
-                if (googleReady) {
-                    InkPill(
-                        label = "Continue with Google",
-                        onClick = {
-                            scope.launch {
-                                val activity = context.findActivity() ?: return@launch
-                                landed(Account.signInWithGoogle(activity))
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        background = Paper,
-                        content = Ink,
-                        border = Ink
-                    )
-                    Spacer(Modifier.height(10.dp))
-                }
-                InkPill(
-                    label = "Continue with Apple",
-                    onClick = { context.findActivity()?.let { Account.signInWithApple(it, landed) } },
-                    modifier = Modifier.fillMaxWidth(),
-                    background = Paper,
-                    content = Ink,
-                    border = Ink
-                )
-
-                Spacer(Modifier.height(22.dp))
-                Text(
-                    "or use an email",
-                    style = Body.copy(fontSize = 12.sp, color = InkFaint),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(18.dp))
-
-                CapsLabel("Email")
-                Spacer(Modifier.height(8.dp))
-                Field(
-                    value = address,
-                    onValueChange = { address = it },
-                    placeholder = "you@example.com",
-                    keyboard = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
-                )
-                Spacer(Modifier.height(16.dp))
-                CapsLabel("Password")
-                Spacer(Modifier.height(8.dp))
-                Field(
-                    value = password,
-                    onValueChange = { password = it },
-                    placeholder = "At least six characters",
-                    keyboard = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                    secret = true
-                )
-
-                if (error != null) {
-                    Spacer(Modifier.height(12.dp))
-                    Text(error!!, style = Body.copy(fontSize = 13.sp, color = Red))
-                }
-
-                Spacer(Modifier.height(20.dp))
-                InkPill(
-                    label = if (busy) "Working…" else if (creating) "Create account" else "Sign in",
-                    onClick = {
-                        if (creating) Account.createAccount(address, password, landed)
-                        else Account.signIn(address, password, landed)
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                )
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    if (creating) "I already have an account" else "I need an account",
-                    style = Body.copy(fontSize = 13.sp),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(999.dp))
-                        .clickable { creating = !creating }
-                        .padding(vertical = 8.dp)
-                )
+                SignInBlock(label = "Sign in") { }
             }
         } else {
             Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp)) {
@@ -197,7 +95,7 @@ fun AccountScreen(onBack: () -> Unit) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        MochiTile(Mood.PLEASED, Paper, height = 32.dp, corner = 14.dp, inset = 9.dp)
+                        MochiTile(Mood.PLEASED, Color.Transparent, height = 40.dp, inset = 0.dp)
                         Column {
                             Text("Mirrored", style = Display.copy(fontSize = 19.sp, lineHeight = 20.sp))
                             Spacer(Modifier.height(4.dp))

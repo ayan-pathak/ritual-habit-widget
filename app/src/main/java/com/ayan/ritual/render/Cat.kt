@@ -7,7 +7,12 @@ import android.graphics.Path
 import android.graphics.Shader
 
 /** What Mochi is doing, derived from the streak — never chosen for decoration. */
-enum class Mood { AWAKE, PLEASED, RESTING, LET_DOWN }
+enum class Mood {
+    AWAKE, PLEASED, RESTING, LET_DOWN;
+
+    /** Whether this face has eyes to shut, which is what makes a blink read. */
+    val opensEyes: Boolean get() = this == AWAKE || this == LET_DOWN
+}
 
 /**
  * Mochi, four drawn portraits, replayed as vector paths.
@@ -168,10 +173,19 @@ object Cat {
         canvas.restore()
     }
 
-    /** The mood the app should show given today's state and the running streak. */
-    fun moodFor(doneToday: Boolean, streak: Int, missedYesterday: Boolean): Mood = when {
-        doneToday -> Mood.PLEASED
-        missedYesterday && streak == 0 -> Mood.LET_DOWN
-        else -> Mood.AWAKE
-    }
+    /**
+     * The mood the app should show given today's state and the running streak.
+     *
+     * Both faces smile with their eyes closed. [Mood.AWAKE]'s wide green eyes
+     * read as a stare at the sizes he is actually drawn at — a 24dp badge is
+     * two bright discs and not much else — so they are not used, and neither
+     * is [Mood.LET_DOWN]: a sad cat is a punishment for a missed day, and a
+     * missed day is already its own empty square.
+     *
+     * What is left still carries the reward. [Mood.RESTING] is a calm closed
+     * smile and [Mood.PLEASED] is a blushing grin, so marking today still
+     * changes his face, and that change still only ever answers state.
+     */
+    fun moodFor(doneToday: Boolean, streak: Int, missedYesterday: Boolean): Mood =
+        if (doneToday) Mood.PLEASED else Mood.RESTING
 }

@@ -32,7 +32,7 @@ Flat, warm, high-contrast. No gradients, no glow, no shadow anywhere — an earl
 | Ink | `#12120F` | Text, filled squares, primary pills |
 | Lime | `#C9F73F` | Default ritual colour, Mochi's eyes |
 
-Ritual colours: Lime, Red `#E5331C`, Sage `#9DB8A4`, Camel `#BC9F76`, Butter `#EDE55C`, Orange `#F26A1B`.
+Ritual colours: Lime, Red `#E5331C`, Butter `#EDE55C`, Orange `#F26A1B`. Sage and Camel were dropped: six swatches in a row is a decision, four is a choice, and the muted two were the two nobody picked.
 
 Type is **Archivo** — one variable TTF in `res/font/`, pinned to weights 500/600/800 by the `archivo_*.xml` font families so Canvas and Compose draw identical instances. Headings are always ExtraBold set tight (`-0.03em`).
 
@@ -50,7 +50,11 @@ They are vectors rather than PNGs because he is drawn at sizes an order of magni
 
 `Cat` needs no loading: the art is embedded, and each mood is parsed on first draw and cached. Size him by height, `Cat.draw(canvas, left, top, height, mood)`, and `Cat.widthFor` gives the rest.
 
-His mood is derived from streak state (`Cat.moodFor`), never chosen for decoration: awake when today is unmarked, pleased once marked, let down the morning after a break.
+His mood is derived from streak state (`Cat.moodFor`), never chosen for decoration: resting when today is unmarked, pleased once marked.
+
+**Only two of the four faces ship.** `AWAKE`'s wide green eyes read as a stare at the sizes he is actually drawn at, and `LET_DOWN` punishes a missed day that the empty square has already recorded. `RESTING` and `PLEASED` both smile with their eyes closed, and the step between a calm smile and a blushing grin still makes marking a day change his face. The other two stay in the art because the sheet is one drawing and dropping them would move the head. Nothing blinks any more, for the obvious reason: `Mood.opensEyes` gates it.
+
+**He grows out of the bottom edge of whatever holds him**, never floats in the middle of it. A portrait cropped by its own frame reads as a character; one centred in a box reads as a sticker. Where there is no box he stands straight on the colour, and there is never a pale tile behind him: two near-whites meeting was the one place he lost his edges.
 
 ### Motion
 

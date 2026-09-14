@@ -27,7 +27,7 @@ enum class Beat { MARK, MISS, UNLOCK, SETTLE }
  * Call [advance] once a frame, then read [scaleX], [scaleY], [offsetY] and
  * [mood].
  */
-class MochiMotion(mood: Mood = Mood.AWAKE) {
+class MochiMotion(mood: Mood = Mood.RESTING) {
 
     /** The face to draw this frame. A blink shows through as [Mood.RESTING]. */
     var mood: Mood = mood
@@ -95,7 +95,7 @@ class MochiMotion(mood: Mood = Mood.AWAKE) {
     private var segments: List<Segment>? = null
     private var index = 0
     private var elapsed = 0f              // seconds into the current segment
-    private var lands = Mood.AWAKE        // the face the running beat swaps to
+    private var lands = Mood.RESTING      // the face the running beat swaps to
 
     // Where the beat started from, so an interrupted beat carries its pose
     // into the next one instead of snapping back to rest first.
@@ -183,8 +183,10 @@ class MochiMotion(mood: Mood = Mood.AWAKE) {
     }
 
     private fun blink() {
-        // He never blinks mid-beat: a shut eye during a hop reads as a flinch.
-        if (segments != null || clock < blinkAt) return
+        // Only a face with open eyes can blink, and the two the app shows do
+        // not have any. He never blinks mid-beat either: a shut eye during a
+        // hop reads as a flinch.
+        if (!faceUnderBlink.opensEyes || segments != null || clock < blinkAt) return
         blinkUntil = clock + BLINK_SECONDS
         blinkAt = clock + 2.8f + Random.nextFloat() * 3.7f
     }

@@ -19,7 +19,7 @@ data class SlabModel(
     val totalDone: Int,
     val remaining: Int,
     val doneToday: Boolean,
-    val mood: Mood = Mood.AWAKE
+    val mood: Mood = Mood.RESTING
 )
 
 /**
@@ -79,7 +79,7 @@ object SlabRenderer {
         }
 
         // ── Layout ──────────────────────────────────────────────────────────
-        val headerH = if (cfg.header) dp(38f) else 0f
+        val headerH = if (cfg.header) dp(42f) else 0f
         val footerH = if (cfg.footer) dp(22f) else 0f
         val actionH = if (cfg.action) dp(ACTION_HEIGHT_DP) else 0f
 
@@ -156,9 +156,11 @@ object SlabRenderer {
 
             if (cfg.cat) {
                 val streakPaint = paint(dp(8.5f), onBlock.withAlpha(170), Fonts.semiBold(), 0.10f)
+                // 14dp below the name's baseline rather than 10: at 8.5dp the
+                // caps line was sitting in the name's descenders.
                 canvas.drawText(
                     "${model.streak} DAY STREAK",
-                    pad, pad + dp(37f), streakPaint
+                    pad, pad + dp(41f), streakPaint
                 )
             }
         }

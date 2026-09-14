@@ -8,6 +8,7 @@ import androidx.credentials.GetCredentialRequest
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.OAuthProvider
 import kotlinx.coroutines.tasks.await
@@ -69,29 +70,45 @@ object Account {
         }
     }
 
-    fun signIn(email: String, password: String, onDone: (Boolean) -> Unit = {}) {
-        val instance = auth ?: return onDone(false)
-        _busy.value = true
-        _error.value = null
-        instance.signInWithEmailAndPassword(email.trim(), password)
-            .addOnCompleteListener { task ->
-                _busy.value = false
-                if (!task.isSuccessful) _error.value = readable(task.exception?.message)
-                onDone(task.isSuccessful)
-            }
-    }
 
-    fun createAccount(email: String, password: String, onDone: (Boolean) -> Unit = {}) {
+    /**
+     * The only email path the app offers: one button that ends with you signed
+     * in, whether or not you had an account a moment ago.
+     *
+     * Asking someone to declare up front whether they are new is a question
+     * they should not have to answer — they know their address and they know
+     * their password, and Firebase already knows which of the two calls is the
+     * right one. Creating first and falling back on a collision keeps the
+     * error honest: a wrong password reports a wrong password rather than an
+     * address that is already taken.
+     */
+    fun continueWithEmail(email: String, password: String, onDone: (Boolean) -> Unit = {}) {
         val instance = auth ?: return onDone(false)
         _busy.value = true
         _error.value = null
         instance.createUserWithEmailAndPassword(email.trim(), password)
-            .addOnCompleteListener { task ->
-                _busy.value = false
-                if (!task.isSuccessful) _error.value = readable(task.exception?.message)
-                onDone(task.isSuccessful)
+            .addOnCompleteListener { made ->
+                if (made.isSuccessful) {
+                    _busy.value = false
+                    onDone(true)
+                    return@addOnCompleteListener
+                }
+                if (made.exception !is FirebaseAuthUserCollisionException) {
+                    _busy.value = false
+                    _error.value = readable(made.exception?.message)
+                    onDone(false)
+                    return@addOnCompleteListener
+                }
+                // The address is already an account, so this is a return.
+                instance.signInWithEmailAndPassword(email.trim(), password)
+                    .addOnCompleteListener { back ->
+                        _busy.value = false
+                        if (!back.isSuccessful) _error.value = readable(back.exception?.message)
+                        onDone(back.isSuccessful)
+                    }
             }
     }
+
 
     /**
      * Whether a Google button can do anything.
