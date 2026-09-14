@@ -170,7 +170,7 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
             Spacer(Modifier.height(8.dp))
             Text(
                 if (StoryShare.isInstagramInstalled(context))
-                    "Opens Instagram Stories"
+                    "Opens Instagram Stories, with the link copied for a sticker"
                 else
                     "Instagram isn't installed — you'll get the share sheet",
                 style = Body.copy(fontSize = 12.sp, color = InkFaint),

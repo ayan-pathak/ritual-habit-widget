@@ -26,10 +26,16 @@ import kotlinx.coroutines.launch
  * The three ways in, as one group.
  *
  * Google, Apple and an email address are the same offer made three ways, so
- * they are stacked together with nothing between them. There is no question
- * about whether you already have an account: [Account.continueWithEmail]
- * works that out, because the person holding the address and the password
- * already knows the answer and should not have to say it twice.
+ * they are stacked together with nothing between them — three buttons, one
+ * decision. Email is a button like the other two and only becomes a form once
+ * it is chosen, because two empty fields sitting open under two one-tap
+ * buttons make the whole screen look like work when most people will never
+ * touch them.
+ *
+ * There is no question about whether you already have an account either:
+ * [Account.continueWithEmail] works that out, because the person holding the
+ * address and the password already knows the answer and should not have to
+ * say it twice.
  *
  * One block, used by the first launch and by the account screen, so the two
  * cannot drift into two different sign-ins.
@@ -44,6 +50,7 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit) {
 
     var address by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var emailChosen by remember { mutableStateOf(false) }
 
     // Whoever they came in as, the mirror starts on the same uid.
     val landed: (Boolean) -> Unit = { ok ->
@@ -80,36 +87,49 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit) {
             border = Ink
         )
 
-        Spacer(Modifier.height(18.dp))
-        CapsLabel("Email")
-        Spacer(Modifier.height(8.dp))
-        Field(
-            value = address,
-            onValueChange = { address = it },
-            placeholder = "you@example.com",
-            keyboard = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
-        )
-        Spacer(Modifier.height(12.dp))
-        CapsLabel("Password")
-        Spacer(Modifier.height(8.dp))
-        Field(
-            value = password,
-            onValueChange = { password = it },
-            placeholder = "At least six characters",
-            keyboard = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-            secret = true
-        )
+        Spacer(Modifier.height(10.dp))
 
-        if (error != null) {
+        if (!emailChosen) {
+            InkPill(
+                label = "Continue with email",
+                onClick = { emailChosen = true },
+                modifier = Modifier.fillMaxWidth(),
+                background = Paper,
+                content = Ink,
+                border = Ink
+            )
+        } else {
+            Spacer(Modifier.height(8.dp))
+            CapsLabel("Email")
+            Spacer(Modifier.height(8.dp))
+            Field(
+                value = address,
+                onValueChange = { address = it },
+                placeholder = "you@example.com",
+                keyboard = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next)
+            )
             Spacer(Modifier.height(12.dp))
-            Text(error!!, style = Body.copy(fontSize = 13.sp, color = Red))
-        }
+            CapsLabel("Password")
+            Spacer(Modifier.height(8.dp))
+            Field(
+                value = password,
+                onValueChange = { password = it },
+                placeholder = "At least six characters",
+                keyboard = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+                secret = true
+            )
 
-        Spacer(Modifier.height(20.dp))
-        InkPill(
-            label = if (busy) "Working…" else label,
-            onClick = { Account.continueWithEmail(address, password, landed) },
-            modifier = Modifier.fillMaxWidth()
-        )
+            if (error != null) {
+                Spacer(Modifier.height(12.dp))
+                Text(error!!, style = Body.copy(fontSize = 13.sp, color = Red))
+            }
+
+            Spacer(Modifier.height(18.dp))
+            InkPill(
+                label = if (busy) "Working…" else label,
+                onClick = { Account.continueWithEmail(address, password, landed) },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
     }
 }
