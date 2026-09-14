@@ -22,6 +22,15 @@ enum Mood {
  They are replayed rather than rasterised because he is drawn at sizes an
  order of magnitude apart — 30pt in the widget header, 176px on the story
  card — and a raster picked for one is wrong for the other.
+
+ Replaying is also what makes the seams closable. The drawing is built from
+ shapes that abut rather than overlap, and each one antialiases its own edge,
+ so the paper behind it shows through every boundary as a hairline. Covering
+ it means growing each shape by half a pixel of stroke in its own colour, and
+ it has to be half a *device* pixel: the seam is one device pixel wide however
+ far the art is scaled, so a width in art units that closes it at 30pt is a
+ fat outline at 176px. Only a per-draw stroke, taken from the transform in
+ force, is the same width on every surface.
  */
 enum Cat {
 
@@ -156,17 +165,33 @@ enum Cat {
      context is, so the whole thing is drawn under one transform and no flip.
      */
     static func draw(in ctx: CGContext, left: CGFloat, top: CGFloat, height: CGFloat, mood: Mood) {
+        guard height > 0 else { return }
         ctx.saveGState()
         ctx.translateBy(x: left, y: top)
         ctx.scaleBy(x: widthFor(height) / MochiArt.viewWidth, y: height / MochiArt.viewHeight)
+
+        // One device pixel, read back out of the transform that is now in
+        // force, so this is the same hairline on a 2x phone and in a 1080px
+        // story card. Half of it lands outside each shape, which is the seam.
+        let m = ctx.ctm
+        let perUnit = max(hypot(m.a, m.b), hypot(m.c, m.d))
+        let seam = perUnit > 0 ? 1 / perUnit : 0
+
         for item in items(mood) {
             ctx.saveGState()
             if item.alpha < 1 { ctx.setAlpha(item.alpha) }
+            ctx.setLineWidth(seam)
+            ctx.setLineJoin(.round)
             if let solid = item.solid {
                 ctx.addPath(item.path)
                 ctx.setFillColor(solid)
-                ctx.fillPath()
+                ctx.setStrokeColor(solid)
+                ctx.drawPath(using: .fillStroke)
             } else if let gradient = item.gradient {
+                // A gradient cannot be stroked, so the clip is widened instead:
+                // the stroke's own outline, unioned with the shape it rings.
+                ctx.addPath(item.path)
+                ctx.replacePathWithStrokedPath()
                 ctx.addPath(item.path)
                 ctx.clip()
                 ctx.drawLinearGradient(gradient, start: item.start, end: item.end,
@@ -178,12 +203,24 @@ enum Cat {
         ctx.restoreGState()
     }
 
-    /// A standalone image of Mochi, for the places SwiftUI wants one.
+    private static var images: [String: UIImage] = [:]
+
+    /**
+     A standalone image of Mochi, for the places SwiftUI wants one.
+
+     Kept, because a moving tile asks for one sixty times a second and every
+     one of those is seventy-five paths. Moving a raster is what the motion
+     costs; drawing it is what it would cost.
+     */
     static func image(height: CGFloat, mood: Mood) -> UIImage {
+        let key = "\(source(mood).0)@\(Int(height.rounded()))"
+        if let hit = images[key] { return hit }
         let size = CGSize(width: widthFor(height), height: height)
-        return UIGraphicsImageRenderer(size: size).image { ctx in
+        let made = UIGraphicsImageRenderer(size: size).image { ctx in
             draw(in: ctx.cgContext, left: 0, top: 0, height: height, mood: mood)
         }
+        images[key] = made
+        return made
     }
 
     /// The mood the app should show given today's state and the running streak.

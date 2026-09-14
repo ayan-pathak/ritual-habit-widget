@@ -11,6 +11,11 @@ struct PaywallView: View {
     @ObservedObject var unlock: Unlock
     let onClose: () -> Void
 
+    /// Long enough for the two bounces of `Beat.unlock` to finish.
+    private static let unlockHold: Duration = .milliseconds(900)
+
+    @State private var mochi = MochiMotion(.pleased)
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
@@ -30,7 +35,8 @@ struct PaywallView: View {
                 .padding(.top, 14)
 
                 VStack(alignment: .center, spacing: 18) {
-                    MochiTile(mood: .pleased, tile: Theme.paper, height: 64, corner: 18, inset: 14)
+                    MochiTile(mood: .pleased, tile: Theme.paper, height: 64, corner: 18, inset: 14,
+                              motion: mochi)
                     Text("Keep more than one.")
                         .displayStyle(28)
                         .multilineTextAlignment(.center)
@@ -89,7 +95,15 @@ struct PaywallView: View {
         }
         .background(Theme.cream)
         .onChange(of: unlock.isUnlocked) { _, unlocked in
-            if unlocked { onClose() }
+            guard unlocked else { return }
+            // The purchase lands and Mochi answers it before the sheet goes:
+            // closing on the frame the money clears is the one moment worth
+            // holding on to.
+            mochi.play(.unlock, face: .pleased)
+            Task {
+                try? await Task.sleep(for: Self.unlockHold)
+                onClose()
+            }
         }
     }
 

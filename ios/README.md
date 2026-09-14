@@ -14,6 +14,18 @@ both follow.
 Completions are still epoch-days in a JSON blob, in the same shape Android
 writes, so the two platforms could read each other's export unchanged.
 
+`MochiMotion.swift` is the one piece of Shared/ with no drawing in it at all:
+the beat table and a clock, the same timings as the Kotlin of the same name, so
+the two Mochis move alike. `MochiTile` runs it off a `TimelineView` and moves a
+cached raster rather than replaying seventy-five paths a frame.
+
+Mochi's seams are closed with a stroke one *device* pixel wide, taken from the
+CTM at draw time. The art is built from shapes that abut rather than overlap,
+so without it the paper shows through every boundary as a hairline — and since
+the seam stays one device pixel however far he is scaled, a width in art units
+that closes it in the widget header is a fat outline on the story card. That is
+why `Cat.draw` reads the transform rather than taking a constant.
+
 ## Building
 
 ```bash

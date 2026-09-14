@@ -39,22 +39,65 @@ struct RitualCard: View {
     }
 }
 
-/// Mochi on a coloured tile — the app's only mascot surface.
+/**
+ Mochi on a coloured tile — the app's only mascot surface.
+
+ He breathes and blinks while nothing is happening, and answers a change of
+ `mood` with a beat: a hop when a day is marked, a sink when a streak breaks.
+ The motion is derived from state exactly as the face is, so it never fires for
+ decoration. Pass a `motion` to drive a beat the mood alone cannot say.
+ */
 struct MochiTile: View {
     let mood: Mood
     let tile: Color
     var height: CGFloat = 48
     var corner: CGFloat = 14
     var inset: CGFloat = 8
+    var motion: MochiMotion?
+
+    @State private var own = MochiMotion()
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var rig: MochiMotion { motion ?? own }
 
     var body: some View {
-        Image(uiImage: Cat.image(height: height, mood: mood))
+        Group {
+            if reduceMotion {
+                portrait(mood, 1, 1, 0)
+            } else {
+                TimelineView(.animation) { context in
+                    let _ = rig.tick(at: context.date)
+                    portrait(rig.mood, rig.scaleX, rig.scaleY, rig.offsetY)
+                }
+            }
+        }
+        .padding(.horizontal, inset)
+        .padding(.vertical, inset * 0.8)
+        .background(tile)
+        .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+        .onAppear { if motion == nil { own.snap(to: mood) } }
+        .onChange(of: mood) { _, next in
+            rig.play(Self.beat(for: next), face: next)
+        }
+    }
+
+    private func portrait(_ face: Mood, _ sx: CGFloat, _ sy: CGFloat, _ ty: CGFloat) -> some View {
+        Image(uiImage: Cat.image(height: height, mood: face))
             .resizable()
             .frame(width: Cat.widthFor(height), height: height)
-            .padding(.horizontal, inset)
-            .padding(.vertical, inset * 0.8)
-            .background(tile)
-            .clipShape(RoundedRectangle(cornerRadius: corner, style: .continuous))
+            // Offset first, then scale, so a hop is squashed along with him.
+            // Scaling from the bottom presses him onto the tile rather than
+            // shrinking him toward the middle of the frame.
+            .offset(y: ty * height / MochiArt.viewHeight)
+            .scaleEffect(x: sx, y: sy, anchor: .bottom)
+    }
+
+    private static func beat(for mood: Mood) -> Beat {
+        switch mood {
+        case .pleased: return .mark
+        case .letDown: return .miss
+        default: return .settle
+        }
     }
 }
 
