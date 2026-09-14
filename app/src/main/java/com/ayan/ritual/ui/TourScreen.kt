@@ -10,6 +10,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -38,6 +39,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -386,11 +388,15 @@ private val WALLPAPER = Color(0xFF3A382F)
 private val WALL_INK = Color(0xFFF2EFE3)
 
 /**
- * The story card, at the width of the panel and its own proportions.
+ * The story card where it ends up: full-bleed in a stories frame.
  *
- * 1080 by 1920, not a thumbnail of it: at anything smaller the year collapses
- * into a smear and the one thing worth showing is gone. It is taller than the
- * panel, which is why the panel scrolls.
+ * 1080 by 1920 at the panel's own width, not a thumbnail of it — at anything
+ * smaller the year collapses into a smear and the one thing worth showing is
+ * gone. It is taller than the panel, which is why the panel scrolls.
+ *
+ * The chrome over it is the shape of a stories viewer and nothing more: no
+ * wordmark, no logo, no real account on it. It is there so the card's empty
+ * top and bottom read as the safe area they are, rather than as a mistake.
  */
 @Composable
 private fun StoryArt() {
@@ -404,13 +410,113 @@ private fun StoryArt() {
                 ShareCardRenderer.render(model, width.roundToPx(), height.roundToPx())
             }
         }
-        Image(
-            bitmap = bitmap.asImageBitmap(),
-            contentDescription = null,
-            modifier = Modifier
+        Box(
+            Modifier
                 .size(width, height)
                 .clip(RoundedCornerShape(18.dp))
-                .border(BorderStroke(1.dp, InkFaint), RoundedCornerShape(18.dp))
-        )
+        ) {
+            Image(
+                bitmap = bitmap.asImageBitmap(),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize()
+            )
+            StoryChrome()
+        }
+    }
+}
+
+private val SCRIM = Color(0x3D000000)
+private val CHROME = Color(0xFFFFFFFF)
+private val CHROME_SOFT = Color(0x99FFFFFF)
+
+@Composable
+private fun BoxScope.StoryChrome() {
+    Column(
+        Modifier
+            .align(Alignment.TopCenter)
+            .fillMaxWidth()
+            .background(SCRIM)
+            .padding(horizontal = 12.dp, vertical = 11.dp)
+    ) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            repeat(4) { i ->
+                Box(
+                    Modifier
+                        .weight(1f)
+                        .height(2.5.dp)
+                        .clip(RoundedCornerShape(999.dp))
+                        .background(if (i == 0) CHROME else CHROME_SOFT.copy(alpha = 0.35f))
+                )
+            }
+        }
+        Spacer(Modifier.height(12.dp))
+        Row(
+            Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(9.dp)
+        ) {
+            Box(Modifier.size(26.dp).clip(RoundedCornerShape(999.dp)).background(CHROME_SOFT))
+            Text(
+                "your story",
+                style = Caps.copy(fontSize = 11.sp, letterSpacing = 0.sp, color = CHROME)
+            )
+            Text(
+                "now",
+                style = Caps.copy(fontSize = 11.sp, letterSpacing = 0.sp, color = CHROME_SOFT)
+            )
+            Spacer(Modifier.weight(1f))
+            Canvas(Modifier.size(13.dp)) {
+                val c = CHROME
+                drawLine(c, Offset(0f, 0f), Offset(size.width, size.height), 1.8.dp.toPx(), StrokeCap.Round)
+                drawLine(c, Offset(size.width, 0f), Offset(0f, size.height), 1.8.dp.toPx(), StrokeCap.Round)
+            }
+        }
+    }
+
+    Row(
+        Modifier
+            .align(Alignment.BottomCenter)
+            .fillMaxWidth()
+            .background(SCRIM)
+            .padding(horizontal = 12.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Box(
+            Modifier
+                .weight(1f)
+                .height(34.dp)
+                .clip(RoundedCornerShape(999.dp))
+                .border(BorderStroke(1.5.dp, CHROME_SOFT), RoundedCornerShape(999.dp)),
+            contentAlignment = Alignment.CenterStart
+        ) {
+            Text(
+                "Send message",
+                style = Caps.copy(fontSize = 11.sp, letterSpacing = 0.sp, color = CHROME_SOFT),
+                modifier = Modifier.padding(start = 14.dp)
+            )
+        }
+        // A heart and a paper plane, drawn rather than fetched.
+        Canvas(Modifier.size(18.dp)) {
+            val w = size.width
+            val p = androidx.compose.ui.graphics.Path().apply {
+                moveTo(w * .5f, w * .88f)
+                cubicTo(w * -.12f, w * .5f, w * .14f, w * .02f, w * .5f, w * .28f)
+                cubicTo(w * .86f, w * .02f, w * 1.12f, w * .5f, w * .5f, w * .88f)
+                close()
+            }
+            drawPath(p, CHROME, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.7.dp.toPx()))
+        }
+        Canvas(Modifier.size(18.dp)) {
+            val w = size.width
+            val p = androidx.compose.ui.graphics.Path().apply {
+                moveTo(w * .06f, w * .5f)
+                lineTo(w * .94f, w * .1f)
+                lineTo(w * .58f, w * .9f)
+                lineTo(w * .46f, w * .58f)
+                close()
+            }
+            drawPath(p, CHROME, style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.7.dp.toPx()))
+        }
     }
 }
