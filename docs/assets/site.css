@@ -1,0 +1,276 @@
+/* Ritual on the web.
+ *
+ * The app's design system, extended to a page. Flat, warm, high-contrast; no
+ * gradients, no glow, no shadow. The tokens below are Palette.kt and Theme.kt
+ * and nothing else, and they follow the app's one rule about the dark theme:
+ * only the chrome flips. A ritual card is a printed object and it is the same
+ * object on a dark table as on a light one, so the canvases keep their fixed
+ * palette while the page around them changes. */
+
+:root {
+  --page:    #E7E3D4;
+  --surface: #F4F2EA;
+  --ink:     #12120F;
+  --on-ink:  #F4F2EA;
+  --ink-soft:  rgba(18, 18, 15, .56);
+  --ink-faint: rgba(18, 18, 15, .20);
+  --rule:      rgba(18, 18, 15, .13);
+
+  /* Fixed both ways round: these are the brand, not the surface. */
+  --lime:   #C9F73F;
+  --red:    #E5331C;
+  --butter: #EDE55C;
+  --orange: #F26A1B;
+  --on-lime: #12120F;
+
+  --gutter: 20px;
+  --measure: 34rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page:    #16150F;
+    --surface: #232117;
+    --ink:     #EDE9DA;
+    --on-ink:  #16150F;
+    --ink-soft:  rgba(237, 233, 218, .56);
+    --ink-faint: rgba(237, 233, 218, .20);
+    --rule:      rgba(237, 233, 218, .14);
+  }
+}
+
+:root[data-theme="dark"] {
+  --page:    #16150F;
+  --surface: #232117;
+  --ink:     #EDE9DA;
+  --on-ink:  #16150F;
+  --ink-soft:  rgba(237, 233, 218, .56);
+  --ink-faint: rgba(237, 233, 218, .20);
+  --rule:      rgba(237, 233, 218, .14);
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--ink);
+  font: 500 16px/1.6 Archivo, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding-left: var(--gutter);
+  padding-right: var(--gutter);
+}
+
+/* ── Type ──────────────────────────────────────────────────────────────
+   Headings are ExtraBold set tight, exactly as they are in the app. */
+h1, h2, h3 {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.04;
+  text-wrap: balance;
+  margin: 0;
+}
+h1 { font-size: clamp(2.6rem, 8vw, 4.6rem); }
+h2 { font-size: clamp(1.9rem, 5vw, 2.9rem); }
+h3 { font-size: 1.1rem; letter-spacing: -0.02em; }
+
+p { margin: 0; max-width: var(--measure); }
+.lede { font-size: clamp(1.05rem, 2.4vw, 1.25rem); color: var(--ink-soft); line-height: 1.5; }
+.soft { color: var(--ink-soft); }
+.faint { color: var(--ink-faint); }
+.small { font-size: .875rem; line-height: 1.55; }
+
+.caps {
+  font-weight: 600;
+  font-size: .688rem;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0;
+}
+
+a { color: inherit; }
+a:focus-visible, button:focus-visible, canvas:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* ── The mark ──────────────────────────────────────────────────────────
+   A row of squares standing in for the eyebrow, because the grid is the
+   product's whole visual language and a number would say less. */
+.mark { display: flex; gap: 3px; align-items: center; }
+.mark i {
+  width: 7px; height: 7px; border-radius: 2px;
+  background: var(--ink-faint); display: block;
+}
+.mark i.on { background: var(--ink); }
+
+.eyebrow { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+
+/* ── Sections ──────────────────────────────────────────────────────────── */
+section { padding-block: clamp(56px, 9vw, 104px); }
+section + section { border-top: 1px solid var(--rule); }
+
+.stack { display: flex; flex-direction: column; gap: 18px; }
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(32px, 6vw, 72px);
+  align-items: center;
+}
+@media (max-width: 760px) { .split { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Controls ──────────────────────────────────────────────────────────
+   The primary control is a solid ink pill. Nothing else on the page is
+   this loud, which is the rule the app follows too. */
+.pill {
+  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 56px; padding: 0 28px;
+  border: 0; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: var(--on-ink);
+  font: 800 .95rem/1 Archivo, system-ui, sans-serif;
+  letter-spacing: -0.01em; text-decoration: none;
+  transition: transform .12s ease;
+}
+.pill:active { transform: translateY(1px); }
+.pill.ghost {
+  background: transparent; color: var(--ink);
+  box-shadow: inset 0 0 0 2px var(--ink);
+}
+.pills { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+
+.chip {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 13px 7px 10px; border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--rule);
+  font: 600 .75rem/1 Archivo, system-ui, sans-serif;
+  color: var(--ink-soft); letter-spacing: .02em;
+}
+.chip b { color: var(--ink); font-weight: 800; }
+
+/* ── Surfaces ──────────────────────────────────────────────────────────── */
+.panel {
+  background: var(--surface);
+  border-radius: 24px;
+  padding: clamp(20px, 3vw, 28px);
+}
+.hero-card { background: var(--lime); border-radius: 28px; padding: 26px 22px; }
+
+/* Canvases carry their own fixed palette; they must never stretch. */
+canvas { display: block; max-width: 100%; }
+
+.card-live { width: 100%; cursor: pointer; border-radius: 24px; }
+
+/* ── The phone, for the widget ─────────────────────────────────────────── */
+.phone {
+  width: 100%; max-width: 393px;
+  background: #3A382F;
+  border-radius: 30px 30px 6px 6px;
+  padding: 0 16px 0;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.phone > * { flex: none; }
+.phone .bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 6px 0;
+  font: 600 12px/1 Archivo, system-ui, sans-serif; color: #F2EFE3;
+}
+.phone .bars { display: flex; gap: 3px; align-items: flex-end; height: 11px; }
+.phone .bars i { width: 4px; border-radius: 1.4px; background: #F2EFE3; display: block; }
+.icons { display: flex; justify-content: space-between; }
+.icons i {
+  display: block; width: 56px; height: 56px; flex: none;
+  border-radius: 15px; background: rgba(242, 239, 227, .13);
+}
+
+/* ── The story, in a stories frame ─────────────────────────────────────── */
+.story {
+  position: relative; overflow: hidden; border-radius: 20px;
+  width: 100%; max-width: 300px;
+  /* The story is cream and so is the page: without a real edge the
+     frame is simply not there and the safe area reads as a gap. */
+  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+}
+.story .chrome {
+  position: absolute; left: 0; right: 0;
+  background: rgba(0, 0, 0, .24);
+  padding: 11px 12px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.story .chrome.top { top: 0; }
+.story .chrome.bottom { bottom: 0; flex-direction: row; align-items: center; gap: 12px; }
+.story .segs { display: flex; gap: 3px; }
+.story .segs i { flex: 1; height: 2.5px; border-radius: 999px; background: rgba(255,255,255,.35); display: block; }
+.story .segs i.on { background: #fff; }
+.story .who { display: flex; align-items: center; gap: 9px; }
+.story .av { width: 26px; height: 26px; border-radius: 999px; background: rgba(255,255,255,.6); }
+.story .name { font: 600 11px/1 Archivo, system-ui, sans-serif; color: #fff; }
+.story .when { font: 600 11px/1 Archivo, system-ui, sans-serif; color: rgba(255,255,255,.6); }
+.story .reply {
+  flex: 1; height: 34px; border-radius: 999px; display: flex; align-items: center;
+  padding: 0 14px; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.6);
+  font: 600 11px/1 Archivo, system-ui, sans-serif; color: rgba(255,255,255,.6);
+}
+
+/* ── Swatches ──────────────────────────────────────────────────────────── */
+.swatches { display: flex; gap: 10px; }
+.swatches button {
+  flex: 1; height: 52px; border: 0; border-radius: 15px; cursor: pointer;
+  padding: 0; transition: transform .12s ease;
+}
+.swatches button[aria-pressed="true"] { box-shadow: inset 0 0 0 2.5px var(--on-lime); }
+.swatches button:active { transform: scale(.97); }
+
+/* ── Price ─────────────────────────────────────────────────────────────── */
+.ledger { display: grid; gap: 1px; background: var(--rule); border-radius: 18px; overflow: hidden; }
+.ledger div {
+  background: var(--surface); padding: 18px 20px;
+  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+}
+.ledger b { font-weight: 800; letter-spacing: -0.02em; }
+
+/* ── Footer ────────────────────────────────────────────────────────────── */
+footer { border-top: 1px solid var(--rule); padding-block: 40px; }
+.foot {
+  display: flex; flex-wrap: wrap; gap: 14px 28px;
+  align-items: baseline; justify-content: space-between;
+}
+.foot nav { display: flex; flex-wrap: wrap; gap: 20px; }
+.foot a { color: var(--ink-soft); text-decoration: none; font-size: .875rem; }
+.foot a:hover { color: var(--ink); text-decoration: underline; }
+
+/* ── Prose pages ───────────────────────────────────────────────────────── */
+.prose { max-width: var(--measure); display: flex; flex-direction: column; gap: 22px; }
+.prose h2 { font-size: 1.35rem; margin-top: 18px; }
+.prose ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 8px; }
+.prose li { color: var(--ink-soft); }
+.prose li b, .prose p b { color: var(--ink); font-weight: 700; }
+.prose a { color: var(--ink); text-underline-offset: 3px; }
+.backlink {
+  display: inline-flex; align-items: center; gap: 8px;
+  font: 600 .8rem/1 Archivo, system-ui, sans-serif;
+  color: var(--ink-soft); text-decoration: none;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+.backlink:hover { color: var(--ink); }
+
+.note {
+  background: var(--surface); border-radius: 16px; padding: 16px 18px;
+  font-size: .9rem; color: var(--ink-soft); max-width: var(--measure);
+}
+.note b { color: var(--ink); }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; }
+}

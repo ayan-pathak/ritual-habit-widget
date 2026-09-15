@@ -1,0 +1,48 @@
+name: Site
+
+# Publishes docs/ to GitHub Pages.
+#
+# It runs on a push to main once the site is merged, and by hand from the
+# Actions tab on any branch — which is how it goes live before the merge.
+# Set Settings → Pages → Source to "GitHub Actions" once; nothing else is
+# needed, and there is no branch for it to fight over.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/pages.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# One deploy at a time, and a newer one waits rather than cancelling the
+# older: a half-finished Pages deploy is worse than a slow one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload docs/
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4

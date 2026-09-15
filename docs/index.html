@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ritual — a year is a grid of empty squares</title>
+<meta name="description" content="A daily habit tracker built around one idea: a year is a grid of empty squares, and each day you keep a practice, one fills in. The home-screen widget is the product.">
+<meta name="theme-color" content="#E7E3D4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16150F" media="(prefers-color-scheme: dark)">
+<link rel="canonical" href="https://ayan-pathak.github.io/ritual-habit-widget/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ritual — a year is a grid of empty squares">
+<meta property="og:description" content="One square a day. The home-screen widget is the product; the app exists to feed it.">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ── Hero ───────────────────────────────────────────────────────────
+       No screenshot. The card below is SlabRenderer running in the page,
+       and tapping it marks today — the app's only gesture, as the first
+       thing the site lets anyone do. -->
+  <section id="top">
+    <div class="split">
+      <div class="stack">
+        <div class="eyebrow">
+          <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+          <p class="caps">Ritual — one square a day</p>
+        </div>
+        <h1>A year is a grid of empty squares.</h1>
+        <p class="lede">
+          Each day you keep a practice, one fills in. That is the whole app.
+          The home-screen widget is the product; everything else exists to
+          feed it.
+        </p>
+        <div class="pills">
+          <a class="pill" href="https://github.com/ayan-pathak/ritual-habit-widget/releases/latest" id="get">Get the APK</a>
+          <a class="pill ghost" href="#widget">See the widget</a>
+        </div>
+        <p class="small faint">
+          Android, 11&nbsp;MB. Coming to Google&nbsp;Play. iOS is being ported.
+        </p>
+      </div>
+
+      <div class="stack">
+        <div class="hero-card">
+          <canvas id="hero" class="card-live" role="button" tabindex="0"
+                  aria-label="A ritual card. Activate to mark today."></canvas>
+        </div>
+        <p class="small soft" id="hero-hint">Tap the card to mark today.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── The gesture ────────────────────────────────────────────────── -->
+  <section>
+    <div class="split">
+      <div class="stack">
+        <div class="eyebrow">
+          <span class="mark" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
+          <p class="caps">One gesture</p>
+        </div>
+        <h2>Name it. Then keep it.</h2>
+        <p class="soft">
+          A ritual is a name, a time of day, and a colour. Nothing else to
+          configure, no streak insurance, no reminders to dismiss. Marking
+          today inverts the card — colour block to ink, ink grid to the
+          ritual's colour — so an unkept ritual is obvious at a glance across
+          a home screen.
+        </p>
+        <div class="stack" style="gap:12px">
+          <p class="caps">Its colour</p>
+          <div class="swatches" id="swatches" role="group" aria-label="Ritual colour"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <canvas id="detail" class="card-live" role="button" tabindex="0"
+                aria-label="The same ritual in another colour. Activate to mark today."></canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── The widget ─────────────────────────────────────────────────── -->
+  <section id="widget">
+    <div class="split">
+      <div class="stack">
+        <div class="eyebrow">
+          <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i></span>
+          <p class="caps">On your home screen</p>
+        </div>
+        <h2>Never open the app.</h2>
+        <p class="soft">
+          The widget draws the same pixels from the same function as the app,
+          so the two can never drift apart. The pill marks today without
+          anything launching. Most days you will not open Ritual at all, which
+          is the point of it.
+        </p>
+        <div class="pills">
+          <span class="chip"><b>365</b> squares a year</span>
+          <span class="chip"><b>1</b> tap a day</span>
+          <span class="chip"><b>0</b> notifications</span>
+        </div>
+      </div>
+      <div class="phone" aria-label="A phone home screen with the Ritual widget on it">
+        <div class="bar">
+          <span>9:41</span>
+          <span class="bars" aria-hidden="true"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i></span>
+        </div>
+        <div style="height:18px"></div>
+        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div style="height:16px"></div>
+        <canvas id="wcard"></canvas>
+        <div style="height:16px"></div>
+        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div style="height:22px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── The story ──────────────────────────────────────────────────── -->
+  <section>
+    <div class="split">
+      <div class="stack">
+        <div class="eyebrow">
+          <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+          <p class="caps">When it is worth showing</p>
+        </div>
+        <h2>A year, as a story.</h2>
+        <p class="soft">
+          Any ritual becomes a 1080&nbsp;×&nbsp;1920 card with the grid you
+          actually filled on it, handed straight to Instagram Stories. No
+          watermark, no badge, no account required to post one. The card on
+          the right is that renderer, at a third of the size.
+        </p>
+      </div>
+      <div style="display:flex;justify-content:center">
+        <div class="story">
+          <canvas id="story"></canvas>
+          <div class="chrome top">
+            <div class="segs" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
+            <div class="who">
+              <span class="av" aria-hidden="true"></span>
+              <span class="name">your story</span>
+              <span class="when">now</span>
+            </div>
+          </div>
+          <div class="chrome bottom">
+            <span class="reply">Send message</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── What it costs ──────────────────────────────────────────────── -->
+  <section id="price">
+    <div class="split">
+      <div class="stack">
+        <div class="eyebrow">
+          <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>
+          <p class="caps">What it costs</p>
+        </div>
+        <h2>Keep your progress, forever.</h2>
+        <p class="soft">
+          Your first ritual is free forever. Unlock the rest once, and every
+          square you have filled stays yours for good. One payment, no
+          subscription, nothing to cancel.
+        </p>
+        <p class="small faint">
+          Marking a day, the widget, the archive and the story card keep
+          working for everyone, on whatever you already have. The wall sits on
+          <em>creating</em> a second ritual and nowhere else.
+        </p>
+      </div>
+      <div class="ledger">
+        <div><span class="soft">One ritual</span> <b>Free, forever</b></div>
+        <div><span class="soft">As many as you keep</span> <b>$4.99 once</b></div>
+        <div><span class="soft">Subscription</span> <b>None</b></div>
+        <div><span class="soft">Ads, trackers, analytics</span> <b>None</b></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Get it ─────────────────────────────────────────────────────── -->
+  <section id="get-it">
+    <div class="stack" style="align-items:flex-start">
+      <div class="eyebrow">
+        <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>
+        <p class="caps">Start today</p>
+      </div>
+      <h2>There are <span id="left">—</span> squares left this year.</h2>
+      <p class="lede">Every one of them is still empty.</p>
+      <div class="pills" style="margin-top:8px">
+        <a class="pill" href="https://github.com/ayan-pathak/ritual-habit-widget/releases/latest">Get the APK</a>
+        <a class="pill ghost" href="https://github.com/ayan-pathak/ritual-habit-widget">Read the source</a>
+      </div>
+      <p class="small faint">
+        The APK is signed with a development key, so Android will ask you to
+        allow the install. The Play release is on its way.
+      </p>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap foot">
+    <p class="caps">Ritual — one square a day</p>
+    <nav>
+      <a href="privacy/">Privacy</a>
+      <a href="delete-account/">Delete your account</a>
+      <a href="https://github.com/ayan-pathak/ritual-habit-widget">Source</a>
+    </nav>
+  </div>
+</footer>
+
+<script src="assets/mochi.js"></script>
+<script src="assets/ritual.js"></script>
+<script>
+"use strict";
+
+// One model behind the hero and the colour section, so tapping either one
+// tells the truth about the other.
+let accent = 0;
+let marked = false;
+
+const hero = document.getElementById("hero");
+const detail = document.getElementById("detail");
+const wcard = document.getElementById("wcard");
+const story = document.getElementById("story");
+const hint = document.getElementById("hero-hint");
+
+function model(opts) {
+  return Ritual.demoModel(Object.assign({ accent, marked }, opts || {}));
+}
+
+function paintAll() {
+  Ritual.paintCard(hero, model());
+  Ritual.paintCard(detail, model());
+  // The widget carries the mark-today pill the real one is tapped by.
+  Ritual.paintCard(wcard, model({ marked: false }), { action: true, ratio: 361 / 156 });
+  Ritual.Story.paint(story, story.clientWidth * (Ritual.Story.H / Ritual.Story.W),
+                     model({ marked: true }));
+  hint.textContent = marked
+    ? "Marked. Tap again to take it back."
+    : "Tap the card to mark today.";
+}
+
+function toggle() {
+  marked = !marked;
+  paintAll();
+}
+
+for (const c of [hero, detail]) {
+  c.addEventListener("click", toggle);
+  c.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); }
+  });
+}
+
+// Six colours went in, four came out: six swatches in a row is a decision,
+// four is a choice.
+const swatches = document.getElementById("swatches");
+Ritual.ACCENTS.forEach((a, i) => {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.style.background = a.block;
+  b.setAttribute("aria-label", a.name);
+  b.setAttribute("aria-pressed", String(i === accent));
+  b.addEventListener("click", () => {
+    accent = i;
+    for (const other of swatches.children) other.setAttribute("aria-pressed", "false");
+    b.setAttribute("aria-pressed", "true");
+    paintAll();
+  });
+  swatches.append(b);
+});
+
+// The same number the app's home screen opens with, worked out the same way.
+const now = new Date();
+const year = now.getFullYear();
+const jan = Date.UTC(year, 0, 1);
+const doy = Math.floor((Date.UTC(year, now.getMonth(), now.getDate()) - jan) / 86400000) + 1;
+const len = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
+document.getElementById("left").textContent = String(len - doy);
+
+// Nothing draws until Archivo is real, or every card measures the wrong text.
+const ready = document.fonts
+  ? document.fonts.load("800 17px Archivo").then(() => document.fonts.ready)
+  : Promise.resolve();
+ready.then(paintAll, paintAll);
+
+let resizing;
+addEventListener("resize", () => {
+  clearTimeout(resizing);
+  resizing = setTimeout(paintAll, 120);
+});
+</script>
+</body>
+</html>
