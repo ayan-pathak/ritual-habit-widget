@@ -344,6 +344,12 @@ footer { border-top: 1px solid var(--rule); padding-block: 40px; }
   pointer-events: none;
 }
 .stage-cat canvas { cursor: default; }
+/* The card gets narrow before it gets short, so a cat sized for the wide
+   layout climbs over the tally. Let him lean on the edge instead. */
+@media (max-width: 620px) {
+  .stage { padding-bottom: 74px; }
+  .stage-cat { height: 106px; left: 8px; }
+}
 
 /* A pill in a stack is a control, not a banner. */
 .stack > .pill { align-self: flex-start; }
@@ -415,3 +421,57 @@ footer { border-top: 1px solid var(--rule); padding-block: 40px; }
   margin-bottom: clamp(8px, 2vw, 16px);
 }
 .closer .hero-lede { color: rgba(18, 18, 15, .74); }
+
+/* ── Ideas ─────────────────────────────────────────────────────────────── */
+/* Not .chip: those carry a number and a claim. These are just examples, so
+   they read as labels stuck to the page rather than statistics. */
+.ideas { display: flex; flex-wrap: wrap; gap: 9px; }
+.ideas span {
+  background: var(--surface);
+  box-shadow: inset 0 0 0 1px var(--rule);
+  border-radius: 10px;
+  padding: 9px 13px;
+  font-size: .95rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.ideas span:nth-child(4n + 1) { box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 0 var(--lime); }
+.ideas span:nth-child(4n + 2) { box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 0 var(--red); }
+.ideas span:nth-child(4n + 3) { box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 0 var(--butter); }
+.ideas span:nth-child(4n + 4) { box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 0 var(--orange); }
+
+/* ── FAQ ───────────────────────────────────────────────────────────────── */
+/* Ruled rows, not cards: it is a list of questions, and seven boxes in a
+   column would give every answer the same weight as a section. */
+dl.faq { margin: clamp(26px, 4vw, 38px) 0 0; max-width: var(--measure); }
+dl.faq > div { padding-block: 20px; border-top: 1px solid var(--rule); }
+dl.faq > div:last-child { border-bottom: 1px solid var(--rule); }
+dl.faq dt {
+  font-weight: 800; letter-spacing: -0.02em;
+  font-size: 1.05rem; line-height: 1.3;
+}
+dl.faq dd {
+  margin: 7px 0 0; color: var(--ink-soft);
+  line-height: 1.55; font-size: .95rem;
+}
+dl.faq dd a { color: var(--ink); text-underline-offset: 3px; }
+
+/* ── Install helper ────────────────────────────────────────────────────── */
+/* Sits on the lime close, so its colours come from --on-ink/--on-lime and
+   not the page tokens. Retire it once there is a Play listing. */
+.helper {
+  margin-top: 22px;
+  text-align: left;
+  max-width: 30rem;
+  background: var(--on-lime);
+  color: rgba(244, 242, 234, .74);
+  border-radius: 18px;
+  padding: 18px 20px 20px;
+}
+.helper .caps { color: var(--lime); margin-bottom: 10px; }
+.helper ol {
+  margin: 0; padding-left: 1.15rem;
+  display: flex; flex-direction: column; gap: 9px;
+  font-size: .92rem; line-height: 1.5;
+}
+.helper li::marker { color: var(--lime); font-weight: 800; }
