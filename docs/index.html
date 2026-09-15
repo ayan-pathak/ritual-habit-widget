@@ -19,6 +19,13 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&display=swap">
 <link rel="stylesheet" href="assets/site.css">
+<script>
+// Set before the first paint so nothing appears and then hides itself. A
+// viewer who asked for reduced motion never gets the class, so for them the
+// page is simply at rest.
+if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
+  document.documentElement.classList.add("js");
+</script>
 </head>
 <body id="top">
 
@@ -46,7 +53,7 @@
 <!-- ── Hero: the promise, the proof, the two buttons ──────────────────── -->
 <section class="hero">
   <div class="wrap hero-grid">
-    <div class="hero-copy">
+    <div class="hero-copy" data-reveal>
       <p class="caps">Habit tracker for iPhone and Android</p>
       <h1>The habit tracker you don't have to open.</h1>
       <p class="lede">
@@ -54,7 +61,22 @@
         today fills in. Miss a day and nothing resets, so one bad week never
         wipes out the four good months behind it.
       </p>
+    </div>
 
+    <div class="hero-art" data-reveal>
+      <div class="phone" aria-label="A phone home screen with the Ritual widget on it">
+        <div class="bar-row">
+          <span>9:41</span>
+          <span class="bars" aria-hidden="true"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:11px"></i></span>
+        </div>
+        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <canvas id="wcard" class="widget-shot" aria-label="The Ritual widget: a year of squares, a streak, and a Mark button"></canvas>
+        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      </div>
+      <p class="caption">Your home screen tomorrow morning. The button marks the day without opening the app.</p>
+    </div>
+
+    <div class="hero-get" data-reveal>
       <div class="stores">
         <a class="store" data-store="appstore" href="#get">
           <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
@@ -78,19 +100,6 @@
         more than one. No subscription, no ads, no notifications.
       </p>
     </div>
-
-    <div class="hero-art">
-      <div class="phone" aria-label="A phone home screen with the Ritual widget on it">
-        <div class="bar-row">
-          <span>9:41</span>
-          <span class="bars" aria-hidden="true"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:11px"></i></span>
-        </div>
-        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        <canvas id="wcard" class="widget-shot" aria-label="The Ritual widget: a year of squares, a streak, and a Mark button"></canvas>
-        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-      </div>
-      <p class="caption">Your home screen tomorrow morning. The button marks the day without opening the app.</p>
-    </div>
   </div>
 </section>
 
@@ -108,7 +117,7 @@
 
   <!-- ── The three reasons someone is still using it in June ─────────── -->
   <section id="how">
-    <div class="head">
+    <div class="head" data-reveal>
       <p class="caps">Why this one lasts</p>
       <h2>Most habit apps get deleted in week three.</h2>
       <p class="lede">
@@ -119,7 +128,10 @@
     </div>
 
     <div class="cards">
-      <article>
+      <article data-reveal>
+        <div class="shot dark">
+          <canvas id="c-home" aria-label="The widget on a home screen"></canvas>
+        </div>
         <p class="caps">One</p>
         <h3>You never have to remember it</h3>
         <p class="soft">
@@ -129,7 +141,10 @@
           and nothing to remember.
         </p>
       </article>
-      <article>
+      <article data-reveal>
+        <div class="shot">
+          <canvas id="c-gap" aria-label="A run of filled squares with one left empty"></canvas>
+        </div>
         <p class="caps">Two</p>
         <h3>A missed day costs you one square</h3>
         <p class="soft">
@@ -138,7 +153,10 @@
           the difference between a slip and a reason to quit.
         </p>
       </article>
-      <article>
+      <article data-reveal>
+        <div class="shot">
+          <canvas id="c-year" aria-label="A full year of filled squares"></canvas>
+        </div>
         <p class="caps">Three</p>
         <h3>You can finally see the work</h3>
         <p class="soft">
@@ -153,7 +171,7 @@
   <!-- ── The card, live. Letting someone tap it is the demo ──────────── -->
   <section id="try">
     <div class="split">
-      <div class="stack">
+      <div class="stack" data-reveal>
         <p class="caps">One tap a day</p>
         <h2>This is the real card. Tap it.</h2>
         <p class="soft">
@@ -170,7 +188,7 @@
         <p class="small faint" id="mark-line">Go on, it is the real thing.</p>
       </div>
 
-      <div class="stage">
+      <div class="stage" data-reveal>
         <div class="card-frame">
           <canvas id="card" class="card-live" role="button" tabindex="0"
                   aria-label="A ritual card. Activate to mark today."></canvas>
@@ -184,7 +202,7 @@
 
   <!-- ── The year, which is the actual product ───────────────────────── -->
   <section id="year">
-    <div class="head">
+    <div class="head" data-reveal>
       <p class="caps">What you end up with</p>
       <h2>You do not need a perfect year. You need a visible one.</h2>
       <p class="lede">
@@ -194,7 +212,7 @@
       </p>
     </div>
 
-    <div class="year-panel">
+    <div class="year-panel" data-reveal>
       <div class="tally">
         <p class="figure"><span id="fig-days">169</span><span class="caps">days kept</span></p>
         <p class="figure"><span id="fig-streak">10</span><span class="caps">longest run</span></p>
@@ -211,7 +229,7 @@
   <!-- ── Sharing, sold as proof rather than as a feature ─────────────── -->
   <section id="share">
     <div class="split">
-      <div class="stack">
+      <div class="stack" data-reveal>
         <p class="caps">Tell the people who care</p>
         <h2>Proof you can put in front of someone.</h2>
         <p class="soft">
@@ -229,7 +247,8 @@
         </p>
       </div>
 
-      <div class="story-holder">
+      <div class="story-holder" data-reveal>
+       <div class="story-phone">
         <div class="story" aria-label="The story card as it appears on Instagram">
           <div class="chrome top">
             <span class="segs" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
@@ -244,6 +263,7 @@
             <span class="reply">Send message</span>
           </div>
         </div>
+       </div>
       </div>
     </div>
   </section>
@@ -251,10 +271,10 @@
   <!-- ── Mochi, kept brief and kept honest ───────────────────────────── -->
   <section id="mochi">
     <div class="split reverse">
-      <div class="mochi-slab">
+      <div class="mochi-slab" data-reveal>
         <canvas id="big-cat" role="button" tabindex="0" aria-label="Mochi. Activate to say hello."></canvas>
       </div>
-      <div class="stack">
+      <div class="stack" data-reveal>
         <p class="caps">Small thing, works anyway</p>
         <h2>Someone notices when you show up.</h2>
         <p class="soft">
@@ -268,9 +288,39 @@
     </div>
   </section>
 
+  <!-- ── Everything at once, in colour ───────────────────────────────
+       Placed here on purpose: seeing six of them is the argument for the
+       $4.99, and the section immediately after is where it is asked for. -->
+  <section id="many">
+    <div class="head" data-reveal>
+      <p class="caps">More than one</p>
+      <h2>Keep several going at once, each in its own colour.</h2>
+      <p class="lede">
+        Give every habit a colour and a time of day and your home screen
+        stops being a list of chores. One glance tells you what you have
+        already done today and what is still sitting there waiting.
+      </p>
+    </div>
+
+    <div class="collage" id="collage" data-reveal>
+      <div class="tile"><canvas id="m1" aria-label="Read before sleep, marked today"></canvas></div>
+      <div class="tile"><canvas id="m2" aria-label="Morning run"></canvas></div>
+      <div class="tile"><canvas id="m3" aria-label="Practice guitar"></canvas></div>
+      <div class="tile"><canvas id="m4" aria-label="No phone in bed"></canvas></div>
+      <div class="tile"><canvas id="m5" aria-label="Walk after dinner, marked today"></canvas></div>
+      <div class="tile"><canvas id="m6" aria-label="Journal three lines"></canvas></div>
+    </div>
+
+    <p class="small faint collage-note">
+      Four colours, because six swatches in a row is a decision and four is a
+      choice. A card flips to ink the moment you mark it, which is how you
+      tell the two apart from across the room.
+    </p>
+  </section>
+
   <!-- ── Price, stated so plainly it cannot be misread ───────────────── -->
   <section id="pricing">
-    <div class="head">
+    <div class="head" data-reveal>
       <p class="caps">Pricing</p>
       <h2>Pay once, or never. There is no monthly anything.</h2>
       <p class="lede">
@@ -280,7 +330,7 @@
       </p>
     </div>
 
-    <div class="price-grid">
+    <div class="price-grid" data-reveal>
       <article class="plan">
         <p class="caps">Start here</p>
         <p class="amount">Free</p>
@@ -326,7 +376,7 @@
 
   <!-- ── The questions that stop a download ──────────────────────────── -->
   <section id="faq">
-    <div class="head">
+    <div class="head" data-reveal>
       <p class="caps">Before you download</p>
       <h2>The questions people ask first.</h2>
     </div>
@@ -448,6 +498,7 @@
 "use strict";
 
 const $ = id => document.getElementById(id);
+const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 /* ── The two store links ───────────────────────────────────────────────
    Fill these in when the listings exist and every button on the page
@@ -458,8 +509,6 @@ const STORE = {
   appstore: "",   // ← paste the App Store URL here
   play: "",       // ← paste the Google Play URL here
 };
-const APK = "https://github.com/ayan-pathak/ritual-habit-widget/releases/latest";
-
 const NAMES = { appstore: "the App Store", play: "Google Play" };
 
 document.querySelectorAll("[data-store]").forEach(a => {
@@ -478,8 +527,100 @@ document.querySelectorAll("[data-store]").forEach(a => {
   });
 });
 
-const apk = $("apk");
-if (apk) apk.href = APK;
+/* ── Coming into view ──────────────────────────────────────────────────
+   One observer per thing, disconnected the moment it fires: everything
+   here happens once and nothing needs watching afterwards. A viewer who
+   asked for reduced motion gets the finished state immediately. */
+function onView(node, fn, threshold) {
+  if (REDUCED || !("IntersectionObserver" in window)) { fn(); return; }
+  const io = new IntersectionObserver(entries => {
+    for (const e of entries) {
+      if (e.isIntersecting) { io.disconnect(); fn(); return; }
+    }
+  }, { threshold: threshold == null ? 0.25 : threshold, rootMargin: "0px 0px 90px 0px" });
+  io.observe(node);
+}
+
+document.querySelectorAll("[data-reveal]").forEach(el => {
+  onView(el, () => el.classList.add("in"), 0.12);
+});
+
+/* ── Cards that fill themselves in ─────────────────────────────────────
+   The grid is the product, so every card on this page draws itself
+   arriving rather than arriving drawn: the days land in order and the
+   tally counts up with them. */
+const shown = {};
+
+const empty = model => Object.assign({}, model, {
+  doneDaysOfYear: new Set(), totalDone: 0, streak: 0,
+});
+
+function animateCard(id, model, cfg, ms) {
+  const canvas = $(id);
+  if (REDUCED) { shown[id] = true; Ritual.paintCard(canvas, model, cfg); return; }
+  const days = Array.from(model.doneDaysOfYear).sort((a, b) => a - b);
+  const t0 = performance.now();
+  const frame = now => {
+    const k = Math.min((now - t0) / ms, 1);
+    const e = 1 - Math.pow(1 - k, 3);
+    const cut = Math.round(e * days.length);
+    Ritual.paintCard(canvas, Object.assign({}, model, {
+      doneDaysOfYear: new Set(days.slice(0, cut)),
+      totalDone: cut,
+      streak: Math.round(model.streak * e),
+    }), cfg);
+    if (k < 1) requestAnimationFrame(frame); else shown[id] = true;
+  };
+  requestAnimationFrame(frame);
+}
+
+/* ── One missed square, drawn large ────────────────────────────────────
+   Not a card render. The whole point of this picture is a single empty
+   cell, and at card scale a single cell is two pixels across. */
+const GAP_RATIO = 2.35, GAP_COLS = 9, GAP_ROWS = 3, GAP_MISS = 9 + 4;   // middle row, middle-ish
+
+function gapArt(k) {
+  const canvas = $("c-gap");
+  const w = canvas.clientWidth;
+  if (!w) return;
+  const dpr = window.devicePixelRatio || 1;
+  const h = Math.round(w / GAP_RATIO);
+  canvas.width = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  canvas.style.height = h + "px";
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, w, h);
+
+  ctx.fillStyle = Ritual.LIME;
+  ctx.beginPath(); ctx.roundRect(0, 0, w, h, w * 0.055); ctx.fill();
+
+  const pad = w * 0.085;
+  const step = (w - pad * 2) / (GAP_COLS - 0.26);
+  const cell = step * 0.74;
+  const top = (h - (GAP_ROWS - 1) * step - cell) / 2;
+  const lit = Math.round(k * GAP_COLS * GAP_ROWS);
+  for (let r = 0; r < GAP_ROWS; r++) {
+    for (let c = 0; c < GAP_COLS; c++) {
+      const i = r * GAP_COLS + c;
+      ctx.fillStyle = (i < lit && i !== GAP_MISS) ? Ritual.INK : "rgba(18,18,15,.16)";
+      ctx.beginPath();
+      ctx.roundRect(pad + c * step, top + r * step, cell, cell, cell * 0.24);
+      ctx.fill();
+    }
+  }
+}
+
+function animateGap(ms) {
+  if (REDUCED) { shown["c-gap"] = true; gapArt(1); return; }
+  const t0 = performance.now();
+  const frame = now => {
+    const k = Math.min((now - t0) / ms, 1);
+    gapArt(1 - Math.pow(1 - k, 3));
+    if (k < 1) requestAnimationFrame(frame); else shown["c-gap"] = true;
+  };
+  requestAnimationFrame(frame);
+}
 
 /* ── The cats ──────────────────────────────────────────────────────────
    Three live rigs, each breathing on its own clock so they are never in
@@ -503,11 +644,20 @@ tapable($("big-cat"), () => {
   bigCat.play(bigMood % 2 ? "mark" : "settle", bigMood % 2 ? "pleased" : "resting");
 });
 
+onView($("big-cat"), () => setTimeout(() => bigCat.play("mark", "pleased"), 420));
+onView($("end-cat"), () => setTimeout(() => endCat.play("mark", "pleased"), 420));
+
 /* ── The card you can tap ──────────────────────────────────────────────── */
+const WIDGET = { action: true, ratio: 361 / 156 };
+const YEAR_SHOT = { ratio: 353 / 150 };
+
 let marked = false;
+const cardModel = () => Ritual.demoModel({ marked, run: 9 });
+const widgetModel = () => Ritual.demoModel({ marked: false });
 
 function paintCard() {
-  Ritual.paintCard($("card"), Ritual.demoModel({ marked, run: 9 }));
+  const model = cardModel();
+  Ritual.paintCard($("card"), shown.card ? model : empty(model));
   $("mark-line").textContent = marked
     ? "Day marked, and nothing was at stake."
     : "Go on, it is the real thing.";
@@ -516,6 +666,7 @@ function paintCard() {
 
 function toggleMark() {
   marked = !marked;
+  shown.card = true;
   paintCard();
   marked ? cheerCat.play("mark", "pleased") : cheerCat.set("resting");
 }
@@ -565,20 +716,86 @@ function yearModel(pct) {
   };
 }
 
+/* ── Six rituals, six different years ──────────────────────────────────
+   demoModel draws the same pattern every time, which is right for one card
+   and wrong for six side by side: identical grids in different colours read
+   as a swatch chart. Each of these gets its own seed, its own start date and
+   its own density, so the collage looks like six people's actual years. */
+const RITUALS = [
+  { id: "m1", title: "Read before sleep",  slot: "Evening", accent: 0, seed: 3,  span: .96, pct: .84, run: 9,  marked: true },
+  { id: "m2", title: "Morning run",        slot: "Morning", accent: 1, seed: 11, span: .62, pct: .71, run: 3 },
+  { id: "m3", title: "Practice guitar",    slot: "Evening", accent: 2, seed: 19, span: .81, pct: .9,  run: 14 },
+  { id: "m4", title: "No phone in bed",    slot: "Night",   accent: 3, seed: 27, span: .44, pct: .66, run: 5 },
+  { id: "m5", title: "Walk after dinner",  slot: "Evening", accent: 1, seed: 35, span: .73, pct: .78, run: 21, marked: true },
+  { id: "m6", title: "Journal three lines", slot: "Morning", accent: 2, seed: 43, span: .55, pct: .62, run: 2 },
+];
+
+function ritualModel(o) {
+  const now = new Date();
+  const year = now.getFullYear();
+  const jan = Date.UTC(year, 0, 1);
+  const today = Math.floor(Date.UTC(year, now.getMonth(), now.getDate()) / 86400000);
+  const doy = Math.floor((Date.UTC(year, now.getMonth(), now.getDate()) - jan) / 86400000) + 1;
+  const len = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
+
+  const hash = d => {
+    const x = Math.sin(d * 127.1 + o.seed * 97.3) * 43758.5453;
+    return x - Math.floor(x);
+  };
+  const from = Math.max(1, Math.round(doy * (1 - o.span)));
+  const done = new Set();
+  for (let d = from; d <= doy; d++) if (hash(d) < o.pct) done.add(d);
+  for (let d = doy - o.run + 1; d <= doy; d++) if (d >= 1) done.add(d);
+  if (!o.marked) done.delete(doy);
+
+  let streak = 0;
+  for (let d = o.marked ? doy : doy - 1; d >= 1 && done.has(d); d--) streak++;
+
+  return {
+    title: o.title, slot: o.slot, accent: Ritual.accentAt(o.accent),
+    year, today, doneDaysOfYear: done, streak,
+    totalDone: done.size, remaining: len - doy,
+    doneToday: !!o.marked, mood: o.marked ? "pleased" : "resting",
+  };
+}
+
+const YEAR_TARGET = 66;
+
 function paintYear() {
   const y = yearModel(+$("scrub").value);
-  Ritual.paintCard($("year-card"), y.model, { ratio: 353 / 150 });
+  Ritual.paintCard($("year-card"), y.model, YEAR_SHOT);
   $("fig-days").textContent = String(y.days);
   $("fig-streak").textContent = String(y.best);
   $("fig-pct").innerHTML = Math.round(y.days / y.doy * 100) + '<span class="pct">%</span>';
 }
-$("scrub").addEventListener("input", paintYear);
+$("scrub").addEventListener("input", () => { shown.year = true; paintYear(); });
 
-function paintRest() {
-  Ritual.paintCard($("wcard"), Ritual.demoModel({ marked: false }),
-                   { action: true, ratio: 361 / 156 });
-  const story = $("story");
-  Ritual.Story.paint(story, story.clientWidth * (Ritual.Story.H / Ritual.Story.W),
+/** The panel arrives at its floor and climbs, which says drag me. */
+function animateYear(ms) {
+  const el = $("scrub"), from = +el.min, to = YEAR_TARGET;
+  if (REDUCED) { el.value = String(to); shown.year = true; paintYear(); return; }
+  const t0 = performance.now();
+  const frame = now => {
+    const k = Math.min((now - t0) / ms, 1);
+    const e = 1 - Math.pow(1 - k, 3);
+    if (!shown.year) {
+      el.value = String(Math.round(from + (to - from) * e));
+      paintYear();
+    }
+    if (k < 1) requestAnimationFrame(frame); else shown.year = true;
+  };
+  requestAnimationFrame(frame);
+}
+
+/* ── The story, in its Instagram frame ─────────────────────────────────
+   Sized off the frame rather than off the canvas: a canvas with no CSS
+   width reports whatever its last width attribute was, which is how the
+   card ended up narrower than the phone around it. */
+function paintStory() {
+  const frame = document.querySelector(".story");
+  const w = frame.clientWidth;
+  if (!w) return;
+  Ritual.Story.paint($("story"), w * (Ritual.Story.H / Ritual.Story.W),
                      Ritual.demoModel({ marked: true }));
 }
 
@@ -591,15 +808,74 @@ const dayOfYear = Math.floor(
   (Date.UTC(thisYear, now.getMonth(), now.getDate()) - Date.UTC(thisYear, 0, 1)) / 86400000) + 1;
 const yearLength =
   (thisYear % 4 === 0 && thisYear % 100 !== 0) || thisYear % 400 === 0 ? 366 : 365;
-$("left").textContent = String(yearLength - dayOfYear);
+const LEFT = yearLength - dayOfYear;
+$("left").textContent = String(LEFT);
 
-function paintAll() { paintCard(); paintYear(); paintRest(); }
+/* ── Small dynamics ────────────────────────────────────────────────────
+   The bar earns its rule once the page has actually moved, and the number
+   in the close counts itself up, because a number that arrives is read and
+   a number that is simply there is skipped. */
+const bar = document.querySelector(".bar");
+const onScroll = () => bar.classList.toggle("stuck", scrollY > 8);
+addEventListener("scroll", onScroll, { passive: true });
+onScroll();
+
+function countTo(el, to, ms) {
+  if (REDUCED) { el.textContent = String(to); return; }
+  const t0 = performance.now();
+  const frame = now => {
+    const k = Math.min((now - t0) / ms, 1);
+    el.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3))));
+    if (k < 1) requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+}
+onView($("left"), () => countTo($("left"), LEFT, 1200), 0.6);
+
+/* ── First paint, then the animations ──────────────────────────────────
+   Everything is painted empty first so the page never moves under the
+   reader when a canvas finds its height. */
+function paintAll() {
+  const wm = widgetModel();
+  Ritual.paintCard($("wcard"),  shown.wcard ? wm : empty(wm), WIDGET);
+  Ritual.paintCard($("c-home"), shown["c-home"] ? wm : empty(wm), WIDGET);
+  const ym = yearModel(88).model;
+  Ritual.paintCard($("c-year"), shown["c-year"] ? ym : empty(ym), YEAR_SHOT);
+  gapArt(shown["c-gap"] ? 1 : 0);
+  for (const r of RITUALS) {
+    const m = ritualModel(r);
+    Ritual.paintCard($(r.id), shown[r.id] ? m : empty(m));
+  }
+  paintCard();
+  paintYear();
+  paintStory();
+}
+
+function start() {
+  $("scrub").value = $("scrub").min;
+  paintAll();
+
+  // The hero is already on screen, so it plays at once.
+  animateCard("wcard", widgetModel(), WIDGET, 1500);
+
+  onView($("c-home"), () => animateCard("c-home", widgetModel(), WIDGET, 1200));
+  onView($("c-gap"),  () => animateGap(900));
+  onView($("c-year"), () => animateCard("c-year", yearModel(88).model, YEAR_SHOT, 1400));
+  onView($("card"),   () => animateCard("card", cardModel(), null, 1300), 0.35);
+  onView($("year-card"), () => animateYear(1600), 0.3);
+
+  // The collage lands one card at a time, left to right, so it reads as six
+  // separate habits rather than one picture fading up.
+  onView($("collage"), () => RITUALS.forEach((r, i) => {
+    setTimeout(() => animateCard(r.id, ritualModel(r), null, 1000), i * 130);
+  }), 0.12);
+}
 
 // Nothing draws until Archivo is real, or every card measures the wrong text.
 const ready = document.fonts
   ? document.fonts.load("800 17px Archivo").then(() => document.fonts.ready)
   : Promise.resolve();
-ready.then(paintAll, paintAll);
+ready.then(start, start);
 
 let resizing;
 addEventListener("resize", () => {

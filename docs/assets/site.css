@@ -30,6 +30,14 @@
   --orange: #F26A1B;
   --on-lime: #12120F;
 
+  /* Fixed in both themes. The close is a dark band the way the app's own
+     colour blocks are: --ink flips with the theme, so a band built on it
+     turns cream in dark mode and takes its white text down with it. */
+  --slab:    #12120F;
+  --on-slab: #F4F2EA;
+  --on-slab-soft:  rgba(244, 242, 234, .74);
+  --on-slab-faint: rgba(244, 242, 234, .55);
+
   --gutter: 22px;
   --measure: 36rem;
 }
@@ -138,6 +146,29 @@ section { padding-block: clamp(52px, 7vw, 92px); }
 @media (max-width: 860px) { .split { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 860px) { .split.reverse > :first-child { order: 2; } }
 
+/* ── Arriving ──────────────────────────────────────────────────────────
+   The .js class is set in the head, before the first paint, and only for a
+   viewer who has not asked for less motion. Without it every rule here is
+   inert and the page renders finished. */
+.js [data-reveal] { opacity: 0; transform: translateY(18px); }
+.js [data-reveal].in {
+  opacity: 1; transform: none;
+  transition: opacity .6s ease, transform .75s cubic-bezier(.2, .75, .25, 1);
+}
+
+/* The first screen deals itself out rather than arriving all at once: claim,
+   then the thing itself, then the buttons, which is also the order it wants
+   to be read in. */
+.js .hero-copy[data-reveal] { transition-delay: .04s; }
+.js .hero-art[data-reveal]  { transition-delay: .2s; }
+.js .hero-get[data-reveal]  { transition-delay: .34s; }
+
+/* A section's text leads its picture by a beat. */
+.js .split .stack[data-reveal] { transition-delay: .06s; }
+.js .split .stage[data-reveal],
+.js .split .story-holder[data-reveal],
+.js .split .mochi-slab[data-reveal] { transition-delay: .16s; }
+
 /* ── Buttons ───────────────────────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center;
@@ -147,6 +178,8 @@ section { padding-block: clamp(52px, 7vw, 92px); }
   letter-spacing: -0.01em; text-decoration: none; cursor: pointer;
 }
 .btn.tight { padding: 9px 17px; font-size: .86rem; }
+.btn { transition: transform .16s ease; }
+.btn:hover { transform: translateY(-1px); }
 .btn:active { transform: translateY(1px); }
 
 /* ── Store buttons ─────────────────────────────────────────────────────
@@ -171,10 +204,12 @@ section { padding-block: clamp(52px, 7vw, 92px); }
   letter-spacing: .1em; text-transform: uppercase; opacity: .72;
 }
 .store b { font-size: 1.04rem; font-weight: 800; letter-spacing: -0.025em; }
+.store { transition: transform .16s ease; }
+.store:hover { transform: translateY(-2px); }
 .store:active { transform: translateY(1px); }
 
-/* Paper on ink, for the dark close. */
-.store.light { background: var(--surface); color: var(--ink); }
+/* Paper on ink, for the dark close. Fixed, because the band it sits on is. */
+.store.light { background: var(--on-slab); color: var(--slab); }
 
 /* Until a listing exists. Better than a button that silently does nothing. */
 .store[data-soon]::after {
@@ -184,6 +219,12 @@ section { padding-block: clamp(52px, 7vw, 92px); }
   font-size: .58rem; font-weight: 800; letter-spacing: .1em;
   text-transform: uppercase;
   padding: 3px 7px; border-radius: 999px;
+  animation: soon 3.4s ease-in-out infinite;
+}
+@keyframes soon {
+  0%, 82%, 100% { transform: none; }
+  88%           { transform: translateY(-2px) rotate(-3deg); }
+  94%           { transform: translateY(0) rotate(2deg); }
 }
 
 /* ── Sticky bar ────────────────────────────────────────────────────────── */
@@ -191,8 +232,24 @@ section { padding-block: clamp(52px, 7vw, 92px); }
   position: sticky; top: 0; z-index: 20;
   background: var(--bar-bg);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--rule);
+  border-bottom: 1px solid transparent;
+  transition: border-color .25s ease, box-shadow .25s ease;
 }
+/* Only once the page has moved under it: a rule under the bar at the top of
+   an untouched page is a line for its own sake. */
+.bar.stuck {
+  border-bottom-color: var(--rule);
+  box-shadow: 0 6px 20px -18px rgba(18, 18, 15, .7);
+}
+
+/* The mark is the product in miniature, so it keeps a day now and then. */
+.brand .mark i:nth-child(4) { animation: keepaday 9s ease-in-out infinite; }
+@keyframes keepaday {
+  0%, 62%   { background: var(--ink-faint); transform: none; }
+  68%       { background: var(--ink); transform: scale(1.35); }
+  74%, 100% { background: var(--ink); transform: none; }
+}
+.brand:hover .mark i { background: var(--ink); transition: background .18s ease; }
 .bar-inner {
   display: flex; align-items: center; gap: 20px;
   padding-block: 12px;
@@ -220,21 +277,29 @@ section { padding-block: clamp(52px, 7vw, 92px); }
    sold. */
 .hero { padding-block: clamp(44px, 6vw, 84px) clamp(40px, 5vw, 72px); }
 .hero-grid {
-  display: grid; gap: clamp(34px, 5vw, 64px);
+  display: grid;
+  gap: 24px clamp(34px, 5vw, 64px);
   grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
-  align-items: center;
+  grid-template-areas: "copy art" "get art";
+  align-content: center;
 }
-.hero-copy { display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+.hero-copy { grid-area: copy; display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
 .hero-copy .lede { max-width: 30rem; }
+.hero-get { grid-area: get; display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 .hero-fine { max-width: 26rem; }
-.hero-art { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.hero-art { grid-area: art; display: flex; flex-direction: column; align-items: center; gap: 14px; }
 .caption {
   font-size: .8rem; color: var(--ink-faint); text-align: center;
   max-width: 21rem; line-height: 1.5;
 }
+/* On a phone: what it is, then what it looks like, then the two buttons. */
 @media (max-width: 860px) {
-  .hero-grid { grid-template-columns: minmax(0, 1fr); }
-  .hero-art { order: 2; }
+  .hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "copy" "art" "get";
+    gap: 28px;
+  }
+  .hero-art { margin-inline: auto; }
 }
 
 /* ── Trust strip ───────────────────────────────────────────────────────── */
@@ -321,6 +386,8 @@ canvas { display: block; max-width: 100%; }
   width: 100%; background: transparent; cursor: grab; height: 26px;
 }
 .scrub input:active { cursor: grabbing; }
+.scrub input::-webkit-slider-thumb { transition: transform .15s ease; }
+.scrub input:hover::-webkit-slider-thumb { transform: scale(1.08); }
 .scrub input::-webkit-slider-runnable-track {
   height: 6px; border-radius: 999px; background: var(--rule);
 }
@@ -349,8 +416,15 @@ canvas { display: block; max-width: 100%; }
   background: var(--page);
   padding: clamp(22px, 2.6vw, 30px);
   display: flex; flex-direction: column; gap: 11px;
+  transition: background .25s ease;
 }
+.cards article:hover { background: var(--surface); }
+.shot { transition: transform .3s cubic-bezier(.2, .75, .25, 1); }
+.cards article:hover .shot { transform: translateY(-3px); }
 .cards article p:last-child { max-width: none; }
+.shot { border-radius: 16px; overflow: hidden; margin-bottom: 6px; }
+.shot canvas { width: 100%; display: block; border-radius: 12px; }
+.shot.dark { background: #2A2823; padding: 10px; }
 @media (max-width: 860px) { .cards { grid-template-columns: minmax(0, 1fr); } }
 
 /* ── Mochi's slab ──────────────────────────────────────────────────────
@@ -365,18 +439,27 @@ canvas { display: block; max-width: 100%; }
 }
 .mochi-slab canvas { height: 86%; width: auto; cursor: pointer; }
 
-/* ── Sharing ───────────────────────────────────────────────────────────── */
+/* ── Sharing ───────────────────────────────────────────────────────────
+   In a phone, because the story card is cream and so is this page: without
+   a device around it the frame is simply not there, and Instagram's own
+   chrome reads as two grey bars floating in the margin. */
 .story-holder { display: flex; justify-content: center; }
+.story-phone {
+  width: min(322px, 100%);
+  background: #2A2823;
+  border-radius: 42px;
+  padding: 10px;
+  box-shadow: 0 0 0 1px rgba(18, 18, 15, .14);
+}
 .story {
-  position: relative; width: min(330px, 100%);
-  border-radius: 20px; overflow: hidden;
+  position: relative; width: 100%;
+  border-radius: 33px; overflow: hidden;
   background: var(--page);
-  box-shadow: inset 0 0 0 1.5px var(--rule);
 }
 .story .chrome {
   position: absolute; left: 0; right: 0;
   padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
-  background: rgba(18, 18, 15, .42);
+  background: rgba(18, 18, 15, .38);
 }
 .story .chrome.top { top: 0; }
 .story .chrome.bottom { bottom: 0; flex-direction: row; align-items: center; gap: 12px; }
@@ -391,6 +474,36 @@ canvas { display: block; max-width: 100%; }
   flex: 1; border-radius: 999px; padding: 9px 14px;
   box-shadow: inset 0 0 0 1px rgba(255,255,255,.5);
   font: 600 11px/1 Archivo, system-ui, sans-serif; color: rgba(255,255,255,.8);
+}
+
+/* ── The collage ───────────────────────────────────────────────────────
+   Staggered rather than aligned: a tidy grid of six cards reads as a
+   catalogue, and the point here is a wall of colour. */
+.collage {
+  display: grid;
+  gap: clamp(14px, 1.8vw, 22px);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+.collage .tile:nth-child(3n + 2) { margin-top: clamp(20px, 3.4vw, 46px); }
+.collage .tile:nth-child(3n + 3) { margin-top: clamp(8px, 1.4vw, 20px); }
+.collage canvas { width: 100%; display: block; border-radius: 18px; }
+.collage .tile { transition: transform .3s cubic-bezier(.2, .75, .25, 1); }
+.collage .tile:hover { transform: translateY(-5px); }
+.collage-note { margin-top: clamp(20px, 3vw, 30px); max-width: 34rem; }
+
+@media (max-width: 900px) {
+  .collage { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .collage .tile:nth-child(3n + 2),
+  .collage .tile:nth-child(3n + 3) { margin-top: 0; }
+  .collage .tile:nth-child(2n) { margin-top: clamp(18px, 4vw, 34px); }
+}
+/* One column below this, and four cards instead of six: the point is made
+   by the fourth and the other two are scrolling. */
+@media (max-width: 620px) {
+  .collage { grid-template-columns: minmax(0, 1fr); }
+  .collage .tile:nth-child(2n) { margin-top: 0; }
+  .collage .tile:nth-child(n + 5) { display: none; }
 }
 
 /* ── Pricing ───────────────────────────────────────────────────────────
@@ -410,6 +523,8 @@ canvas { display: block; max-width: 100%; }
   padding: clamp(22px, 3vw, 32px);
   display: flex; flex-direction: column; gap: 13px;
 }
+.plan { transition: transform .3s cubic-bezier(.2, .75, .25, 1); }
+.plan:hover { transform: translateY(-4px); }
 .plan.lift { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
 .plan .amount {
   font-size: clamp(2.2rem, 5vw, 3rem); font-weight: 800;
@@ -446,9 +561,9 @@ dl.faq dd a { color: var(--ink); text-underline-offset: 3px; }
    going dark here is the visual equivalent of lowering your voice for the
    ask. */
 .cta {
-  background: var(--ink);
-  color: var(--on-ink);
-  border-top: 1px solid var(--rule);
+  background: var(--slab);
+  color: var(--on-slab);
+  border-top: 1px solid rgba(244, 242, 234, .14);
   /* No bottom padding: the cat stands on the bottom edge of the band the way
      he stands on the bottom edge of everything else in the app. The copy
      carries its own padding instead. */
@@ -463,10 +578,11 @@ dl.faq dd a { color: var(--ink); text-underline-offset: 3px; }
   display: flex; flex-direction: column; gap: 18px; align-items: flex-start;
   padding-bottom: clamp(52px, 7vw, 92px);
 }
-.cta h2 { color: var(--on-ink); font-size: clamp(2rem, 4.6vw, 3rem); }
+.cta h2 { color: var(--on-slab); font-size: clamp(2rem, 4.6vw, 3rem); }
 .cta h2 #left { color: var(--lime); }
-.cta .lede { color: rgba(244, 242, 234, .72); max-width: 32rem; }
-.cta-fine { color: rgba(244, 242, 234, .5); }
+.cta .lede { color: var(--on-slab-soft); max-width: 32rem; }
+.cta-fine { color: var(--on-slab-faint); }
+.cta-fine a { color: var(--on-slab-soft); }
 .cta-cat { height: clamp(170px, 22vw, 250px); display: flex; align-items: flex-end; justify-content: center; }
 .cta-cat canvas { height: 100%; width: auto; }
 @media (max-width: 760px) {
@@ -512,4 +628,5 @@ footer { border-top: 1px solid var(--rule); padding-block: 34px; }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   * { animation: none !important; transition: none !important; }
+  [data-reveal] { opacity: 1 !important; transform: none !important; }
 }
