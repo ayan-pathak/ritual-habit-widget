@@ -1,30 +1,37 @@
-/* Ritual on the web.
- *
- * The app's design system, extended to a page. Flat, warm, high-contrast; no
- * gradients, no glow, no shadow. The tokens below are Palette.kt and Theme.kt
- * and nothing else, and they follow the app's one rule about the dark theme:
- * only the chrome flips. A ritual card is a printed object and it is the same
- * object on a dark table as on a light one, so the canvases keep their fixed
- * palette while the page around them changes. */
+/* ══════════════════════════════════════════════════════════════════════
+   Ritual, the site.
+
+   Same palette and same type as the app, set soberly. The app is allowed
+   to be playful because you have already paid for it. This page is asking
+   someone for money, so lime is an accent here, not a ground: it appears
+   on the product itself, on the thing you are meant to click, and nowhere
+   else.
+
+   Tokens come from Palette.kt and Theme.kt. Light and dark are declared
+   three times over on purpose: the bare :root carries the whole light
+   palette, the media query covers the viewer who never chose, and the
+   [data-theme] block lets an explicit choice win in both directions.
+   ══════════════════════════════════════════════════════════════════════ */
 
 :root {
   --page:    #E7E3D4;
   --surface: #F4F2EA;
   --ink:     #12120F;
   --on-ink:  #F4F2EA;
-  --ink-soft:  rgba(18, 18, 15, .56);
-  --ink-faint: rgba(18, 18, 15, .20);
+  --ink-soft:  rgba(18, 18, 15, .58);
+  --ink-faint: rgba(18, 18, 15, .34);
   --rule:      rgba(18, 18, 15, .13);
+  --bar-bg:    rgba(231, 227, 212, .88);
 
-  /* Fixed both ways round: these are the brand, not the surface. */
+  /* Ritual colours, unchanged from the app. */
   --lime:   #C9F73F;
   --red:    #E5331C;
   --butter: #EDE55C;
   --orange: #F26A1B;
   --on-lime: #12120F;
 
-  --gutter: 20px;
-  --measure: 34rem;
+  --gutter: 22px;
+  --measure: 36rem;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -33,9 +40,10 @@
     --surface: #232117;
     --ink:     #EDE9DA;
     --on-ink:  #16150F;
-    --ink-soft:  rgba(237, 233, 218, .56);
-    --ink-faint: rgba(237, 233, 218, .20);
+    --ink-soft:  rgba(237, 233, 218, .58);
+    --ink-faint: rgba(237, 233, 218, .34);
     --rule:      rgba(237, 233, 218, .14);
+    --bar-bg:    rgba(22, 21, 15, .88);
   }
 }
 
@@ -44,169 +52,331 @@
   --surface: #232117;
   --ink:     #EDE9DA;
   --on-ink:  #16150F;
-  --ink-soft:  rgba(237, 233, 218, .56);
-  --ink-faint: rgba(237, 233, 218, .20);
+  --ink-soft:  rgba(237, 233, 218, .58);
+  --ink-faint: rgba(237, 233, 218, .34);
   --rule:      rgba(237, 233, 218, .14);
+  --bar-bg:    rgba(22, 21, 15, .88);
 }
 
+/* ── Base ──────────────────────────────────────────────────────────────── */
 * { box-sizing: border-box; }
-
-html { -webkit-text-size-adjust: 100%; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+html { scroll-padding-top: 84px; }
 
 body {
   margin: 0;
+  font: 500 16px/1.6 Archivo, system-ui, -apple-system, Segoe UI, sans-serif;
   background: var(--page);
   color: var(--ink);
-  font: 500 16px/1.6 Archivo, system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
 }
 
 .wrap {
   width: 100%;
-  max-width: 1080px;
-  margin: 0 auto;
+  max-width: 1120px;
+  margin-inline: auto;
   padding-left: var(--gutter);
   padding-right: var(--gutter);
 }
 
 /* ── Type ──────────────────────────────────────────────────────────────
-   Headings are ExtraBold set tight, exactly as they are in the app. */
+   A tighter scale than the app's marketing voice used to run at. Serious
+   is mostly this: display type that stops before it starts shouting. */
 h1, h2, h3 {
+  margin: 0;
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.04;
   text-wrap: balance;
-  margin: 0;
 }
-h1 { font-size: clamp(2.6rem, 8vw, 4.6rem); }
-h2 { font-size: clamp(1.9rem, 5vw, 2.9rem); }
-h3 { font-size: 1.1rem; letter-spacing: -0.02em; }
+h1 { font-size: clamp(2.3rem, 5.2vw, 3.5rem); }
+h2 { font-size: clamp(1.7rem, 3.6vw, 2.4rem); line-height: 1.08; }
+h3 { font-size: 1.12rem; letter-spacing: -0.02em; line-height: 1.25; }
 
 p { margin: 0; max-width: var(--measure); }
-.lede { font-size: clamp(1.05rem, 2.4vw, 1.25rem); color: var(--ink-soft); line-height: 1.5; }
+.lede { font-size: clamp(1.02rem, 1.5vw, 1.14rem); color: var(--ink-soft); line-height: 1.55; }
 .soft { color: var(--ink-soft); }
 .faint { color: var(--ink-faint); }
 .small { font-size: .875rem; line-height: 1.55; }
 
 .caps {
-  font-weight: 600;
-  font-size: .688rem;
-  letter-spacing: .11em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
   margin: 0;
+  font-size: .7rem; font-weight: 700;
+  letter-spacing: .13em; text-transform: uppercase;
+  color: var(--ink-soft);
 }
 
 a { color: inherit; }
-a:focus-visible, button:focus-visible, canvas:focus-visible {
+a:focus-visible, button:focus-visible, canvas:focus-visible, input:focus-visible {
   outline: 2px solid var(--ink);
   outline-offset: 3px;
   border-radius: 4px;
 }
 
-/* ── The mark ──────────────────────────────────────────────────────────
-   A row of squares standing in for the eyebrow, because the grid is the
-   product's whole visual language and a number would say less. */
-.mark { display: flex; gap: 3px; align-items: center; }
+/* Four squares, two filled: the app's own mark. */
+.mark { display: inline-flex; gap: 3px; align-items: center; }
 .mark i {
-  width: 7px; height: 7px; border-radius: 2px;
+  width: 7px; height: 7px; border-radius: 1.6px;
   background: var(--ink-faint); display: block;
 }
 .mark i.on { background: var(--ink); }
-
 .eyebrow { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
 
-/* ── Sections ──────────────────────────────────────────────────────────── */
-section { padding-block: clamp(56px, 9vw, 104px); }
-section + section { border-top: 1px solid var(--rule); }
+section { padding-block: clamp(52px, 7vw, 92px); }
+.wrap > section + section { border-top: 1px solid var(--rule); }
 
-.stack { display: flex; flex-direction: column; gap: 18px; }
+/* A section's opening block: label, headline, one paragraph of why. */
+.head { display: flex; flex-direction: column; gap: 14px; max-width: 42rem; }
+.head + * { margin-top: clamp(28px, 4vw, 46px); }
+
+.stack { display: flex; flex-direction: column; gap: 16px; align-items: flex-start; }
 .split {
-  display: grid;
+  display: grid; gap: clamp(26px, 5vw, 60px);
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: clamp(32px, 6vw, 72px);
   align-items: center;
 }
-@media (max-width: 760px) { .split { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 860px) { .split { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 860px) { .split.reverse > :first-child { order: 2; } }
 
-/* ── Controls ──────────────────────────────────────────────────────────
-   The primary control is a solid ink pill. Nothing else on the page is
-   this loud, which is the rule the app follows too. */
-.pill {
-  display: inline-flex; align-items: center; justify-content: center; gap: 10px;
-  min-height: 56px; padding: 0 28px;
-  border: 0; border-radius: 999px; cursor: pointer;
+/* ── Buttons ───────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 13px 24px; border: 0; border-radius: 999px;
   background: var(--ink); color: var(--on-ink);
-  font: 800 .95rem/1 Archivo, system-ui, sans-serif;
-  letter-spacing: -0.01em; text-decoration: none;
-  transition: transform .12s ease;
+  font: 800 .98rem/1 Archivo, system-ui, sans-serif;
+  letter-spacing: -0.01em; text-decoration: none; cursor: pointer;
 }
-.pill:active { transform: translateY(1px); }
-.pill.ghost {
-  background: transparent; color: var(--ink);
-  box-shadow: inset 0 0 0 2px var(--ink);
+.btn.tight { padding: 9px 17px; font-size: .86rem; }
+.btn:active { transform: translateY(1px); }
+
+/* ── Store buttons ─────────────────────────────────────────────────────
+   The shape everybody already knows, so nobody has to work out what the
+   thing does. One markup block, three placements, and the hrefs are set
+   in one place in index.html. */
+.stores { display: flex; flex-wrap: wrap; gap: 12px; }
+.stores.center { justify-content: flex-start; }
+
+.store {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 11px;
+  padding: 11px 20px 11px 17px;
+  border-radius: 14px;
+  background: var(--ink); color: var(--on-ink);
+  text-decoration: none;
 }
-.pills { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-
-.chip {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 7px 13px 7px 10px; border-radius: 999px;
-  box-shadow: inset 0 0 0 1px var(--rule);
-  font: 600 .75rem/1 Archivo, system-ui, sans-serif;
-  color: var(--ink-soft); letter-spacing: .02em;
+.store .glyph { width: 23px; height: 23px; flex: none; }
+.store span { display: flex; flex-direction: column; line-height: 1.15; }
+.store i {
+  font-style: normal; font-size: .64rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase; opacity: .72;
 }
-.chip b { color: var(--ink); font-weight: 800; }
+.store b { font-size: 1.04rem; font-weight: 800; letter-spacing: -0.025em; }
+.store:active { transform: translateY(1px); }
 
-/* ── Surfaces ──────────────────────────────────────────────────────────── */
-.panel {
-  background: var(--surface);
-  border-radius: 24px;
-  padding: clamp(20px, 3vw, 28px);
+/* Paper on ink, for the dark close. */
+.store.light { background: var(--surface); color: var(--ink); }
+
+/* Until a listing exists. Better than a button that silently does nothing. */
+.store[data-soon]::after {
+  content: "Soon";
+  position: absolute; top: -8px; right: -8px;
+  background: var(--lime); color: var(--on-lime);
+  font-size: .58rem; font-weight: 800; letter-spacing: .1em;
+  text-transform: uppercase;
+  padding: 3px 7px; border-radius: 999px;
 }
-.hero-card { background: var(--lime); border-radius: 28px; padding: 26px 22px; }
 
-/* Canvases carry their own fixed palette; they must never stretch. */
-canvas { display: block; max-width: 100%; }
+/* ── Sticky bar ────────────────────────────────────────────────────────── */
+.bar {
+  position: sticky; top: 0; z-index: 20;
+  background: var(--bar-bg);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--rule);
+}
+.bar-inner {
+  display: flex; align-items: center; gap: 20px;
+  padding-block: 12px;
+}
+.brand {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-weight: 800; letter-spacing: -0.03em; font-size: 1.12rem;
+  text-decoration: none;
+}
+.bar-links { display: flex; gap: 22px; margin-left: auto; }
+.bar-links a {
+  text-decoration: none; font-size: .9rem; font-weight: 600;
+  color: var(--ink-soft);
+}
+.bar-links a:hover { color: var(--ink); }
+.bar .btn { flex: none; }
+@media (max-width: 760px) {
+  .bar-links { display: none; }
+  .bar .btn { margin-left: auto; }
+}
 
-.card-live { width: 100%; cursor: pointer; border-radius: 24px; }
+/* ── Hero ──────────────────────────────────────────────────────────────
+   Claim on the left, the product itself on the right. No lime ground: the
+   only lime in the first screen is the widget, which is the thing being
+   sold. */
+.hero { padding-block: clamp(44px, 6vw, 84px) clamp(40px, 5vw, 72px); }
+.hero-grid {
+  display: grid; gap: clamp(34px, 5vw, 64px);
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+  align-items: center;
+}
+.hero-copy { display: flex; flex-direction: column; gap: 20px; align-items: flex-start; }
+.hero-copy .lede { max-width: 30rem; }
+.hero-fine { max-width: 26rem; }
+.hero-art { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.caption {
+  font-size: .8rem; color: var(--ink-faint); text-align: center;
+  max-width: 21rem; line-height: 1.5;
+}
+@media (max-width: 860px) {
+  .hero-grid { grid-template-columns: minmax(0, 1fr); }
+  .hero-art { order: 2; }
+}
 
-/* ── The phone, for the widget ─────────────────────────────────────────── */
+/* ── Trust strip ───────────────────────────────────────────────────────── */
+.strip { background: var(--surface); border-block: 1px solid var(--rule); }
+.strip-inner {
+  display: flex; flex-wrap: wrap; gap: 10px 34px;
+  padding-block: 16px;
+  font-size: .8rem; font-weight: 700;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.strip-inner span { display: inline-flex; align-items: center; gap: 9px; }
+.strip-inner span::before {
+  content: ""; width: 7px; height: 7px; border-radius: 1.6px;
+  background: var(--ink); flex: none;
+}
+
+/* ── Phone, for the hero shot ──────────────────────────────────────────── */
 .phone {
-  width: 100%; max-width: 393px;
-  background: #3A382F;
-  border-radius: 30px 30px 6px 6px;
-  padding: 0 16px 0;
-  overflow: hidden;
-  display: flex; flex-direction: column;
+  width: min(366px, 100%);
+  background: #2A2823;
+  border-radius: 34px;
+  padding: 16px 13px;
+  display: flex; flex-direction: column; gap: 14px;
+  box-shadow: 0 0 0 1px rgba(18, 18, 15, .14);
 }
 .phone > * { flex: none; }
-.phone .bar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 6px 0;
-  font: 600 12px/1 Archivo, system-ui, sans-serif; color: #F2EFE3;
+.phone .bar-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 0 8px 2px;
+  font: 700 12px/1 Archivo, system-ui, sans-serif; color: #F2EFE3;
 }
 .phone .bars { display: flex; gap: 3px; align-items: flex-end; height: 11px; }
 .phone .bars i { width: 4px; border-radius: 1.4px; background: #F2EFE3; display: block; }
-.icons { display: flex; justify-content: space-between; }
+.icons { display: flex; justify-content: space-between; padding: 0 4px; }
 .icons i {
-  display: block; width: 56px; height: 56px; flex: none;
-  border-radius: 15px; background: rgba(242, 239, 227, .13);
+  width: 58px; height: 58px; border-radius: 15px;
+  background: rgba(244, 242, 234, .13); display: block;
+}
+.widget-shot { width: 100%; border-radius: 20px; }
+
+/* ── Live cards ────────────────────────────────────────────────────────── */
+canvas { display: block; max-width: 100%; }
+.card-live { width: 100%; border-radius: 22px; }
+#card { cursor: pointer; }
+.card-frame { border-radius: 26px; }
+
+/* The tappable card with a cat leaning on its bottom edge. */
+.stage { position: relative; padding-bottom: 56px; }
+/* On the right, because the card's tally sits bottom left and a cat over a
+   number is a cat that cost you the number. */
+.stage-cat {
+  position: absolute; right: 18px; bottom: 0;
+  height: 122px;
+  display: flex; align-items: flex-end;
+  pointer-events: none;
+}
+.stage-cat canvas { cursor: default; height: 100%; width: auto; }
+@media (max-width: 620px) {
+  .stage { padding-bottom: 62px; }
+  .stage-cat { height: 104px; right: 10px; }
 }
 
-/* ── The story, in a stories frame ─────────────────────────────────────── */
+/* ── The year panel ────────────────────────────────────────────────────── */
+.year-panel {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 26px;
+  padding: clamp(20px, 3vw, 30px);
+  display: flex; flex-direction: column; gap: 22px;
+}
+.tally { display: flex; flex-wrap: wrap; gap: 16px 48px; }
+.figure {
+  display: flex; flex-direction: column; gap: 4px;
+  font-size: clamp(1.9rem, 4vw, 2.6rem); font-weight: 800;
+  letter-spacing: -0.04em; line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.pct { font-size: .5em; letter-spacing: 0; }
+
+.scrub { display: flex; flex-direction: column; gap: 10px; }
+.scrub input {
+  -webkit-appearance: none; appearance: none;
+  width: 100%; background: transparent; cursor: grab; height: 26px;
+}
+.scrub input:active { cursor: grabbing; }
+.scrub input::-webkit-slider-runnable-track {
+  height: 6px; border-radius: 999px; background: var(--rule);
+}
+.scrub input::-moz-range-track {
+  height: 6px; border-radius: 999px; background: var(--rule);
+}
+.scrub input::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 26px; height: 26px; margin-top: -10px;
+  border-radius: 9px; background: var(--ink); border: 0;
+}
+.scrub input::-moz-range-thumb {
+  width: 26px; height: 26px; border-radius: 9px;
+  background: var(--ink); border: 0;
+}
+
+/* ── Three reasons ─────────────────────────────────────────────────────── */
+.cards {
+  display: grid; gap: 1px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  background: var(--rule);
+  border: 1px solid var(--rule);
+  border-radius: 22px; overflow: hidden;
+}
+.cards article {
+  background: var(--page);
+  padding: clamp(22px, 2.6vw, 30px);
+  display: flex; flex-direction: column; gap: 11px;
+}
+.cards article p:last-child { max-width: none; }
+@media (max-width: 860px) { .cards { grid-template-columns: minmax(0, 1fr); } }
+
+/* ── Mochi's slab ──────────────────────────────────────────────────────
+   He stands on the bottom edge of the block rather than floating in the
+   middle of it, which is the rule everywhere he appears in the app. */
+.mochi-slab {
+  background: var(--lime);
+  border-radius: 26px;
+  height: clamp(210px, 26vw, 280px);
+  display: flex; align-items: flex-end; justify-content: center;
+  overflow: hidden;
+}
+.mochi-slab canvas { height: 86%; width: auto; cursor: pointer; }
+
+/* ── Sharing ───────────────────────────────────────────────────────────── */
+.story-holder { display: flex; justify-content: center; }
 .story {
-  position: relative; overflow: hidden; border-radius: 20px;
-  width: 100%; max-width: 300px;
-  /* The story is cream and so is the page: without a real edge the
-     frame is simply not there and the safe area reads as a gap. */
-  box-shadow: inset 0 0 0 1.5px var(--ink-faint);
+  position: relative; width: min(330px, 100%);
+  border-radius: 20px; overflow: hidden;
+  background: var(--page);
+  box-shadow: inset 0 0 0 1.5px var(--rule);
 }
 .story .chrome {
   position: absolute; left: 0; right: 0;
-  background: rgba(0, 0, 0, .24);
-  padding: 11px 12px;
-  display: flex; flex-direction: column; gap: 12px;
+  padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+  background: rgba(18, 18, 15, .42);
 }
 .story .chrome.top { top: 0; }
 .story .chrome.bottom { bottom: 0; flex-direction: row; align-items: center; gap: 12px; }
@@ -218,53 +388,121 @@ canvas { display: block; max-width: 100%; }
 .story .name { font: 600 11px/1 Archivo, system-ui, sans-serif; color: #fff; }
 .story .when { font: 600 11px/1 Archivo, system-ui, sans-serif; color: rgba(255,255,255,.6); }
 .story .reply {
-  flex: 1; height: 34px; border-radius: 999px; display: flex; align-items: center;
-  padding: 0 14px; box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.6);
-  font: 600 11px/1 Archivo, system-ui, sans-serif; color: rgba(255,255,255,.6);
+  flex: 1; border-radius: 999px; padding: 9px 14px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.5);
+  font: 600 11px/1 Archivo, system-ui, sans-serif; color: rgba(255,255,255,.8);
 }
 
-/* ── Swatches ──────────────────────────────────────────────────────────── */
-.swatches { display: flex; gap: 10px; }
-.swatches button {
-  flex: 1; height: 52px; border: 0; border-radius: 15px; cursor: pointer;
-  padding: 0; transition: transform .12s ease;
+/* ── Pricing ───────────────────────────────────────────────────────────
+   Two plans side by side and nothing else on the screen, because the only
+   question here is which of the two you are. */
+.price-grid {
+  display: grid; gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 26px;
 }
-.swatches button[aria-pressed="true"] { box-shadow: inset 0 0 0 2.5px var(--on-lime); }
-.swatches button:active { transform: scale(.97); }
+@media (max-width: 760px) { .price-grid { grid-template-columns: minmax(0, 1fr); } }
 
-/* ── Price ─────────────────────────────────────────────────────────────── */
-.ledger { display: grid; gap: 1px; background: var(--rule); border-radius: 18px; overflow: hidden; }
-.ledger div {
-  background: var(--surface); padding: 18px 20px;
-  display: flex; justify-content: space-between; align-items: baseline; gap: 16px;
+.plan {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 24px;
+  padding: clamp(22px, 3vw, 32px);
+  display: flex; flex-direction: column; gap: 13px;
 }
-.ledger b { font-weight: 800; letter-spacing: -0.02em; }
+.plan.lift { border-color: var(--ink); box-shadow: inset 0 0 0 1px var(--ink); }
+.plan .amount {
+  font-size: clamp(2.2rem, 5vw, 3rem); font-weight: 800;
+  letter-spacing: -0.04em; line-height: 1;
+}
+.plan .amount span {
+  font-size: .36em; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--ink-soft);
+  margin-left: 6px;
+}
+.ticks { list-style: none; margin: 4px 0 0; padding: 0; display: grid; gap: 9px; }
+.ticks li {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: .93rem; color: var(--ink-soft);
+}
+.ticks li::before {
+  content: ""; width: 8px; height: 8px; border-radius: 2px;
+  background: var(--lime); box-shadow: inset 0 0 0 1px var(--rule);
+  margin-top: 7px; flex: none;
+}
+
+/* ── FAQ ───────────────────────────────────────────────────────────────
+   Ruled rows, not cards: a column of boxes would give every answer the
+   weight of a section. */
+dl.faq { margin: 0; max-width: 46rem; }
+dl.faq > div { padding-block: 20px; border-top: 1px solid var(--rule); }
+dl.faq > div:last-child { border-bottom: 1px solid var(--rule); }
+dl.faq dt { font-weight: 800; letter-spacing: -0.02em; font-size: 1.05rem; line-height: 1.3; }
+dl.faq dd { margin: 7px 0 0; color: var(--ink-soft); line-height: 1.55; font-size: .95rem; }
+dl.faq dd a { color: var(--ink); text-underline-offset: 3px; }
+
+/* ── The close ─────────────────────────────────────────────────────────
+   Ink rather than lime. The page has been cream the whole way down, so
+   going dark here is the visual equivalent of lowering your voice for the
+   ask. */
+.cta {
+  background: var(--ink);
+  color: var(--on-ink);
+  border-top: 1px solid var(--rule);
+  /* No bottom padding: the cat stands on the bottom edge of the band the way
+     he stands on the bottom edge of everything else in the app. The copy
+     carries its own padding instead. */
+  padding-block: clamp(52px, 7vw, 92px) 0;
+}
+.cta-inner {
+  display: grid; gap: clamp(24px, 4vw, 50px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, .42fr);
+  align-items: end;
+}
+.cta-copy {
+  display: flex; flex-direction: column; gap: 18px; align-items: flex-start;
+  padding-bottom: clamp(52px, 7vw, 92px);
+}
+.cta h2 { color: var(--on-ink); font-size: clamp(2rem, 4.6vw, 3rem); }
+.cta h2 #left { color: var(--lime); }
+.cta .lede { color: rgba(244, 242, 234, .72); max-width: 32rem; }
+.cta-fine { color: rgba(244, 242, 234, .5); }
+.cta-cat { height: clamp(170px, 22vw, 250px); display: flex; align-items: flex-end; justify-content: center; }
+.cta-cat canvas { height: 100%; width: auto; }
+@media (max-width: 760px) {
+  .cta-inner { grid-template-columns: minmax(0, 1fr); }
+  .cta-copy { padding-bottom: 30px; }
+  .cta-cat { justify-content: flex-start; height: 150px; }
+}
 
 /* ── Footer ────────────────────────────────────────────────────────────── */
-footer { border-top: 1px solid var(--rule); padding-block: 40px; }
+footer { border-top: 1px solid var(--rule); padding-block: 34px; }
 .foot {
-  display: flex; flex-wrap: wrap; gap: 14px 28px;
-  align-items: baseline; justify-content: space-between;
+  display: flex; flex-wrap: wrap; gap: 16px 28px;
+  align-items: center; justify-content: space-between;
 }
 .foot nav { display: flex; flex-wrap: wrap; gap: 20px; }
 .foot a { color: var(--ink-soft); text-decoration: none; font-size: .875rem; }
 .foot a:hover { color: var(--ink); text-decoration: underline; }
 
-/* ── Prose pages ───────────────────────────────────────────────────────── */
+/* ── The two Play pages ────────────────────────────────────────────────── */
 .prose { max-width: var(--measure); display: flex; flex-direction: column; gap: 22px; }
-.prose h2 { font-size: 1.35rem; margin-top: 18px; }
+.prose h2 { font-size: 1.3rem; margin-top: 18px; }
 .prose ul { margin: 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: 8px; }
 .prose li { color: var(--ink-soft); }
 .prose li b, .prose p b { color: var(--ink); font-weight: 700; }
 .prose a { color: var(--ink); text-underline-offset: 3px; }
+.prose code {
+  font-size: .86em; background: var(--surface);
+  padding: 2px 5px; border-radius: 5px;
+}
 .backlink {
-  display: inline-flex; align-items: center; gap: 8px;
-  font: 600 .8rem/1 Archivo, system-ui, sans-serif;
+  display: inline-flex; align-items: center; gap: 7px;
+  font-size: .875rem; font-weight: 600;
   color: var(--ink-soft); text-decoration: none;
-  letter-spacing: .04em; text-transform: uppercase;
+  margin-bottom: 8px;
 }
 .backlink:hover { color: var(--ink); }
-
 .note {
   background: var(--surface); border-radius: 16px; padding: 16px 18px;
   font-size: .9rem; color: var(--ink-soft); max-width: var(--measure);
@@ -272,206 +510,6 @@ footer { border-top: 1px solid var(--rule); padding-block: 40px; }
 .note b { color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
   * { animation: none !important; transition: none !important; }
 }
-
-/* ══ The sales page ══════════════════════════════════════════════════════
-   The hero is a full-bleed Lime slab with Mochi standing on it, which is the
-   same arrangement the app's own welcome card uses, at poster size. Lime is
-   fixed in both themes, so everything printed on it takes the ink that
-   colour was chosen against rather than the page's. */
-
-.hero {
-  background: var(--lime);
-  color: var(--on-lime);
-  padding-block: clamp(28px, 5vw, 44px) clamp(40px, 6vw, 64px);
-}
-.hero-inner {
-  display: flex; flex-direction: column; align-items: center; text-align: center;
-  gap: 0;
-}
-.hero .caps, .on-lime-soft { color: rgba(18, 18, 15, .62); }
-
-/* He stands on the type the way he stands on every surface in the app: on an
-   edge, cropped by it, never floating in the middle of a box. */
-.hero-cat {
-  height: clamp(170px, 30vw, 280px);
-  margin-top: clamp(14px, 3vw, 26px);
-  display: flex; align-items: flex-end; justify-content: center;
-}
-.hero-cat canvas, .mochi-slab canvas, .stage-cat canvas, .closer-cat canvas {
-  height: 100%; display: block; cursor: pointer;
-}
-.hero-cat canvas { border-radius: 8px; }
-
-.hero h1 {
-  color: var(--on-lime);
-  font-size: clamp(2.7rem, 9vw, 5.4rem);
-  margin-top: clamp(10px, 2vw, 18px);
-}
-.hero-lede {
-  color: rgba(18, 18, 15, .74);
-  font-size: clamp(1.05rem, 2.6vw, 1.35rem);
-  line-height: 1.45;
-  max-width: 30rem;
-  margin-top: 14px;
-}
-.hero-pills { justify-content: center; margin-top: clamp(20px, 3vw, 30px); }
-.hero-note {
-  color: rgba(18, 18, 15, .5);
-  font-size: .8rem; margin-top: 14px;
-  min-height: 1.2em;
-}
-
-.pill.on-lime { background: var(--on-lime); color: var(--lime); }
-.pill.outline-lime {
-  background: transparent; color: var(--on-lime);
-  box-shadow: inset 0 0 0 2px var(--on-lime);
-}
-
-/* ── Reversed splits keep the picture first on a phone ─────────────────── */
-@media (max-width: 760px) {
-  .split.reverse > *:first-child { order: 2; }
-  .split.reverse > *:last-child { order: 1; }
-}
-
-/* ── The card you can mark, with a cat leaning on it ───────────────────── */
-.stage { position: relative; padding-bottom: 54px; }
-.stage-cat {
-  position: absolute; left: 14px; bottom: 0;
-  height: 132px;
-  display: flex; align-items: flex-end;
-  pointer-events: none;
-}
-.stage-cat canvas { cursor: default; }
-/* The card gets narrow before it gets short, so a cat sized for the wide
-   layout climbs over the tally. Let him lean on the edge instead. */
-@media (max-width: 620px) {
-  .stage { padding-bottom: 74px; }
-  .stage-cat { height: 106px; left: 8px; }
-}
-
-/* A pill in a stack is a control, not a banner. */
-.stack > .pill { align-self: flex-start; }
-
-/* ── Mochi's own slab ──────────────────────────────────────────────────── */
-.mochi-slab {
-  background: var(--lime);
-  border-radius: 28px;
-  height: clamp(230px, 34vw, 330px);
-  display: flex; align-items: flex-end; justify-content: center;
-  overflow: hidden;
-}
-
-/* ── The year you can drag ─────────────────────────────────────────────── */
-.year-panel {
-  margin-top: clamp(26px, 4vw, 40px);
-  background: var(--surface);
-  border-radius: 26px;
-  padding: clamp(20px, 3vw, 30px);
-  display: flex; flex-direction: column; gap: 22px;
-}
-.tally { display: flex; flex-wrap: wrap; gap: 14px 44px; }
-.figure {
-  font-weight: 800; letter-spacing: -0.04em;
-  font-size: clamp(2.2rem, 6vw, 3.2rem); line-height: 1;
-  font-variant-numeric: tabular-nums;
-  margin: 0 0 6px;
-}
-.pct { font-size: .5em; letter-spacing: 0; }
-
-.scrub { display: flex; flex-direction: column; gap: 10px; }
-.scrub input {
-  -webkit-appearance: none; appearance: none;
-  width: 100%; height: 26px; background: transparent; cursor: grab;
-}
-.scrub input:active { cursor: grabbing; }
-.scrub input::-webkit-slider-runnable-track {
-  height: 6px; border-radius: 999px; background: var(--ink-faint);
-}
-.scrub input::-moz-range-track {
-  height: 6px; border-radius: 999px; background: var(--ink-faint);
-}
-.scrub input::-webkit-slider-thumb {
-  -webkit-appearance: none; appearance: none;
-  width: 26px; height: 26px; margin-top: -10px;
-  border-radius: 8px; background: var(--ink); border: 0;
-}
-.scrub input::-moz-range-thumb {
-  width: 26px; height: 26px; border-radius: 8px;
-  background: var(--ink); border: 0;
-}
-
-/* ── Sharing ───────────────────────────────────────────────────────────── */
-.story-holder { display: flex; justify-content: center; }
-
-/* ── The close ─────────────────────────────────────────────────────────── */
-.closer {
-  background: var(--lime);
-  color: var(--on-lime);
-  padding-block: clamp(40px, 6vw, 64px);
-}
-.closer-inner {
-  display: flex; flex-direction: column; align-items: center; text-align: center;
-}
-.closer h2 { color: var(--on-lime); font-size: clamp(2rem, 6vw, 3.4rem); }
-.closer-cat {
-  height: clamp(130px, 20vw, 190px);
-  display: flex; align-items: flex-end; justify-content: center;
-  margin-bottom: clamp(8px, 2vw, 16px);
-}
-.closer .hero-lede { color: rgba(18, 18, 15, .74); }
-
-/* ── Ideas ─────────────────────────────────────────────────────────────── */
-/* Not .chip: those carry a number and a claim. These are just examples, so
-   they read as labels stuck to the page rather than statistics. */
-.ideas { display: flex; flex-wrap: wrap; gap: 9px; }
-.ideas span {
-  background: var(--surface);
-  box-shadow: inset 0 0 0 1px var(--rule);
-  border-radius: 10px;
-  padding: 9px 13px;
-  font-size: .95rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-}
-.ideas span:nth-child(4n + 1) { box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 0 var(--lime); }
-.ideas span:nth-child(4n + 2) { box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 0 var(--red); }
-.ideas span:nth-child(4n + 3) { box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 0 var(--butter); }
-.ideas span:nth-child(4n + 4) { box-shadow: inset 0 0 0 1px var(--rule), inset 3px 0 0 0 var(--orange); }
-
-/* ── FAQ ───────────────────────────────────────────────────────────────── */
-/* Ruled rows, not cards: it is a list of questions, and seven boxes in a
-   column would give every answer the same weight as a section. */
-dl.faq { margin: clamp(26px, 4vw, 38px) 0 0; max-width: var(--measure); }
-dl.faq > div { padding-block: 20px; border-top: 1px solid var(--rule); }
-dl.faq > div:last-child { border-bottom: 1px solid var(--rule); }
-dl.faq dt {
-  font-weight: 800; letter-spacing: -0.02em;
-  font-size: 1.05rem; line-height: 1.3;
-}
-dl.faq dd {
-  margin: 7px 0 0; color: var(--ink-soft);
-  line-height: 1.55; font-size: .95rem;
-}
-dl.faq dd a { color: var(--ink); text-underline-offset: 3px; }
-
-/* ── Install helper ────────────────────────────────────────────────────── */
-/* Sits on the lime close, so its colours come from --on-ink/--on-lime and
-   not the page tokens. Retire it once there is a Play listing. */
-.helper {
-  margin-top: 22px;
-  text-align: left;
-  max-width: 30rem;
-  background: var(--on-lime);
-  color: rgba(244, 242, 234, .74);
-  border-radius: 18px;
-  padding: 18px 20px 20px;
-}
-.helper .caps { color: var(--lime); margin-bottom: 10px; }
-.helper ol {
-  margin: 0; padding-left: 1.15rem;
-  display: flex; flex-direction: column; gap: 9px;
-  font-size: .92rem; line-height: 1.5;
-}
-.helper li::marker { color: var(--lime); font-weight: 800; }

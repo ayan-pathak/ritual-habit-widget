@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ritual: the habit tracker that lives on your home screen</title>
-<meta name="description" content="One tap a day fills one square. Miss a day and nothing resets. A calm habit tracker widget for Android, with a cat who notices. Free.">
-<meta name="theme-color" content="#C9F73F">
+<title>Ritual: the habit tracker you don't have to open</title>
+<meta name="description" content="Your whole year sits on your home screen as 365 squares. Tap once a day. Miss a day and nothing resets. Free for your first habit, $4.99 once for unlimited. No subscription.">
+<meta name="theme-color" content="#E7E3D4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16150F" media="(prefers-color-scheme: dark)">
 <link rel="canonical" href="https://ayan-pathak.github.io/ritual-habit-widget/">
 
 <meta property="og:type" content="website">
-<meta property="og:title" content="Watch a year fill up.">
-<meta property="og:description" content="One tap a day. A year you can see. A cat who notices.">
+<meta property="og:title" content="Ritual: the habit tracker you don't have to open">
+<meta property="og:description" content="A year of squares on your home screen. One tap fills today. Miss a day and nothing resets.">
 <meta property="og:url" content="https://ayan-pathak.github.io/ritual-habit-widget/">
 <meta name="twitter:card" content="summary_large_image">
 
@@ -19,97 +20,158 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&display=swap">
 <link rel="stylesheet" href="assets/site.css">
 </head>
-<body>
+<body id="top">
 
-<!-- ── Hero ─────────────────────────────────────────────────────────────
-     Mochi first and large, standing on the bottom edge of the slab the way
-     he stands on every surface in the app. He breathes, looks up at you
-     between breaths, and hops when you click him. -->
-<header class="hero">
-  <div class="wrap hero-inner">
-    <p class="caps on-lime-soft">The habit tracker that lives on your home screen</p>
-
-    <div class="hero-cat">
-      <canvas id="hero-cat" role="button" tabindex="0"
-              aria-label="Mochi. Activate to say hello."></canvas>
-    </div>
-
-    <h1>Watch a year fill&nbsp;up.</h1>
-    <p class="hero-lede">
-      Tap once a day to fill a square. Miss a day and nothing resets. By
-      December you're holding a whole year of showing up, and a cat named
-      Mochi who noticed every single day of it.
-    </p>
-
-    <div class="pills hero-pills" id="cta-top"></div>
-    <noscript>
-      <div class="pills hero-pills">
-        <a class="pill on-lime" href="https://github.com/ayan-pathak/ritual-habit-widget/releases/latest">Get Ritual free</a>
-      </div>
-    </noscript>
-    <p class="hero-note" id="cat-line">Free forever for your first habit. No ads.</p>
+<!-- ── Bar ──────────────────────────────────────────────────────────────
+     Quiet and sticky. Its only job is to keep the download one click away
+     from wherever the reader stopped scrolling. -->
+<header class="bar">
+  <div class="wrap bar-inner">
+    <a class="brand" href="#top">
+      <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+      Ritual
+    </a>
+    <nav class="bar-links">
+      <a href="#how">How it works</a>
+      <a href="#year">Your year</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+    <a class="btn tight" href="#get">Get the app</a>
   </div>
 </header>
 
+<main>
+
+<!-- ── Hero: the promise, the proof, the two buttons ──────────────────── -->
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <p class="caps">Habit tracker for iPhone and Android</p>
+      <h1>The habit tracker you don't have to open.</h1>
+      <p class="lede">
+        Your whole year sits on your home screen as 365 squares. Tap once and
+        today fills in. Miss a day and nothing resets, so one bad week never
+        wipes out the four good months behind it.
+      </p>
+
+      <div class="stores">
+        <a class="store" data-store="appstore" href="#get">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
+            <path fill="currentColor" d="M16.4 1.4c0 1.1-.4 2.2-1.1 3-.9 1-2.3 1.7-3.4 1.6-.2-1.1.4-2.3 1.1-3 .8-.9 2.2-1.5 3.4-1.6zM20.9 17.1c-.6 1.3-.8 1.8-1.5 3-1 1.6-2.4 3.5-4.1 3.5-1.6 0-2-1-4-1s-2.5 1-4.1 1c-1.7 0-3-1.8-4-3.4C.4 15.9.1 10.8 1.8 8c1.2-1.9 3.1-3.1 4.9-3.1 1.9 0 3 1 4.5 1 1.5 0 2.4-1 4.5-1 1.6 0 3.3.9 4.5 2.4-4 2.2-3.3 7.9.7 9.8z"/>
+          </svg>
+          <span><i>Download on the</i><b>App Store</b></span>
+        </a>
+        <a class="store" data-store="play" href="#get">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
+            <path fill="#00D2FF" d="M3.9 2.1c-.3.3-.5.8-.5 1.4v17c0 .6.2 1.1.5 1.4L13 12z"/>
+            <path fill="#00E27A" d="M3.9 2.1 16.1 9 13 12z"/>
+            <path fill="#FFCE00" d="M16.1 9l3.6 2c.9.5.9 1.5 0 2l-3.6 2-3.1-3z"/>
+            <path fill="#FF3A44" d="M3.9 21.9 13 12l3.1 3z"/>
+          </svg>
+          <span><i>Get it on</i><b>Google Play</b></span>
+        </a>
+      </div>
+
+      <p class="small faint hero-fine">
+        Free for your first habit, with no trial clock. $4.99 once if you want
+        more than one. No subscription, no ads, no notifications.
+      </p>
+    </div>
+
+    <div class="hero-art">
+      <div class="phone" aria-label="A phone home screen with the Ritual widget on it">
+        <div class="bar-row">
+          <span>9:41</span>
+          <span class="bars" aria-hidden="true"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:11px"></i></span>
+        </div>
+        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <canvas id="wcard" class="widget-shot" aria-label="The Ritual widget: a year of squares, a streak, and a Mark button"></canvas>
+        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+      </div>
+      <p class="caption">Your home screen tomorrow morning. The button marks the day without opening the app.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ── What you are buying, in four words each ────────────────────────── -->
+<div class="strip">
+  <div class="wrap strip-inner">
+    <span>Pay once, not monthly</span>
+    <span>No notifications, ever</span>
+    <span>No ads, no trackers</span>
+    <span>Works with no signal</span>
+  </div>
+</div>
+
 <div class="wrap">
 
-  <!-- ── Where it lives, first, because that is the product ─────────── -->
-  <section id="widget">
-    <div class="split reverse">
-      <div class="phone" aria-label="A phone home screen with the Ritual widget on it">
-        <div class="bar">
-          <span>9:41</span>
-          <span class="bars" aria-hidden="true"><i style="height:5px"></i><i style="height:8px"></i><i style="height:11px"></i></span>
-        </div>
-        <div style="height:18px"></div>
-        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        <div style="height:16px"></div>
-        <canvas id="wcard"></canvas>
-        <div style="height:16px"></div>
-        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        <div style="height:22px"></div>
-      </div>
-      <div class="stack">
-        <div class="eyebrow">
-          <span class="mark" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
-          <p class="caps">It lives on your home screen</p>
-        </div>
-        <h2>You'll barely open the app.</h2>
+  <!-- ── The three reasons someone is still using it in June ─────────── -->
+  <section id="how">
+    <div class="head">
+      <p class="caps">Why this one lasts</p>
+      <h2>Most habit apps get deleted in week three.</h2>
+      <p class="lede">
+        Not because people stop caring. Because opening an app to record that
+        you did a thing is itself a habit, and one broken streak makes the
+        whole thing feel pointless. Ritual removes both problems.
+      </p>
+    </div>
+
+    <div class="cards">
+      <article>
+        <p class="caps">One</p>
+        <h3>You never have to remember it</h3>
         <p class="soft">
-          Your whole year sits on your home screen, and the button marks today
-          without launching anything. The habit you're building is one tap, so
-          Ritual puts that tap exactly where your thumb already goes.
+          The widget sits on your home screen between your camera and your
+          messages. You see your year every time you unlock your phone, and
+          the button marks today from right there. There is nothing to open
+          and nothing to remember.
         </p>
-        <div class="pills">
-          <span class="chip"><b>1</b> tap a day</span>
-          <span class="chip"><b>0</b> notifications</span>
-          <span class="chip"><b>0</b> ads</span>
-        </div>
-      </div>
+      </article>
+      <article>
+        <p class="caps">Two</p>
+        <h3>A missed day costs you one square</h3>
+        <p class="soft">
+          No chain to break, no reset to zero, no screen telling you that you
+          failed. The days you did keep stay exactly where they are, which is
+          the difference between a slip and a reason to quit.
+        </p>
+      </article>
+      <article>
+        <p class="caps">Three</p>
+        <h3>You can finally see the work</h3>
+        <p class="soft">
+          A number in a list is forgettable. Two hundred filled squares is
+          something you look at in December and think, I actually did that.
+          It is the same reason people keep a wall calendar.
+        </p>
+      </article>
     </div>
   </section>
 
-  <!-- ── The gesture, live ──────────────────────────────────────────── -->
+  <!-- ── The card, live. Letting someone tap it is the demo ──────────── -->
   <section id="try">
     <div class="split">
       <div class="stack">
-        <div class="eyebrow">
-          <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i></span>
-          <p class="caps">How it works</p>
-        </div>
-        <h2>One tap. That's the whole habit.</h2>
+        <p class="caps">One tap a day</p>
+        <h2>This is the real card. Tap it.</h2>
         <p class="soft">
-          No streak to protect. No reminders to swipe away. No weekly report
-          you'll never open. You kept the day, so you tap, and the card flips
-          to ink to prove it. Mochi is delighted. Every time. Because showing
-          up deserves that.
+          Nothing on this page is a mockup. The card beside this text is drawn
+          by the same code that draws it on your phone, so what you see here
+          is exactly what you get.
         </p>
-        <button class="pill" id="mark" type="button">Tap today</button>
-        <p class="small soft" id="mark-line">Go on. This is the real card.</p>
+        <p class="soft">
+          Marking the day flips the whole card to ink. That flip is the point:
+          across a home screen you can tell at a glance which habits you have
+          kept today and which are still waiting.
+        </p>
+        <button class="btn" id="mark" type="button">Tap today</button>
+        <p class="small faint" id="mark-line">Go on, it is the real thing.</p>
       </div>
 
       <div class="stage">
-        <div class="hero-card">
+        <div class="card-frame">
           <canvas id="card" class="card-live" role="button" tabindex="0"
                   aria-label="A ritual card. Activate to mark today."></canvas>
         </div>
@@ -120,160 +182,64 @@
     </div>
   </section>
 
-  <!-- ── The wedge ──────────────────────────────────────────────────── -->
-  <section id="missed">
-    <div class="stack" style="align-items:flex-start;gap:14px;max-width:46rem">
-      <div class="eyebrow">
-        <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
-        <p class="caps">The part other apps get wrong</p>
-      </div>
-      <h2>A streak resets. A year doesn't.</h2>
-      <p class="soft">
-        Most habit apps treat one bad Tuesday like a crime. You miss once, the
-        counter drops to zero, three weeks of effort vanish in a single
-        notification, and you quit.
-      </p>
-      <p class="soft">
-        Ritual keeps every square you've ever filled. Miss a day and there's a
-        gap in the grid. That's all. Tomorrow is a fresh square sitting right
-        next to all the ones you already earned.
-      </p>
-      <p class="small faint">
-        Real life has fevers, flights and weddings. Your year can handle them,
-        and Mochi has no opinion about yesterday.
-      </p>
-    </div>
-  </section>
-
-  <!-- ── Mochi ──────────────────────────────────────────────────────── -->
-  <section id="mochi">
-    <div class="split reverse">
-      <div class="mochi-slab">
-        <canvas id="big-cat" role="button" tabindex="0"
-                aria-label="Mochi, larger. Activate to change his mood."></canvas>
-      </div>
-      <div class="stack">
-        <div class="eyebrow">
-          <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i></span>
-          <p class="caps">Meet Mochi</p>
-        </div>
-        <h2>A cat who's quietly proud of you.</h2>
-        <p class="soft">
-          Mochi is calm while today is still open and thrilled the moment you
-          keep it. He doesn't send notifications. He doesn't lecture. He has no
-          sad face, because there's no version of this where you're in trouble.
-          He just lives on your home screen, noticing every day you show up.
-        </p>
-        <p class="small faint">
-          Hand drawn as vectors, so he stays crisp on a 24 pixel badge and on a
-          full story card. Tap him.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ── What it adds up to ─────────────────────────────────────────── -->
+  <!-- ── The year, which is the actual product ───────────────────────── -->
   <section id="year">
-    <div class="stack" style="align-items:flex-start;gap:14px">
-      <div class="eyebrow">
-        <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
-        <p class="caps">What it adds up to</p>
-      </div>
-      <h2>A hundred small days is not a small thing.</h2>
-      <p class="soft">
-        One day is easy to forget. A year of them isn't. Drag through the year
-        and watch what showing up actually looks like. This is the exact grid
-        the app draws, filling the exact same way.
+    <div class="head">
+      <p class="caps">What you end up with</p>
+      <h2>You do not need a perfect year. You need a visible one.</h2>
+      <p class="lede">
+        Drag the slider and watch what different levels of showing up look
+        like. Even a year with plenty of gaps in it reads as an achievement,
+        and the longest run is the number you will want to tell people about.
       </p>
     </div>
 
     <div class="year-panel">
       <div class="tally">
-        <div>
-          <p class="figure" id="fig-days">165</p>
-          <p class="caps">Days kept</p>
-        </div>
-        <div>
-          <p class="figure" id="fig-streak">8</p>
-          <p class="caps">Longest run</p>
-        </div>
-        <div>
-          <p class="figure" id="fig-pct">64<span class="pct">%</span></p>
-          <p class="caps">Of the year so far</p>
-        </div>
+        <p class="figure"><span id="fig-days">169</span><span class="caps">days kept</span></p>
+        <p class="figure"><span id="fig-streak">10</span><span class="caps">longest run</span></p>
+        <p class="figure"><span id="fig-pct">66<span class="pct">%</span></span><span class="caps">of the year so far</span></p>
       </div>
-
-      <canvas id="year-card" class="card-live" aria-label="A year of kept days."></canvas>
-
-      <label class="scrub">
-        <span class="caps">Drag through a year</span>
-        <input type="range" id="scrub" min="5" max="100" value="64"
-               aria-label="How much of the year you kept">
-      </label>
+      <canvas id="year-card" class="card-live" aria-label="A year of squares"></canvas>
+      <div class="scrub">
+        <label class="caps" for="scrub">Drag through a year</label>
+        <input id="scrub" type="range" min="18" max="100" value="66" aria-label="How much of the year was kept">
+      </div>
     </div>
   </section>
 
-  <!-- ── Ideas ──────────────────────────────────────────────────────── -->
-  <section id="ideas">
-    <div class="stack" style="align-items:flex-start;gap:16px">
-      <div class="eyebrow">
-        <span class="mark" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
-        <p class="caps">What people keep</p>
-      </div>
-      <h2>Anything you want to do most days.</h2>
-      <div class="ideas">
-        <span>Read 10 pages</span>
-        <span>Walk after dinner</span>
-        <span>No phone in bed</span>
-        <span>Play guitar</span>
-        <span>Stretch</span>
-        <span>Journal three lines</span>
-        <span>Water before coffee</span>
-        <span>Call home</span>
-      </div>
-      <p class="soft">
-        Name it, pick its colour, choose when in the day it belongs. Then add
-        the widget and forget the app exists.
-      </p>
-    </div>
-  </section>
-
-  <!-- ── Sharing ────────────────────────────────────────────────────── -->
+  <!-- ── Sharing, sold as proof rather than as a feature ─────────────── -->
   <section id="share">
     <div class="split">
       <div class="stack">
-        <div class="eyebrow">
-          <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>
-          <p class="caps">Tell the people who care</p>
-        </div>
-        <h2>Nobody claps for a spreadsheet.</h2>
+        <p class="caps">Tell the people who care</p>
+        <h2>Proof you can put in front of someone.</h2>
         <p class="soft">
           One tap turns your year into a story card and sends it straight to
-          Instagram. The real grid, the real number, nothing made up. The
-          friends who asked how it's going finally get to see it. The ones who
-          didn't ask get to be impressed.
+          Instagram. The real grid, the real number, nothing invented. The
+          friends who kept asking how it is going finally get to see it.
         </p>
         <p class="soft">
-          Telling people is the oldest trick there is for actually keeping a
-          habit. Ritual just makes the proof worth posting.
+          Saying it out loud is the oldest trick there is for actually keeping
+          a habit. This is the part that makes it worth posting.
         </p>
         <p class="small faint">
-          Your grid, your number, and a small Ritual wordmark underneath.
-          Nothing else. If Instagram isn't on the phone, the same card goes to
-          whatever is.
+          Your grid, your number, and a small Ritual wordmark underneath. If
+          Instagram is not on the phone, the same card goes to whatever is.
         </p>
       </div>
+
       <div class="story-holder">
-        <div class="story">
-          <canvas id="story"></canvas>
+        <div class="story" aria-label="The story card as it appears on Instagram">
           <div class="chrome top">
-            <div class="segs" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></div>
-            <div class="who">
+            <span class="segs" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
+            <span class="who">
               <span class="av" aria-hidden="true"></span>
               <span class="name">your story</span>
               <span class="when">now</span>
-            </div>
+            </span>
           </div>
+          <canvas id="story" aria-label="A Ritual story card: the habit name, the streak, the year grid"></canvas>
           <div class="chrome bottom">
             <span class="reply">Send message</span>
           </div>
@@ -282,128 +248,193 @@
     </div>
   </section>
 
-  <!-- ── Pricing ────────────────────────────────────────────────────── -->
-  <section id="price">
-    <div class="split">
-      <div class="stack">
-        <div class="eyebrow">
-          <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>
-          <p class="caps">What it costs</p>
-        </div>
-        <h2>Free for one habit. $4.99 once for all of them.</h2>
-        <p class="soft">
-          Your first ritual is free, with no time limit and no catch. When you
-          want to track more than one thing, unlock unlimited rituals with a
-          single payment. That's it, for good.
-        </p>
-        <p class="small faint">
-          No trial that quietly starts billing you. Nothing to cancel.
-        </p>
+  <!-- ── Mochi, kept brief and kept honest ───────────────────────────── -->
+  <section id="mochi">
+    <div class="split reverse">
+      <div class="mochi-slab">
+        <canvas id="big-cat" role="button" tabindex="0" aria-label="Mochi. Activate to say hello."></canvas>
       </div>
-      <div class="ledger">
-        <div><span class="soft">Your first ritual</span> <b>Free, always</b></div>
-        <div><span class="soft">Unlimited rituals</span> <b>$4.99, one time</b></div>
-        <div><span class="soft">Subscription</span> <b>None, ever</b></div>
-        <div><span class="soft">Ads, trackers, analytics</span> <b>None</b></div>
+      <div class="stack">
+        <p class="caps">Small thing, works anyway</p>
+        <h2>Someone notices when you show up.</h2>
+        <p class="soft">
+          Mochi lives on the card. He is calm while today is unmarked, and the
+          moment you tap he is pleased about it. He never guilts you for a
+          missed day, because the empty square has already said everything
+          there is to say.
+        </p>
+        <p class="small faint">Go ahead and click him.</p>
       </div>
     </div>
   </section>
 
-  <!-- ── FAQ ────────────────────────────────────────────────────────── -->
+  <!-- ── Price, stated so plainly it cannot be misread ───────────────── -->
+  <section id="pricing">
+    <div class="head">
+      <p class="caps">Pricing</p>
+      <h2>Pay once, or never. There is no monthly anything.</h2>
+      <p class="lede">
+        Your first habit is free and stays free, with no trial clock and no
+        card. When you want a second one, a single payment unlocks unlimited
+        rituals on every device you sign in on, for good.
+      </p>
+    </div>
+
+    <div class="price-grid">
+      <article class="plan">
+        <p class="caps">Start here</p>
+        <p class="amount">Free</p>
+        <p class="soft">One ritual, the full widget, the whole year, sharing, and every future update to all of it.</p>
+        <ul class="ticks">
+          <li>One habit, no time limit</li>
+          <li>Home screen widget</li>
+          <li>Story sharing</li>
+          <li>No card needed</li>
+        </ul>
+      </article>
+      <article class="plan lift">
+        <p class="caps">If you want more</p>
+        <p class="amount">$4.99 <span>once</span></p>
+        <p class="soft">Everything above, for as many habits as you care to keep. One payment, restored free on every phone you own.</p>
+        <ul class="ticks">
+          <li>Unlimited habits</li>
+          <li>One payment, kept forever</li>
+          <li>No subscription, no renewal</li>
+          <li>Restores on a new phone</li>
+        </ul>
+      </article>
+    </div>
+
+    <div class="stores center">
+      <a class="store" data-store="appstore" href="#get">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
+          <path fill="currentColor" d="M16.4 1.4c0 1.1-.4 2.2-1.1 3-.9 1-2.3 1.7-3.4 1.6-.2-1.1.4-2.3 1.1-3 .8-.9 2.2-1.5 3.4-1.6zM20.9 17.1c-.6 1.3-.8 1.8-1.5 3-1 1.6-2.4 3.5-4.1 3.5-1.6 0-2-1-4-1s-2.5 1-4.1 1c-1.7 0-3-1.8-4-3.4C.4 15.9.1 10.8 1.8 8c1.2-1.9 3.1-3.1 4.9-3.1 1.9 0 3 1 4.5 1 1.5 0 2.4-1 4.5-1 1.6 0 3.3.9 4.5 2.4-4 2.2-3.3 7.9.7 9.8z"/>
+        </svg>
+        <span><i>Download on the</i><b>App Store</b></span>
+      </a>
+      <a class="store" data-store="play" href="#get">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
+          <path fill="#00D2FF" d="M3.9 2.1c-.3.3-.5.8-.5 1.4v17c0 .6.2 1.1.5 1.4L13 12z"/>
+          <path fill="#00E27A" d="M3.9 2.1 16.1 9 13 12z"/>
+          <path fill="#FFCE00" d="M16.1 9l3.6 2c.9.5.9 1.5 0 2l-3.6 2-3.1-3z"/>
+          <path fill="#FF3A44" d="M3.9 21.9 13 12l3.1 3z"/>
+        </svg>
+        <span><i>Get it on</i><b>Google Play</b></span>
+      </a>
+    </div>
+  </section>
+
+  <!-- ── The questions that stop a download ──────────────────────────── -->
   <section id="faq">
-    <div class="stack" style="align-items:flex-start;gap:14px">
-      <div class="eyebrow">
-        <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i></span>
-        <p class="caps">Before you download</p>
-      </div>
-      <h2>The questions everyone asks.</h2>
+    <div class="head">
+      <p class="caps">Before you download</p>
+      <h2>The questions people ask first.</h2>
     </div>
 
     <dl class="faq">
       <div>
         <dt>What happens if I miss a day?</dt>
         <dd>Nothing resets. That day stays empty and every other square stays
-          exactly where it was.</dd>
+          exactly where it was. You pick up tomorrow with everything you have
+          already built still intact.</dd>
       </div>
       <div>
-        <dt>Can I track more than one habit?</dt>
-        <dd>Your first ritual is free. A one time $4.99 unlocks as many as you
-          want.</dd>
+        <dt>Will it nag me?</dt>
+        <dd>No. Ritual sends no notifications at all. The widget on your home
+          screen is the only reminder, and it is one you chose to put there.</dd>
+      </div>
+      <div>
+        <dt>Is $4.99 a subscription?</dt>
+        <dd>No. It is one payment that never renews, and it unlocks unlimited
+          habits on every device you sign in on. Your first habit is free
+          whether or not you ever pay.</dd>
       </div>
       <div>
         <dt>Do I need an account?</dt>
-        <dd>Yes, one sign in on the first launch, with Google, Apple or an
+        <dd>Yes, one sign in on the first launch with Google, Apple or an
           email address. It exists so your year survives a new phone. Nothing
           else in the app asks you for anything.</dd>
       </div>
       <div>
         <dt>Where is my data stored?</dt>
-        <dd>Every square lives on your phone. Because you're signed in, your
-          rituals are also mirrored to your account so a new phone picks them
-          up. That's a name, a colour, a time of day and a list of dates, and
-          nothing else. <a href="privacy/">The full list is here.</a></dd>
+        <dd>Every square lives on your phone, and your rituals are mirrored to
+          your account so a new phone picks them up. That is a name, a colour,
+          a time of day and a list of dates, and nothing else.
+          <a href="privacy/">The full list is here.</a></dd>
       </div>
       <div>
-        <dt>Will it send me notifications?</dt>
-        <dd>Never. The widget on your home screen is the reminder.</dd>
+        <dt>Can I track more than one habit?</dt>
+        <dd>Yes, as many as you want once you have unlocked it. Each one gets
+          its own colour, its own time of day and its own widget.</dd>
       </div>
       <div>
-        <dt>Is it on iPhone?</dt>
-        <dd>Not yet, it's being ported. Leave your email and you'll hear
-          first.</dd>
-      </div>
-      <div>
-        <dt>Why is it open source?</dt>
-        <dd>So you don't have to take anyone's word for "no trackers". Anyone
-          can <a href="https://github.com/ayan-pathak/ritual-habit-widget">check
-          for themselves</a>.</dd>
+        <dt>Why should I trust it with my data?</dt>
+        <dd>You do not have to take anyone's word for it. The whole app is
+          open source, so anyone can
+          <a href="https://github.com/ayan-pathak/ritual-habit-widget">read
+          exactly what it does</a>.</dd>
       </div>
     </dl>
   </section>
+
 </div>
 
-<!-- ── Close ──────────────────────────────────────────────────────────── -->
-<section class="closer" id="get">
-  <div class="wrap closer-inner">
-    <div class="closer-cat">
+<!-- ── The ask ──────────────────────────────────────────────────────────
+     Last screen, one decision, both buttons and a number that is true
+     today rather than a slogan. -->
+<section class="cta" id="get">
+  <div class="wrap cta-inner">
+    <div class="cta-copy">
+      <h2><span id="left">365</span> squares left this year.</h2>
+      <p class="lede">
+        Every one of them is still empty. Pick one thing you want to be doing
+        in December, put it on your home screen tonight, and tap it once.
+      </p>
+
+      <div class="stores">
+        <a class="store light" data-store="appstore" href="#get">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
+            <path fill="currentColor" d="M16.4 1.4c0 1.1-.4 2.2-1.1 3-.9 1-2.3 1.7-3.4 1.6-.2-1.1.4-2.3 1.1-3 .8-.9 2.2-1.5 3.4-1.6zM20.9 17.1c-.6 1.3-.8 1.8-1.5 3-1 1.6-2.4 3.5-4.1 3.5-1.6 0-2-1-4-1s-2.5 1-4.1 1c-1.7 0-3-1.8-4-3.4C.4 15.9.1 10.8 1.8 8c1.2-1.9 3.1-3.1 4.9-3.1 1.9 0 3 1 4.5 1 1.5 0 2.4-1 4.5-1 1.6 0 3.3.9 4.5 2.4-4 2.2-3.3 7.9.7 9.8z"/>
+          </svg>
+          <span><i>Download on the</i><b>App Store</b></span>
+        </a>
+        <a class="store light" data-store="play" href="#get">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
+            <path fill="#00D2FF" d="M3.9 2.1c-.3.3-.5.8-.5 1.4v17c0 .6.2 1.1.5 1.4L13 12z"/>
+            <path fill="#00E27A" d="M3.9 2.1 16.1 9 13 12z"/>
+            <path fill="#FFCE00" d="M16.1 9l3.6 2c.9.5.9 1.5 0 2l-3.6 2-3.1-3z"/>
+            <path fill="#FF3A44" d="M3.9 21.9 13 12l3.1 3z"/>
+          </svg>
+          <span><i>Get it on</i><b>Google Play</b></span>
+        </a>
+      </div>
+
+      <p class="small cta-fine" id="cta-fine">
+        Free for your first habit. $4.99 once for unlimited.
+      </p>
+      <p class="small cta-fine">
+        <a id="apk" href="https://github.com/ayan-pathak/ritual-habit-widget/releases/latest">
+          Or install the Android build directly</a>, while the listings go up.
+      </p>
+    </div>
+
+    <div class="cta-cat">
       <canvas id="end-cat" aria-hidden="true"></canvas>
     </div>
-    <h2><span id="left">365</span> squares left this year.</h2>
-    <p class="hero-lede">Every one of them is still empty. Mochi's waiting.</p>
-
-    <div class="pills hero-pills" id="cta-bottom"></div>
-    <noscript>
-      <div class="pills hero-pills">
-        <a class="pill on-lime" href="https://github.com/ayan-pathak/ritual-habit-widget/releases/latest">Get Ritual free</a>
-      </div>
-    </noscript>
-
-    <!-- Shown once the Android button is tapped, until there is a Play
-         listing to send people to instead. -->
-    <div class="helper" id="helper" hidden>
-      <p class="caps">Almost there</p>
-      <ol>
-        <li>Your download has started.</li>
-        <li>If Android asks, allow installs from your browser. That's normal
-          for an app from outside the Play Store.</li>
-        <li>Open Ritual, then long press your home screen and add the Ritual
-          widget.</li>
-      </ol>
-    </div>
-
-    <p class="hero-note">
-      Android 8 and up. 11&nbsp;MB. Google Play coming soon. iPhone on the way.
-    </p>
   </div>
 </section>
 
+</main>
+
 <footer>
   <div class="wrap foot">
-    <p class="caps">Ritual, one square a day</p>
+    <p class="caps">Ritual · one square a day</p>
     <nav>
+      <a href="#get">Download</a>
+      <a href="#pricing">Pricing</a>
       <a href="privacy/">Privacy</a>
-      <a href="delete-account/">Delete your data</a>
-      <a href="https://github.com/ayan-pathak/ritual-habit-widget">Open source on GitHub</a>
+      <a href="delete-account/">Delete your account</a>
+      <a href="https://github.com/ayan-pathak/ritual-habit-widget">Read the source</a>
     </nav>
   </div>
 </footer>
@@ -417,70 +448,46 @@
 "use strict";
 
 const $ = id => document.getElementById(id);
+
+/* ── The two store links ───────────────────────────────────────────────
+   Fill these in when the listings exist and every button on the page
+   starts working at once. Until then a button says so on the way past
+   rather than silently doing nothing, because a dead download button is
+   the one thing a page like this cannot afford. */
+const STORE = {
+  appstore: "",   // ← paste the App Store URL here
+  play: "",       // ← paste the Google Play URL here
+};
 const APK = "https://github.com/ayan-pathak/ritual-habit-widget/releases/latest";
-const WAITLIST = "mailto:you@example.com" +
-  "?subject=" + encodeURIComponent("Tell me when Ritual is on iPhone") +
-  "&body=" + encodeURIComponent(
-    "Send this and you'll be on the list. Nothing else needed.");
 
-/* ── One clear action per visitor ──────────────────────────────────────
-   An APK is a dead end on an iPhone and a scary warning on a desktop, so
-   neither gets offered one. The buttons are built here rather than in the
-   markup so nobody is ever looking at a download they cannot use, and a
-   <noscript> block keeps the Android path working without this. */
-const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-  (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-const IS_ANDROID = /Android/.test(navigator.userAgent);
+const NAMES = { appstore: "the App Store", play: "Google Play" };
 
-function buildCta(host, primaryFirst) {
-  host.replaceChildren();
-  const add = (label, href, cls, onClick) => {
-    const a = document.createElement("a");
-    a.className = "pill " + cls;
-    a.href = href;
-    a.textContent = label;
-    if (onClick) a.addEventListener("click", onClick);
-    host.append(a);
-  };
-  if (IS_IOS) {
-    add("Tell me when it's on iPhone", WAITLIST, "on-lime");
-    add("Try it right here", "#try", "outline-lime");
-  } else {
-    add("Get Ritual free", APK, "on-lime", showHelper);
-    add(primaryFirst ? "Try it right here" : "Tell me when it's on iPhone",
-        primaryFirst ? "#try" : WAITLIST, "outline-lime");
-  }
-}
+document.querySelectorAll("[data-store]").forEach(a => {
+  const which = a.dataset.store;
+  const href = STORE[which];
+  if (href) { a.href = href; return; }
+  a.dataset.soon = "true";
+  a.addEventListener("click", e => {
+    e.preventDefault();
+    const fine = $("cta-fine");
+    if (fine) {
+      fine.textContent = "Not on " + NAMES[which] + " yet. The Android build " +
+        "is on GitHub in the meantime, and the listing is coming.";
+    }
+    location.hash = "#get";
+  });
+});
 
-function showHelper() {
-  const h = $("helper");
-  if (!h) return;
-  h.hidden = false;
-  if (!IS_ANDROID) {
-    h.querySelector("li").textContent =
-      "Your download has started. It's an Android app, so move it to your phone to install it.";
-  }
-}
-
-buildCta($("cta-top"), true);
-buildCta($("cta-bottom"), false);
+const apk = $("apk");
+if (apk) apk.href = APK;
 
 /* ── The cats ──────────────────────────────────────────────────────────
-   Four live rigs, each breathing on its own clock so they are never in
-   lockstep, which is the difference between a page with animals on it and
-   a page with a looping GIF on it. */
-const heroCat  = Ritual.mochi($("hero-cat"),  { mood: "resting" });
+   Three live rigs, each breathing on its own clock so they are never in
+   lockstep, which is the difference between a page with an animal on it
+   and a page with a looping GIF on it. */
 const cheerCat = Ritual.mochi($("cheer-cat"), { mood: "resting" });
 const bigCat   = Ritual.mochi($("big-cat"),   { mood: "resting" });
 const endCat   = Ritual.mochi($("end-cat"),   { mood: "pleased" });
-
-const HELLOS = [
-  "He's pleased you came.",
-  "That's his whole personality, really.",
-  "He does that every time you keep a day.",
-  "Mochi has no notes. Mochi is just happy.",
-];
-let hello = 0;
 
 /** Click and keyboard, because a canvas that acts like a button must be one. */
 function tapable(node, fn) {
@@ -490,12 +497,6 @@ function tapable(node, fn) {
   });
 }
 
-tapable($("hero-cat"), () => {
-  heroCat.play("mark", "pleased");
-  $("cat-line").textContent = HELLOS[hello++ % HELLOS.length];
-  setTimeout(() => heroCat.set("resting"), 1600);
-});
-
 let bigMood = 0;
 tapable($("big-cat"), () => {
   bigMood++;
@@ -504,13 +505,12 @@ tapable($("big-cat"), () => {
 
 /* ── The card you can tap ──────────────────────────────────────────────── */
 let marked = false;
-const cardModel = () => Ritual.demoModel({ marked, run: 9 });
 
 function paintCard() {
-  Ritual.paintCard($("card"), cardModel());
+  Ritual.paintCard($("card"), Ritual.demoModel({ marked, run: 9 }));
   $("mark-line").textContent = marked
-    ? "Day 214, and nothing was at stake."
-    : "Go on. This is the real card.";
+    ? "Day marked, and nothing was at stake."
+    : "Go on, it is the real thing.";
   $("mark").textContent = marked ? "Tapped today" : "Tap today";
 }
 
@@ -523,7 +523,7 @@ $("mark").addEventListener("click", toggleMark);
 tapable($("card"), toggleMark);
 
 /* ── Drag through a year ───────────────────────────────────────────────
-   The grid and the figures come off one model, so the numbers under the
+   The grid and the figures come off one model, so the numbers above the
    card are the numbers on it rather than a caption written beside it. */
 function yearModel(pct) {
   const now = new Date();
