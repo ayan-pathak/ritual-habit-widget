@@ -444,6 +444,145 @@ const Story = (() => {
 })();
 
 
+/* ══ MochiMotion.kt ══════════════════════════════════════════════════════ */
+const easeIn = t => t * t * t;
+const easeOut = t => 1 - Math.pow(1 - t, 3);
+const easeBoth = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const settleEase = t => 1 - Math.pow(2, -9 * t) * Math.cos(t * 13.5);
+
+const BEATS = {
+  // Load, leave, land, and wobble out. He is committed before he moves.
+  mark: [[90, 1.10, .88, 0, 0, easeIn], [140, .93, 1.13, -34, 1, easeOut],
+         [130, 1.06, .94, 0, 0, easeIn], [290, 1, 1, 0, 0, settleEase]],
+  // No pop. Weight goes out of him and he sinks.
+  miss: [[220, 1.02, .99, 2, 1, easeBoth], [480, 1.015, .985, 9, 0, easeOut]],
+  // Mark, twice, the second bounce half the height of the first.
+  unlock: [[110, 1.09, .90, 0, 0, easeIn], [150, .92, 1.15, -46, 1, easeOut],
+           [130, 1.05, .95, 0, 0, easeIn], [120, .95, 1.08, -22, 0, easeOut],
+           [110, 1.03, .97, 0, 0, easeIn], [280, 1, 1, 0, 0, settleEase]],
+  settle: [[300, 1, 1, 0, 1, easeOut]],
+};
+const BREATH = 3.4, BLINK = .11;
+
+class MochiMotion {
+  constructor(mood = "resting") {
+    this.mood = mood; this.scaleX = 1; this.scaleY = 1; this.offsetY = 0; this.idle = true;
+    this.seg = null; this.i = 0; this.elapsed = 0; this.lands = mood;
+    this.fromX = 1; this.fromY = 1; this.fromT = 0;
+    this.poseX = 1; this.poseY = 1; this.poseT = 0;
+    this.clock = 0; this.blinkAt = 2.4; this.blinkUntil = -1;
+    this.resting = mood; this.face = mood;
+  }
+  play(which, face) {
+    this.seg = BEATS[which]; this.i = 0; this.elapsed = 0;
+    this.lands = face; this.resting = face;
+    this.fromX = this.poseX; this.fromY = this.poseY; this.fromT = this.poseT;
+  }
+  snapTo(face) {
+    this.seg = null; this.resting = face; this.face = face; this.mood = face;
+    this.poseX = this.poseY = 1; this.poseT = 0;
+    this.scaleX = this.scaleY = 1; this.offsetY = 0;
+  }
+  advance(dt) {
+    this.clock += dt;
+    this.step(dt);
+    let bx = 1, by = 1;
+    if (this.idle) {
+      // Slow enough to read as breathing rather than as a pulse, and Y and X
+      // move against each other so his volume stays about constant.
+      const s = Math.sin(this.clock * (2 * Math.PI / BREATH));
+      by = 1 + s * .012; bx = 1 - s * .006;
+      // Only a face with open eyes can blink, and neither of the two the app
+      // shows has any. He never blinks mid-beat either: a shut eye during a
+      // hop reads as a flinch.
+      if (opensEyes(this.face) && !this.seg && this.clock >= this.blinkAt) {
+        this.blinkUntil = this.clock + BLINK;
+        this.blinkAt = this.clock + 2.8 + Math.random() * 3.7;
+      }
+    }
+    this.scaleX = this.poseX * bx; this.scaleY = this.poseY * by;
+    this.offsetY = this.poseT;
+    this.mood = this.clock < this.blinkUntil ? "resting" : this.face;
+  }
+  step(dt) {
+    if (!this.seg) { this.face = this.resting; return; }
+    const s = this.seg[this.i];
+    this.elapsed += dt;
+    const k = Math.min(Math.max(this.elapsed * 1000 / s[0], 0), 1);
+    const e = s[5](k);
+    this.poseX = this.fromX + (s[1] - this.fromX) * e;
+    this.poseY = this.fromY + (s[2] - this.fromY) * e;
+    this.poseT = this.fromT + (s[3] - this.fromT) * e;
+    if (s[4]) this.face = this.lands;
+    if (k >= 1) {
+      // settle overshoots its way back and arrives a thousandth short.
+      this.poseX = s[1]; this.poseY = s[2]; this.poseT = s[3];
+      this.fromX = this.poseX; this.fromY = this.poseY; this.fromT = this.poseT;
+      this.elapsed = 0; this.i++;
+      if (this.i >= this.seg.length) this.seg = null;
+    }
+  }
+}
+
+
+/* ── Mochi, alive ────────────────────────────────────────────────────────
+   One rig per canvas and one frame loop for all of them. He breathes, and a
+   shut-eyed face cannot blink so the calm one does the opposite: it opens its
+   eyes now and then and looks at you. */
+const catsLive = [];
+
+function mochi(canvas, opts) {
+  const o = opts || {};
+  const rig = new MochiMotion(o.mood || "resting");
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (still) rig.idle = false;
+
+  const state = {
+    rig,
+    height: 0,
+    paint() {
+      const dpr = window.devicePixelRatio || 1;
+      const h = canvas.clientHeight;
+      if (!h) return;
+      const w = Cat.widthFor(h);
+      canvas.style.width = w + "px";
+      if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+        canvas.width = Math.round(w * dpr);
+        canvas.height = Math.round(h * dpr);
+      }
+      const ctx = canvas.getContext("2d");
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, w, h);
+      const img = Cat.frame(h, rig.mood);
+      ctx.save();
+      // From the bottom centre: a squash presses him down rather than
+      // shrinking him toward the middle of the frame.
+      ctx.translate(w / 2, h);
+      ctx.scale(rig.scaleX, rig.scaleY);
+      ctx.translate(-w / 2, -h);
+      ctx.translate(0, rig.offsetY * h / Cat.VH);
+      ctx.drawImage(img, 0, 0, w, h);
+      ctx.restore();
+    },
+    play(beat, face) {
+      if (still) { rig.snapTo(face || rig.mood); state.paint(); return; }
+      rig.play(beat, face || rig.mood);
+    },
+    set(face) { still ? rig.snapTo(face) : rig.play("settle", face); },
+  };
+  catsLive.push(state);
+  return state;
+}
+
+let lastFrame = 0;
+function tick(now) {
+  const dt = lastFrame ? Math.min((now - lastFrame) / 1000, 0.05) : 0;
+  lastFrame = now;
+  for (const c of catsLive) { c.rig.advance(dt); c.paint(); }
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
 /* ══ What the page uses ══════════════════════════════════════════════════ */
 
 /**
@@ -493,4 +632,4 @@ function paintCard(canvas, model, cfg) {
 }
 
 window.Ritual = { ACCENTS, accentAt, Cat, Slab, Story, demoModel, paintCard,
-                  INK, PAPER, CREAM, LIME };
+                  mochi, MochiMotion, INK, PAPER, CREAM, LIME };
