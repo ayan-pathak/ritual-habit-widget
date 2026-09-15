@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy · Ritual</title>
+<meta name="description" content="What Ritual stores, where it goes, and how to get rid of it.">
+<meta name="theme-color" content="#E7E3D4" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16150F" media="(prefers-color-scheme: dark)">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&display=swap">
+<link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<div class="wrap">
+  <section>
+    <div class="prose">
+      <a class="backlink" href="../">← Ritual</a>
+
+      <div class="eyebrow" style="margin:0">
+        <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i></span>
+        <p class="caps">Last updated 15 September 2026</p>
+      </div>
+
+      <h1 style="font-size:clamp(2.2rem,6vw,3.2rem)">Privacy</h1>
+
+      <p class="lede">
+        Ritual keeps one thing: which days you kept a practice. Everything
+        below is the whole of it.
+      </p>
+
+      <h2>Without an account, nothing leaves your phone</h2>
+      <p class="soft">
+        Every ritual you keep is stored on the device, in the app's own
+        storage, as a name, a time of day, a colour, and a list of days. An
+        install that is never signed in never sends any of it anywhere, and
+        works with no network at all.
+      </p>
+
+      <h2>With an account, we store exactly this</h2>
+      <ul>
+        <li><b>Your email address and a user ID</b>, held by Firebase
+          Authentication so a new phone can find your rituals. If you sign in
+          with Google or Apple, they tell us the same two things and nothing
+          more; we never see your password.</li>
+        <li><b>Your rituals</b>, held in Cloud Firestore at
+          <code>users/&lt;your&nbsp;user&nbsp;ID&gt;/habits/&lt;ritual&nbsp;ID&gt;</code>:
+          the name you typed, the time of day, the colour, the day it was
+          created, and the list of days you marked.</li>
+      </ul>
+      <p class="soft">
+        That is the complete list. There is no profile, no contacts, no
+        location, no photos, no device identifier, no address book, no
+        advertising ID.
+      </p>
+
+      <h2>Who can read it</h2>
+      <p class="soft">
+        Only you. The database rule is one line: a ritual document is readable
+        and writable only by the signed-in account whose ID is in its path.
+        There is no query shape that reaches across accounts. Nothing is shared, published, or sold, and nothing is handed to
+        anyone else except the two services below that hold it on our behalf.
+      </p>
+
+      <h2>The services involved</h2>
+      <ul>
+        <li><b>Google Firebase</b> (Authentication and Cloud Firestore) stores
+          your email, user ID and rituals. Their handling is covered by
+          Google's privacy policy.</li>
+        <li><b>Google Play Billing</b> handles the one-time unlock. The
+          purchase happens inside Google Play; Ritual is told whether you own
+          it and is never given your payment details, card, or address.</li>
+        <li><b>Instagram</b> is only ever handed an image you chose to share,
+          at the moment you tap Share. It is not given your rituals, your
+          account, or anything else.</li>
+      </ul>
+
+      <h2>No analytics, no ads, no tracking</h2>
+      <p class="soft">
+        Ritual has no analytics SDK, no crash reporter, no advertising, and no
+        third-party trackers. Nobody is counting how often you open it,
+        because nothing is watching.
+      </p>
+
+      <h2>How long it is kept</h2>
+      <p class="soft">
+        Until you delete it. Deleting a ritual in the app removes it from your
+        phone and marks it deleted in the cloud copy so your other devices
+        stop showing it. Deleting your account removes the account and the
+        rituals under it. There is no backup we keep afterwards.
+      </p>
+
+      <h2>Getting rid of it</h2>
+      <p class="soft">
+        <a href="../delete-account/">Delete your account and everything in
+        it</a>. The page explains both ways. Uninstalling the app removes the
+        on-device copy; if you were signed in, the cloud copy survives until
+        you delete the account.
+      </p>
+
+      <h2>Children</h2>
+      <p class="soft">
+        Ritual is not directed at children under 13 and we do not knowingly
+        collect anything from them.
+      </p>
+
+      <h2>Changes</h2>
+      <p class="soft">
+        If this ever changes, the date at the top changes with it, and the
+        history is public in the repository the app is built from.
+      </p>
+
+      <h2>Contact</h2>
+      <p class="soft">
+        Questions, or a request about your data:
+        <a href="mailto:you@example.com">you@example.com</a>.
+      </p>
+
+      <div class="note">
+        <b>Before you submit to Google Play:</b> replace
+        <code>you@example.com</code> on this page and on the deletion page
+        with a real address you read. Play checks that the contact works.
+      </div>
+    </div>
+  </section>
+</div>
+
+<footer>
+  <div class="wrap foot">
+    <p class="caps">Ritual · one square a day</p>
+    <nav>
+      <a href="../">Home</a>
+      <a href="../delete-account/">Delete your account</a>
+      <a href="https://github.com/ayan-pathak/ritual-habit-widget">Source</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>

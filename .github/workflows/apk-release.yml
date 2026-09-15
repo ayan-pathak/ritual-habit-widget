@@ -1,0 +1,74 @@
+name: Publish APK
+
+# CI artifacts are only downloadable by a signed-in browser session, which makes
+# them awkward to hand to a phone. This publishes the same two APKs as a release
+# asset instead, so they can be installed from a plain link.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+
+permissions:
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Stage the Firebase config, when there is one
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          # google-services.json is per-project and never checked in, so the
+          # only way it reaches a build made here is a repository secret. With
+          # no secret this is a no-op and the app runs with no cloud to reach,
+          # which is the same path a signed-out device takes.
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
+            echo "Firebase configured: sign-in and sync are live in this build."
+          else
+            echo "No GOOGLE_SERVICES_JSON secret. Building without a cloud."
+          fi
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APKs
+        run: gradle assembleDebug assembleRelease --no-daemon --stacktrace
+
+      - name: Name the APKs after the commit
+        id: stage
+        run: |
+          set -euo pipefail
+          short="${GITHUB_SHA::7}"
+          mkdir -p out
+          cp app/build/outputs/apk/debug/app-debug.apk "out/ritual-$short-debug.apk"
+          cp app/build/outputs/apk/release/app-release.apk "out/ritual-$short-release.apk"
+          echo "tag=apk-$short" >> "$GITHUB_OUTPUT"
+          echo "short=$short" >> "$GITHUB_OUTPUT"
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${{ steps.stage.outputs.tag }}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" out/*.apk --clobber
+          else
+            gh release create "$tag" out/*.apk \
+              --title "Ritual ${{ steps.stage.outputs.short }}" \
+              --notes "Debug and release APKs built from ${{ github.sha }}. Both are signed with the debug key, so install over any earlier build from this workflow."
+          fi
