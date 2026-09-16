@@ -2,8 +2,12 @@ name: Play bundle
 
 # Play takes an Android App Bundle, not an APK, and refuses a second upload at
 # a versionCode it has already seen. Run this by hand from the Actions tab when
-# there is something to put in front of testers; the run number becomes the
-# versionCode, so it climbs on its own and never repeats.
+# there is something to put in front of testers; the versionCode is the clock,
+# so it climbs on its own, never repeats, and never collides with the bundle
+# android.yml builds on a branch.
+#
+# The Actions tab only offers this once the file is on the default branch.
+# Until then, the bundle comes out of android.yml as an artifact.
 
 on:
   workflow_dispatch:
@@ -79,8 +83,11 @@ jobs:
           UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
           UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
         run: |
+          # Minutes since the epoch rather than this workflow's run number:
+          # two workflows can build a bundle now, and Play only ever accepts a
+          # versionCode above the last one it saw.
           gradle bundleRelease --no-daemon --stacktrace \
-            -PritualVersionCode=${{ github.run_number }} \
+            -PritualVersionCode=$(( $(date +%s) / 60 )) \
             -PritualVersionName=${{ inputs.version_name }}
 
       - name: Publish it

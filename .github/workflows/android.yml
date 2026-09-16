@@ -64,3 +64,48 @@ jobs:
           name: ritual-apk
           path: app/build/outputs/apk/**/*.apk
           if-no-files-found: error
+
+      # ── The thing Play actually takes ──────────────────────────────────
+      # An .aab, not an .apk. play-bundle.yml does this too and publishes it
+      # as a release, but workflow_dispatch only exists for workflows on the
+      # default branch, so until that file is on main this is the only way to
+      # get a bundle off a branch.
+      - name: Stage the upload key, if there is one
+        env:
+          UPLOAD_KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "$UPLOAD_KEYSTORE_BASE64" ]; then
+            printf '%s' "$UPLOAD_KEYSTORE_BASE64" | base64 -d > keystore/upload.jks
+            echo "AAB_NAME=ritual-aab" >> "$GITHUB_ENV"
+            echo "Signed with the upload key."
+          else
+            # The fallback key is the one checked into this public repository.
+            # Play would take it and then hold that public key as the upload
+            # certificate for the life of the listing, so the artifact says so
+            # in its own name rather than in a log line nobody reads.
+            echo "::warning::No UPLOAD_KEYSTORE_BASE64 secret. This bundle is" \
+                 "signed with the development key from this public repository" \
+                 "and must not be uploaded to Play."
+            echo "AAB_NAME=ritual-aab-DEV-KEY-DO-NOT-UPLOAD" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build the Play bundle
+        env:
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          # Minutes since the epoch: monotonic forever, unique across every
+          # workflow in this repository, and about 29 million today against
+          # Play's ceiling of 2.1 billion. A per-workflow run number cannot
+          # promise either of those once two workflows can both publish.
+          gradle bundleRelease --no-daemon --stacktrace \
+            -PritualVersionCode=$(( $(date +%s) / 60 )) \
+            -PritualVersionName=1.0
+
+      - name: Upload the bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.AAB_NAME }}
+          path: app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
