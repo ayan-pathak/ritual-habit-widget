@@ -37,6 +37,16 @@ object CloudSync {
     private var registration: ListenerRegistration? = null
     private var linkedUid: String? = null
 
+    /**
+     * The stamp this device last wrote for each ritual.
+     *
+     * Firestore replays a write to its own listener twice, once locally and
+     * again when the server acks it, and those echoes can arrive after the
+     * next edit has already been made. An echo older than what we have
+     * written is our own past, and applying it drags the ritual backwards.
+     */
+    private val lastPushed = mutableMapOf<String, Long>()
+
     private fun db(): FirebaseFirestore? = runCatching { FirebaseFirestore.getInstance() }.getOrNull()
 
     /**
@@ -60,6 +70,8 @@ object CloudSync {
             if (error != null || snapshot == null) return@addSnapshotListener
             val remote = snapshot.documents.mapNotNull { doc ->
                 val id = doc.getString("id") ?: doc.id
+                val stamp = doc.getLong("updatedAt") ?: 0L
+                if (stamp < (lastPushed[id] ?: 0L)) return@mapNotNull null
                 val days = (doc.get("done") as? List<*>)
                     ?.mapNotNull { (it as? Number)?.toLong() }
                     ?.toSet() ?: emptySet()
@@ -71,17 +83,34 @@ object CloudSync {
                     accentIndex = (doc.getLong("accent") ?: 0L).toInt(),
                     createdEpochDay = doc.getLong("created") ?: 0L,
                     done = days
-                ) to (doc.getLong("updatedAt") ?: 0L)
+                ) to stamp
             }
 
-            val merged = merge(HabitStore.habits, remote, union = pendingUnion)
+            val linking = pendingUnion
+            val merged = merge(HabitStore.habits, remote, union = linking)
             pendingUnion = false
             if (merged != HabitStore.habits) {
                 HabitStore.replaceAll(context, merged)
                 RitualWidgetProvider.refreshAll(context)
             }
-            // Anything the device knows that the cloud doesn't, push up.
-            pushAll(context, uid)
+
+            // Only the first look pushes the whole device up, because only the
+            // first look is the link. After that a push is what a local edit
+            // does, through HabitStore.onChanged.
+            //
+            // Pushing here on every snapshot is a loop with no floor: the push
+            // makes Firestore call this listener, which pushes, as fast as the
+            // network allows for as long as the app is open. It also meant a
+            // day someone had just marked could be overwritten by an echo of
+            // the write before it, which is the one thing this file is not
+            // allowed to do.
+            if (linking) {
+                pushAll(context, uid)
+            } else {
+                val known = snapshot.documents.map { it.getString("id") ?: it.id }.toSet()
+                val strangers = HabitStore.habits.filter { it.id !in known }
+                if (strangers.isNotEmpty()) write(uid, strangers)
+            }
         }
     }
 
@@ -89,16 +118,23 @@ object CloudSync {
         registration?.remove()
         registration = null
         linkedUid = null
+        lastPushed.clear()
     }
 
     /** Writes every local ritual up. Cheap: one small document each. */
     fun pushAll(context: Context, uid: String? = linkedUid) {
         val target = uid ?: return
-        val store = db() ?: return
         HabitStore.ensureLoaded(context)
-        val collection = store.collection(USERS).document(target).collection(HABITS)
+        write(target, HabitStore.habits)
+    }
+
+    private fun write(uid: String, habits: List<Habit>) {
+        if (habits.isEmpty()) return
+        val store = db() ?: return
+        val collection = store.collection(USERS).document(uid).collection(HABITS)
         val stamp = System.currentTimeMillis()
-        HabitStore.habits.forEach { habit ->
+        habits.forEach { habit ->
+            lastPushed[habit.id] = stamp
             collection.document(habit.id).set(
                 mapOf(
                     "id" to habit.id,
@@ -118,8 +154,10 @@ object CloudSync {
     fun markDeleted(id: String) {
         val uid = linkedUid ?: return
         val store = db() ?: return
+        val stamp = System.currentTimeMillis()
+        lastPushed[id] = stamp
         store.collection(USERS).document(uid).collection(HABITS).document(id)
-            .set(mapOf("id" to id, "deleted" to true, "updatedAt" to System.currentTimeMillis()))
+            .set(mapOf("id" to id, "deleted" to true, "updatedAt" to stamp))
     }
 
     /**
