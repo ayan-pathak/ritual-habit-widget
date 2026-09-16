@@ -46,6 +46,7 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit) {
     val scope = rememberCoroutineScope()
     val busy by Account.busyState
     val error by Account.errorState
+    val note by Account.noteState
     val googleReady = remember { Account.googleAvailable(context) }
 
     var address by remember { mutableStateOf("") }
@@ -69,8 +70,14 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit) {
            gone wrong, which is the one moment anybody needs to know which
            build they are holding. Half of diagnosing a sign-in is finding out
            whether the phone has the fix on it yet. */
-        if (error != null) {
-            Text(error!!, style = Body.copy(fontSize = 13.sp, color = Red))
+        if (error != null || note != null) {
+            Text(
+                error ?: note!!,
+                style = Body.copy(
+                    fontSize = 13.sp,
+                    color = if (error != null) Red else InkSoft
+                )
+            )
             Spacer(Modifier.height(4.dp))
             Text(
                 buildStamp(context),

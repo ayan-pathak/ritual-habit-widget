@@ -37,6 +37,7 @@ object Account {
     private val _email = mutableStateOf<String?>(null)
     private val _busy = mutableStateOf(false)
     private val _error = mutableStateOf<String?>(null)
+    private val _note = mutableStateOf<String?>(null)
 
     val uid: String? get() = _uid.value
     val uidState get() = _uid
@@ -44,6 +45,9 @@ object Account {
     val emailState get() = _email
     val busyState get() = _busy
     val errorState get() = _error
+
+    /** Said quietly, under the buttons: not a fault, but worth knowing. */
+    val noteState get() = _note
 
     val signedIn: Boolean get() = _uid.value != null
 
@@ -88,6 +92,7 @@ object Account {
         val instance = auth ?: return onDone(false)
         _busy.value = true
         _error.value = null
+        _note.value = null
         instance.createUserWithEmailAndPassword(email.trim(), password)
             .addOnCompleteListener { made ->
                 if (made.isSuccessful) {
@@ -155,6 +160,7 @@ object Account {
         }
         _busy.value = true
         _error.value = null
+        _note.value = null
         return try {
             val request = GetCredentialRequest.Builder()
                 .addCredentialOption(GetSignInWithGoogleOption.Builder(serverClientId).build())
@@ -163,7 +169,18 @@ object Account {
             val token = GoogleIdTokenCredential.createFrom(response.credential.data).idToken
             instance.signInWithCredential(GoogleAuthProvider.getCredential(token, null)).await()
             true
+        } catch (none: androidx.credentials.exceptions.NoCredentialException) {
+            _error.value = "There is no Google account on this phone to sign in with."
+            false
         } catch (cancelled: androidx.credentials.exceptions.GetCredentialCancellationException) {
+            // This cannot be swallowed, which is what it was. Play Services
+            // reports a configuration it cannot satisfy in exactly the same
+            // breath as someone tapping outside the sheet, so treating the two
+            // alike meant a broken sign-in looked like a button that did
+            // nothing. Whatever it says for itself is carried through.
+            _note.value = cancelled.errorMessage?.toString()?.takeIf { it.isNotBlank() }
+                ?.let { "Google closed the sheet: $it" }
+                ?: "Google closed the sheet without signing you in."
             false
         } catch (failure: Exception) {
             // Credential Manager throws plenty of exceptions carrying no
@@ -185,6 +202,7 @@ object Account {
         val instance = auth ?: return onDone(false)
         _busy.value = true
         _error.value = null
+        _note.value = null
         val provider = OAuthProvider.newBuilder("apple.com")
             .setScopes(listOf("email", "name"))
             .build()
@@ -200,6 +218,7 @@ object Account {
     fun signOut() {
         auth?.signOut()
         _error.value = null
+        _note.value = null
     }
 
     /**
