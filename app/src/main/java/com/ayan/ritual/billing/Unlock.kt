@@ -88,6 +88,9 @@ object Unlock {
             .enablePendingPurchases(
                 PendingPurchasesParams.newBuilder().enableOneTimeProducts().build()
             )
+            // Play reconnects itself from 8.0 on, so a call made while the
+            // service is down waits for it instead of being dropped.
+            .enableAutoServiceReconnection()
             .build()
         client = billing
 
@@ -99,8 +102,8 @@ object Unlock {
             }
 
             override fun onBillingServiceDisconnected() {
-                // Play will be back. Nothing here is load-bearing enough to retry
-                // in a loop; the next launch reconnects.
+                // Handled by enableAutoServiceReconnection above; the next call
+                // through this client brings the service back on its own.
             }
         })
     }
@@ -117,9 +120,9 @@ object Unlock {
                 )
             )
             .build()
-        billing.queryProductDetailsAsync(params) { result, products ->
+        billing.queryProductDetailsAsync(params) { result, found ->
             if (result.responseCode != BillingClient.BillingResponseCode.OK) return@queryProductDetailsAsync
-            details = products.firstOrNull { it.productId == PRODUCT_ID }
+            details = found.productDetailsList.firstOrNull { it.productId == PRODUCT_ID }
             _price.value = details?.oneTimePurchaseOfferDetails?.formattedPrice
         }
     }

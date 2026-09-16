@@ -71,7 +71,11 @@ Storage is a JSON blob in `SharedPreferences` — completions are epoch-days, on
 
 ## Building
 
-Requires JDK 17 and Android SDK 35.
+Requires JDK 17 and Android SDK 36.
+
+Play stopped accepting anything below target API 36, or Billing Library below
+8, on 31 August 2026, so both are floors rather than preferences: `targetSdk 36`
+needs AGP 8.11 or newer, and the billing code is on the 8.x query API.
 
 ```bash
 gradle assembleRelease

@@ -8,7 +8,7 @@ A daily habit tracker built around one idea: **a year is a grid of empty squares
 gradle assembleDebug     # or assembleRelease
 ```
 
-Needs JDK 17 and Android SDK 35. `local.properties` is gitignored — on a machine without it, set `ANDROID_HOME` and Gradle will find the SDK. CI (`.github/workflows/android.yml`) builds both APKs on every push and uploads them as artifacts, so a cloud session can verify a change without a local SDK.
+Needs JDK 17 and Android SDK 36. `local.properties` is gitignored — on a machine without it, set `ANDROID_HOME` and Gradle will find the SDK. CI (`.github/workflows/android.yml`) builds both APKs on every push and uploads them as artifacts, so a cloud session can verify a change without a local SDK.
 
 - `minSdk 26` (Android 8.0) — for `java.time` without desugaring.
 - No Room, no Hilt, no Glance. Compose, `core-ktx`, and the platform Canvas.

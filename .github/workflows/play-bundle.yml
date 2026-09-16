@@ -62,6 +62,10 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          # Pinned: AGP 8.13 needs Gradle 8.13 or newer, and the runner's
+          # preinstalled Gradle is not something this repository controls.
+          gradle-version: '8.14.3'
 
       - name: Build the bundle
         env:

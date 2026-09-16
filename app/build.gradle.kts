@@ -13,12 +13,15 @@ if (file("google-services.json").exists()) {
 
 android {
     namespace = "com.ayan.ritual"
-    compileSdk = 35
+    // 36 because Play stopped accepting anything lower on 31 August 2026.
+    // compileSdk 36 needs AGP 8.11 or newer, which is why the root build file
+    // moved with it.
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.ayan.ritual"
         minSdk = 26
-        targetSdk = 35
+        targetSdk = 36
         // Play rejects a second upload at the same versionCode, so CI passes
         // its run number in. A local build has no reason to care.
         versionCode = (findProperty("ritualVersionCode") as String?)?.toInt() ?: 1
@@ -96,7 +99,10 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.foundation:foundation")
     implementation("androidx.compose.material3:material3")
-    implementation("com.android.billingclient:billing-ktx:7.1.1")
+    // Billing 8 is the floor Play accepts as of 31 August 2026. The base
+    // artifact rather than billing-ktx: the only thing KTX adds is suspend
+    // wrappers this app does not call.
+    implementation("com.android.billingclient:billing:8.3.0")
     implementation(platform("com.google.firebase:firebase-bom:33.5.1"))
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-firestore-ktx")
