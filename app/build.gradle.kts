@@ -53,10 +53,19 @@ android {
         val uploadStore = rootProject.file("keystore/upload.jks")
         if (uploadStore.exists()) {
             create("upload") {
+                // Trimmed, every one of them. These arrive from repository
+                // secrets, secrets arrive from a paste, and a paste brings a
+                // trailing space or newline with it often enough that the
+                // failure it causes is worth never seeing twice: Gradle
+                // reports it thirty frames deep as "no key with alias", which
+                // reads as a broken keystore rather than a stray keypress.
+                val secret = { name: String ->
+                    System.getenv(name)?.trim()?.takeIf { it.isNotEmpty() }
+                }
                 storeFile = uploadStore
-                storePassword = System.getenv("UPLOAD_KEYSTORE_PASSWORD")
-                keyAlias = System.getenv("UPLOAD_KEY_ALIAS") ?: "upload"
-                keyPassword = System.getenv("UPLOAD_KEY_PASSWORD")
+                storePassword = secret("UPLOAD_KEYSTORE_PASSWORD")
+                keyAlias = secret("UPLOAD_KEY_ALIAS") ?: "upload"
+                keyPassword = secret("UPLOAD_KEY_PASSWORD")
             }
         }
     }

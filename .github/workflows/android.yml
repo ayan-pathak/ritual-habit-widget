@@ -73,9 +73,24 @@ jobs:
       - name: Stage the upload key, if there is one
         env:
           UPLOAD_KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
         run: |
           if [ -n "$UPLOAD_KEYSTORE_BASE64" ]; then
             printf '%s' "$UPLOAD_KEYSTORE_BASE64" | base64 -d > keystore/upload.jks
+            # Say which of the two it is here, where it is one line, rather
+            # than thirty frames into a Gradle stack trace that reports a
+            # mistyped alias and a broken keystore in identical words.
+            alias="$(printf '%s' "${UPLOAD_KEY_ALIAS:-upload}" | tr -d '[:space:]')"
+            if ! keytool -list -keystore keystore/upload.jks \
+                 -storepass "$UPLOAD_KEYSTORE_PASSWORD" -alias "$alias" >/dev/null 2>&1; then
+              echo "::error::No key called '$alias' in the upload keystore," \
+                   "or the store password is wrong. What the keystore holds:"
+              keytool -list -keystore keystore/upload.jks \
+                      -storepass "$UPLOAD_KEYSTORE_PASSWORD" 2>&1 \
+                | grep -i 'Entry,' || echo "  (could not read it at all)"
+              exit 1
+            fi
             echo "AAB_NAME=ritual-aab" >> "$GITHUB_ENV"
             echo "Signed with the upload key."
           else
