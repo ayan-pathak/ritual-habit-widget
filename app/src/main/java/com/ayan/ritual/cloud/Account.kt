@@ -263,5 +263,5 @@ object Account {
 
             else -> text
         }
-    }"
+    }
 }
