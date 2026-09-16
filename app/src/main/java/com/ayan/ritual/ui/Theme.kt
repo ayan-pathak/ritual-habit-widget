@@ -38,7 +38,7 @@ object Look {
     private const val PREFS = "ritual_look"
     private const val KEY = "appearance_v1"
 
-    private val _appearance = mutableStateOf(Appearance.LIGHT)
+    private val _appearance = mutableStateOf(Appearance.DARK)
     val appearance: Appearance get() = _appearance.value
 
     private var prefs: android.content.SharedPreferences? = null
@@ -48,8 +48,11 @@ object Look {
         if (prefs != null) return
         val p = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         prefs = p
+        // Dark unless someone has said otherwise. The window background and
+        // the splash are dark too, so a light default meant every cold start
+        // flashed cream over ink before the first frame landed.
         _appearance.value =
-            if (p.getString(KEY, "LIGHT") == "DARK") Appearance.DARK else Appearance.LIGHT
+            if (p.getString(KEY, "DARK") == "LIGHT") Appearance.LIGHT else Appearance.DARK
     }
 
     fun set(value: Appearance) {

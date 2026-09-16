@@ -6,10 +6,12 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.core.view.WindowCompat
 import com.ayan.ritual.billing.Unlock
 import com.ayan.ritual.cloud.Account
 import com.ayan.ritual.cloud.CloudSync
@@ -58,6 +60,16 @@ class MainActivity : ComponentActivity() {
         pendingHabitId.value = intent?.getStringExtra(RitualWidgetProvider.EXTRA_HABIT_ID)
 
         setContent {
+            // The bars are transparent, so their icons have to follow the
+            // appearance rather than the theme file, which only ever sees the
+            // dark default.
+            val lightBars = com.ayan.ritual.ui.Look.appearance == com.ayan.ritual.ui.Appearance.LIGHT
+            LaunchedEffect(lightBars) {
+                WindowCompat.getInsetsController(window, window.decorView).apply {
+                    isAppearanceLightStatusBars = lightBars
+                    isAppearanceLightNavigationBars = lightBars
+                }
+            }
             RitualTheme {
                 RitualApp(openHabitId = pendingHabitId.value, onConsumed = { pendingHabitId.value = null })
             }

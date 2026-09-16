@@ -3,4 +3,8 @@
     <color name="cream">#FFE7E3D4</color>
     <color name="ink">#FF12120F</color>
     <color name="lime">#FFC9F73F</color>
+    <!-- The dark page, and the window behind every screen. Matches
+         Look.page in its dark state, so the first frame lands on the
+         colour that is already there. -->
+    <color name="night">#FF16150F</color>
 </resources>

@@ -1,12 +1,15 @@
 package com.ayan.ritual.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -20,7 +23,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.render.Mood
@@ -36,63 +38,86 @@ import com.ayan.ritual.render.Mood
  * because they are one offer made three ways rather than a main path and a
  * fallback.
  *
+ * The block takes the top half of the screen and the ways in sit on the
+ * bottom edge, with the slack between them rather than underneath. A column
+ * of content that stops two thirds of the way down reads as a form someone
+ * forgot to finish; the same content pushed to both edges reads as a screen.
+ * That is also why the height is measured rather than guessed: a fixed dp
+ * that fills a tall phone leaves a short one scrolling to reach the buttons.
+ *
  * It is skipped outright when there is no Firebase project configured,
  * because a sign-in nobody can complete is a locked door.
  */
 @Composable
 fun WelcomeScreen(onSignedIn: () -> Unit) {
-    Column(
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .background(Cream)
-            .verticalScroll(rememberScrollState())
             .statusBarsPadding()
+            .navigationBarsPadding()
             .imePadding()
-            .padding(horizontal = 20.dp)
     ) {
-        Spacer(Modifier.height(22.dp))
+        // Measured inside the insets, so this is the glass the screen actually
+        // has. When the keyboard comes up it shrinks, the block shrinks with
+        // it, and the fields stay in front of the person typing into them.
+        val screen = maxHeight
+        val block = screen * 0.53f
 
-        // The name first, set the way it is set everywhere else in the app.
-        Text(
-            "Ritual",
-            style = Display.copy(fontSize = 19.sp, lineHeight = 20.sp, letterSpacing = (-0.2).sp)
-        )
-
-        Spacer(Modifier.height(20.dp))
-
-        Box(
+        Column(
             Modifier
                 .fillMaxWidth()
-                .clip(RoundedCornerShape(28.dp))
-                .background(Lime)
-                .padding(vertical = 26.dp),
-            contentAlignment = Alignment.Center
+                .verticalScroll(rememberScrollState())
+                .heightIn(min = screen)
+                .padding(horizontal = 20.dp, vertical = 18.dp),
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                // No tile behind him. A pale panel under a pale cat was the
-                // one place in the app where two near-whites met, and he lost
-                // his edges to it; standing straight on the colour, he keeps
-                // them.
-                MochiTile(Mood.PLEASED, Color.Transparent, height = 72.dp, inset = 0.dp)
-                Spacer(Modifier.height(16.dp))
+            Column {
                 Text(
-                    "A year is a grid\nof empty squares.",
-                    style = Display.copy(fontSize = 26.sp, lineHeight = 28.sp, color = OnLime),
-                    textAlign = TextAlign.Center
+                    "Ritual",
+                    style = Display.copy(fontSize = 40.sp, lineHeight = 42.sp)
                 )
+
+                Spacer(Modifier.height(16.dp))
+
+                Box(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(block)
+                        .clip(RoundedCornerShape(32.dp))
+                        .background(Lime)
+                ) {
+                    Text(
+                        "A year is a grid\nof empty squares.",
+                        style = Display.copy(fontSize = 30.sp, lineHeight = 32.sp, color = OnLime),
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(26.dp)
+                    )
+                    // On the bottom edge of the block, the way he stands on
+                    // every other surface in the app, and with no tile behind
+                    // him: a pale panel under a pale cat was the one place two
+                    // near-whites met and he lost his edges to it.
+                    MochiTile(
+                        mood = Mood.PLEASED,
+                        tile = Color.Transparent,
+                        height = block * 0.54f,
+                        inset = 0.dp,
+                        modifier = Modifier.align(Alignment.BottomCenter)
+                    )
+                }
+            }
+
+            Column {
+                Spacer(Modifier.height(22.dp))
+                Text(
+                    "Every square you fill is mirrored to your account, so a new " +
+                        "phone picks up exactly where the old one left off.",
+                    style = Body.copy(fontSize = 13.sp, color = InkSoft)
+                )
+                Spacer(Modifier.height(16.dp))
+                SignInBlock(label = "Start your journey", onSignedIn = onSignedIn)
             }
         }
-
-        Spacer(Modifier.height(22.dp))
-        Text(
-            "Every square you fill is mirrored to your account, so a new phone picks up exactly where the old one left off.",
-            style = Body
-        )
-
-        Spacer(Modifier.height(22.dp))
-        SignInBlock(label = "Start your journey", onSignedIn = onSignedIn)
-
-        Spacer(Modifier.height(34.dp))
-        Spacer(Modifier.navigationBarsPadding())
     }
 }
