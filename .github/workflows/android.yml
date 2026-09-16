@@ -37,7 +37,13 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        # v4 with an explicit package list. The v3 default is "tools
+        # platform-tools", and Google removed the obsolete `tools` package from
+        # the repository, so sdkmanager exits 1 and the job dies before it ever
+        # reaches Gradle.
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-36'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
