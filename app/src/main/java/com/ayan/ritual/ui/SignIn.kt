@@ -61,6 +61,14 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit) {
     }
 
     Column(Modifier.fillMaxWidth()) {
+        /* Whatever fails, the reason lands here. It used to sit inside the
+           email branch, where a Google or Apple failure set a message that
+           nothing ever drew: the sheet closed and the screen sat there. */
+        if (error != null) {
+            Text(error!!, style = Body.copy(fontSize = 13.sp, color = Red))
+            Spacer(Modifier.height(14.dp))
+        }
+
         if (googleReady) {
             InkPill(
                 label = "Continue with Google",
@@ -118,11 +126,6 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit) {
                 keyboard = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
                 secret = true
             )
-
-            if (error != null) {
-                Spacer(Modifier.height(12.dp))
-                Text(error!!, style = Body.copy(fontSize = 13.sp, color = Red))
-            }
 
             Spacer(Modifier.height(18.dp))
             InkPill(

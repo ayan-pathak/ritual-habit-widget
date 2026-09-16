@@ -155,7 +155,10 @@ object Account {
         } catch (cancelled: androidx.credentials.exceptions.GetCredentialCancellationException) {
             false
         } catch (failure: Exception) {
-            _error.value = readable(failure.message)
+            // Credential Manager throws plenty of exceptions carrying no
+            // message. The class name is not friendly, but it is a great deal
+            // better than a sheet that closes onto nothing.
+            _error.value = readable(failure.message ?: failure.javaClass.simpleName)
             false
         } finally {
             _busy.value = false
@@ -233,7 +236,32 @@ object Account {
         }
     }
 
-    /** Firebase's messages are usable; its exception names are not. */
-    private fun readable(message: String?): String =
-        message?.substringBefore(" [") ?: "That didn't work. Try again."
+    /**
+     * Firebase's messages are usable; its exception names are not, and two of
+     * its failures are so common during setup that guessing at them from
+     * "that didn't work" wastes an afternoon. Both are configuration rather
+     * than anything the person tapping can fix, so both say so plainly.
+     */
+    private fun readable(message: String?): String {
+        val text = message?.substringBefore(" [")?.takeIf { it.isNotBlank() }
+            ?: return "That didn't work. Try again."
+        return when {
+            // The provider is off in Firebase, Authentication, Sign-in method.
+            text.contains("OPERATION_NOT_ALLOWED", true) ||
+                text.contains("operation is not allowed", true) ->
+                "That way in is not switched on for Ritual yet."
+
+            // The signing certificate of this build is not registered against
+            // the Firebase project, so Play Services hands back a token that
+            // nobody will accept.
+            text.contains("Developer console is not set up", true) ||
+                text.contains("28444") || text.contains("ApiException: 10") ->
+                "Google sign-in is not set up for this build of Ritual."
+
+            text.contains("network", true) || text.contains("timeout", true) ->
+                "No connection. Try again when you have one."
+
+            else -> text
+        }
+    }"
 }
