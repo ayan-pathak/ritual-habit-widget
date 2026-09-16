@@ -284,15 +284,22 @@ function phone(cardCanvas) {
 const build = {
 
   /**
-   * The launcher icon at store size, placed with tools/mochi.py's own
-   * numbers: the head box scaled to 53 units of the 108 canvas with its
-   * centre at (54, 52). The store icon and the icon on the phone are then
-   * the same drawing at two sizes rather than two drawings.
+   * The launcher icon at store size, off tools/mochi.py's own numbers: the
+   * head box, centred at (54, 52) of the 108 canvas. The store icon and the
+   * icon on the phone are the same drawing at two sizes.
+   *
+   * The width is the one thing that differs, and it has to. A launcher masks
+   * the icon to a circle, so mochi.py sizes the head to the 66dp that always
+   * survives and lets the chest run off the canvas to be cropped. Play masks
+   * nothing but the corners, so the same number leaves a band of lime under
+   * his chest and he floats in the square. He is meant to grow out of the
+   * bottom edge of whatever holds him, so here the head is wider and the
+   * chest runs off the bottom the way the mask would have cut it.
    */
   icon() {
     const K = 512 / 108;
     const HEAD = [69.9, 7.4, 794.8, 644.3];
-    const s = (64 / (HEAD[2] - HEAD[0])) * K;
+    const s = (76 / (HEAD[2] - HEAD[0])) * K;
     const cx = (HEAD[0] + HEAD[2]) / 2, cy = (HEAD[1] + HEAD[3]) / 2;
 
     const c = document.createElement("canvas");
