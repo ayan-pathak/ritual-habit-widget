@@ -63,9 +63,19 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         /* Whatever fails, the reason lands here. It used to sit inside the
            email branch, where a Google or Apple failure set a message that
-           nothing ever drew: the sheet closed and the screen sat there. */
+           nothing ever drew: the sheet closed and the screen sat there.
+
+           The build stamp under it is only drawn when something has already
+           gone wrong, which is the one moment anybody needs to know which
+           build they are holding. Half of diagnosing a sign-in is finding out
+           whether the phone has the fix on it yet. */
         if (error != null) {
             Text(error!!, style = Body.copy(fontSize = 13.sp, color = Red))
+            Spacer(Modifier.height(4.dp))
+            Text(
+                buildStamp(context),
+                style = Body.copy(fontSize = 11.sp, color = InkFaint)
+            )
             Spacer(Modifier.height(14.dp))
         }
 
@@ -136,3 +146,21 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit) {
         }
     }
 }
+
+/**
+ * Which build this is, read off the installed package rather than BuildConfig,
+ * so it needs no build-system feature switched on to exist.
+ *
+ * It is shown under a failed sign-in and nowhere else. A version number in the
+ * corner of a working screen is clutter; a version number under an error is
+ * the difference between "the fix is not on the phone yet" and "the fix does
+ * not work".
+ */
+private fun buildStamp(context: android.content.Context): String = runCatching {
+    val info = context.packageManager.getPackageInfo(context.packageName, 0)
+    val code =
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P)
+            info.longVersionCode
+        else @Suppress("DEPRECATION") info.versionCode.toLong()
+    "Build ${info.versionName} ($code)"
+}.getOrDefault("Build unknown")

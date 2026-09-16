@@ -8,6 +8,7 @@ import androidx.credentials.GetCredentialRequest
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
 import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.GoogleAuthProvider
@@ -104,7 +105,17 @@ object Account {
                 instance.signInWithEmailAndPassword(email.trim(), password)
                     .addOnCompleteListener { back ->
                         _busy.value = false
-                        if (!back.isSuccessful) _error.value = readable(back.exception?.message)
+                        if (!back.isSuccessful) {
+                            // Firebase calls this "the supplied auth credential
+                            // is incorrect, malformed or has expired", which is
+                            // three guesses for one fact: the address is taken
+                            // and this is not its password. Say the fact.
+                            _error.value =
+                                if (back.exception is FirebaseAuthInvalidCredentialsException)
+                                    "There is already an account for that address, " +
+                                        "and that is not its password."
+                                else readable(back.exception?.message)
+                        }
                         onDone(back.isSuccessful)
                     }
             }
