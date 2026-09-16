@@ -122,6 +122,43 @@ object CloudSync {
             .set(mapOf("id" to id, "deleted" to true, "updatedAt" to System.currentTimeMillis()))
     }
 
+    /**
+     * Removes the whole cloud copy of an account: every ritual document under
+     * `users/{uid}/habits`, and the user document above them.
+     *
+     * It runs while that account is still signed in, because the rules only
+     * ever let an account near its own path — delete the user first and what
+     * is left is unreachable rather than gone, which is the one outcome a
+     * deletion promise cannot survive.
+     *
+     * The listener is stopped first so that nothing pushes the device's own
+     * rituals back up between the read and the delete.
+     */
+    fun deleteEverything(uid: String, onDone: (Boolean) -> Unit) {
+        val store = db() ?: return onDone(false)
+        stop()
+        val user = store.collection(USERS).document(uid)
+        user.collection(HABITS).get()
+            .addOnSuccessListener { snapshot ->
+                val refs = snapshot.documents.map { it.reference } + user
+                // Firestore caps a batch at 500 writes. Nobody has 500
+                // rituals, but a promise to delete everything should not have
+                // a number in it.
+                val batches = refs.chunked(400)
+                var left = batches.size
+                var ok = true
+                batches.forEach { chunk ->
+                    val batch = store.batch()
+                    chunk.forEach { batch.delete(it) }
+                    batch.commit().addOnCompleteListener { task ->
+                        if (!task.isSuccessful) ok = false
+                        if (--left == 0) onDone(ok)
+                    }
+                }
+            }
+            .addOnFailureListener { onDone(false) }
+    }
+
     internal fun merge(
         local: List<Habit>,
         remote: List<Pair<Habit, Long>>,

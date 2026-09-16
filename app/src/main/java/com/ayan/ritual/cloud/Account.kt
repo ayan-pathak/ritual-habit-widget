@@ -8,6 +8,7 @@ import androidx.credentials.GetCredentialRequest
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthRecentLoginRequiredException
 import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.OAuthProvider
@@ -185,6 +186,51 @@ object Account {
     fun signOut() {
         auth?.signOut()
         _error.value = null
+    }
+
+    /**
+     * Deletes the account and everything stored under it, which Play requires
+     * to be reachable from inside the app and not only from a web page.
+     *
+     * Order matters and is not negotiable: the cloud copy goes first, while
+     * this account is still the one asking, because the rules only let an
+     * account near its own path. Delete the user first and the rituals under
+     * it become unreachable rather than deleted.
+     *
+     * The rituals on the phone are left exactly where they are. That is what
+     * the deletion page promises, and it is the honest behaviour: this is a
+     * local-first app, and someone closing an account has not asked to lose
+     * the year they kept. Uninstalling removes that copy.
+     *
+     * Firebase refuses to delete a user whose sign-in is old, which is the one
+     * failure that is worth explaining rather than retrying.
+     */
+    fun deleteAccount(onDone: (Boolean) -> Unit = {}) {
+        val instance = auth ?: return onDone(false)
+        val user = instance.currentUser ?: return onDone(false)
+        _busy.value = true
+        _error.value = null
+        CloudSync.deleteEverything(user.uid) { cloudGone ->
+            if (!cloudGone) {
+                _busy.value = false
+                _error.value = "Could not reach your rituals in the cloud. " +
+                    "Try again with a connection."
+                return@deleteEverything onDone(false)
+            }
+            user.delete().addOnCompleteListener { done ->
+                _busy.value = false
+                if (done.isSuccessful) {
+                    _error.value = null
+                } else {
+                    _error.value =
+                        if (done.exception is FirebaseAuthRecentLoginRequiredException)
+                            "Firebase wants a fresh sign-in before it deletes an " +
+                                "account. Sign out, sign back in, and delete again."
+                        else readable(done.exception?.message)
+                }
+                onDone(done.isSuccessful)
+            }
+        }
     }
 
     /** Firebase's messages are usable; its exception names are not. */
