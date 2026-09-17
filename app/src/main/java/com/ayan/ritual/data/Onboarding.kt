@@ -20,11 +20,13 @@ object Onboarding {
     private const val KEY_SAW_TOUR = "saw_tour_v1"
     private const val KEY_SAW_PAYWALL = "saw_paywall_v1"
     private const val KEY_FIRST_MARK = "first_mark_epoch_day_v1"
+    private const val KEY_SKIPPED_SIGN_IN = "skipped_sign_in_v1"
 
     private var prefs: SharedPreferences? = null
     private var _sawTour = false
     private var _sawPaywall = false
     private var _firstMark = -1L
+    private var _skippedSignIn = false
 
     /** Safe to call on every launch; the widget receiver never needs this. */
     fun load(context: Context) {
@@ -34,6 +36,7 @@ object Onboarding {
         _sawTour = p.getBoolean(KEY_SAW_TOUR, false)
         _sawPaywall = p.getBoolean(KEY_SAW_PAYWALL, false)
         _firstMark = p.getLong(KEY_FIRST_MARK, -1L)
+        _skippedSignIn = p.getBoolean(KEY_SKIPPED_SIGN_IN, false)
     }
 
     /** Whether the three panels have been walked through. */
@@ -50,6 +53,23 @@ object Onboarding {
     fun markSawPaywall() {
         _sawPaywall = true
         prefs?.edit()?.putBoolean(KEY_SAW_PAYWALL, true)?.apply()
+    }
+
+    /**
+     * Whether the way in was declined once.
+     *
+     * Sign-in is how the squares reach a second device, and it is worth
+     * asking for on the first launch, but it is not what the app is for: every
+     * square already lives on the phone, and a first launch that cannot get
+     * past a login is an app nobody sees. So the ask happens once, and once
+     * waved off it does not come back on its own. It stays one tap away in
+     * Account, which is where someone goes when they actually want it.
+     */
+    val skippedSignIn: Boolean get() = _skippedSignIn
+
+    fun markSkippedSignIn() {
+        _skippedSignIn = true
+        prefs?.edit()?.putBoolean(KEY_SKIPPED_SIGN_IN, true)?.apply()
     }
 
     /**

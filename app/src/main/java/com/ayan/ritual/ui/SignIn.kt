@@ -1,9 +1,12 @@
 package com.ayan.ritual.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,9 +16,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.cloud.Account
@@ -38,10 +43,13 @@ import kotlinx.coroutines.launch
  * say it twice.
  *
  * One block, used by the first launch and by the account screen, so the two
- * cannot drift into two different sign-ins.
+ * cannot drift into two different sign-ins. The first launch passes an
+ * [onSkip] and the account screen does not, which is the only difference
+ * between them: there is somewhere to go past a first launch, and nowhere to
+ * go past a screen someone opened on purpose.
  */
 @Composable
-fun SignInBlock(label: String, onSignedIn: () -> Unit) {
+fun SignInBlock(label: String, onSignedIn: () -> Unit, onSkip: (() -> Unit)? = null) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val busy by Account.busyState
@@ -149,6 +157,28 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit) {
                 label = if (busy) "Working…" else label,
                 onClick = { Account.continueWithEmail(address, password, landed) },
                 modifier = Modifier.fillMaxWidth()
+            )
+        }
+
+        /* The way past, where there is one.
+
+           It is drawn the way the tour draws its Skip, quiet and last, for the
+           same reason: an offer nobody is obliged to take should not look like
+           one of the buttons. Signing in is what carries the squares to a
+           second phone, and nothing else, so a first launch that cannot
+           complete it should still reach the grid. Whoever waves it off finds
+           the same three buttons in Account whenever they want them. */
+        if (onSkip != null) {
+            Spacer(Modifier.height(10.dp))
+            Text(
+                "Maybe later",
+                style = Body.copy(fontSize = 13.sp, color = InkFaint),
+                textAlign = TextAlign.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(999.dp))
+                    .clickable(onClick = onSkip)
+                    .padding(vertical = 8.dp)
             )
         }
     }

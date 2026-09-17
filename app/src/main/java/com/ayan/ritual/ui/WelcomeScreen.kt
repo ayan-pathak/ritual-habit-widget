@@ -46,10 +46,13 @@ import com.ayan.ritual.render.Mood
  * that fills a tall phone leaves a short one scrolling to reach the buttons.
  *
  * It is skipped outright when there is no Firebase project configured,
- * because a sign-in nobody can complete is a locked door.
+ * because a sign-in nobody can complete is a locked door — and for the same
+ * reason it can be waved off, because a sign-in that fails on the day is a
+ * locked door too. The squares live on the phone either way; an account is
+ * what carries them to the next one.
  */
 @Composable
-fun WelcomeScreen(onSignedIn: () -> Unit) {
+fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {
     BoxWithConstraints(
         Modifier
             .fillMaxSize()
@@ -116,7 +119,11 @@ fun WelcomeScreen(onSignedIn: () -> Unit) {
                     style = Body.copy(fontSize = 13.sp, color = InkSoft)
                 )
                 Spacer(Modifier.height(16.dp))
-                SignInBlock(label = "Start your journey", onSignedIn = onSignedIn)
+                SignInBlock(
+                    label = "Start your journey",
+                    onSignedIn = onSignedIn,
+                    onSkip = onSkip
+                )
             }
         }
     }

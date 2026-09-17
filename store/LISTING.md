@@ -137,11 +137,10 @@ is no social layer in Ritual. That lands at Everyone.
 Encrypted in transit: yes. Users can request deletion: yes, in the app and at
 https://ayan-pathak.github.io/ritual-habit-widget/delete-account/
 
-**App access**: sign-in is required on the first launch, so this cannot be left
-blank. Create one real account, then give the reviewer its email and password
-under "All functionality is restricted", with the note: *Sign in with the email
-option on the first screen. No other steps are needed.* A reviewer who cannot
-get past the first screen rejects the app.
+**App access**: "All functionality is available without special access". The
+first launch offers sign-in and carries a "Maybe later" under it, so a reviewer
+reaches the grid without an account. Sign-in only mirrors the squares to a
+second device; nothing in the app is behind it.
 
 **Financial features**: none. The one-time unlock is Google Play Billing, not a
 financial product.

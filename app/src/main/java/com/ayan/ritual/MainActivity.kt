@@ -99,16 +99,19 @@ class MainActivity : ComponentActivity() {
 /**
  * Where a launch lands.
  *
- * Three gates, in the order they were passed. Sign-in is the way in rather
- * than an offer on the way past, so a launch stops there whenever there is a
- * Firebase project and nobody is signed in; without one — a checkout with no
- * google-services.json — there is nothing to sign in to and it falls through.
- * Then the tour, once. Then the unlock, but only on a launch that finds a
- * streak already worth keeping, which is the whole point of not asking
- * sooner.
+ * Three gates, in the order they were passed. Sign-in is the first thing
+ * offered, because an account is what carries the squares to the next phone
+ * and the moment to say so is before there are any. It is an offer and not a
+ * wall: a launch stops there when there is a Firebase project, nobody is
+ * signed in, and nobody has waved it off. Without a project — a checkout with
+ * no google-services.json — there is nothing to sign in to and it falls
+ * through; waved off once, it falls through the same way and lives in Account
+ * from then on. Then the tour, once. Then the unlock, but only on a launch
+ * that finds a streak already worth keeping, which is the whole point of not
+ * asking sooner.
  */
 private fun firstRoute(): Route = when {
-    Account.available && !Account.signedIn -> Route.Welcome
+    Account.available && !Account.signedIn && !Onboarding.skippedSignIn -> Route.Welcome
     !Onboarding.sawTour -> Route.Tour
     Onboarding.unlockIsWorthMentioning(LocalDate.now()) && !Unlock.unlocked -> {
         Onboarding.markSawPaywall()
@@ -133,9 +136,16 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
     val habits by HabitStore.habitsState
 
     when (val r = route) {
-        is Route.Welcome -> WelcomeScreen(
-            onSignedIn = { route = if (!Onboarding.sawTour) Route.Tour else Route.Home }
-        )
+        is Route.Welcome -> {
+            val onward = { route = if (!Onboarding.sawTour) Route.Tour else Route.Home }
+            WelcomeScreen(
+                onSignedIn = onward,
+                onSkip = {
+                    Onboarding.markSkippedSignIn()
+                    onward()
+                }
+            )
+        }
 
         is Route.Tour -> TourScreen(onDone = { route = Route.Home })
 
