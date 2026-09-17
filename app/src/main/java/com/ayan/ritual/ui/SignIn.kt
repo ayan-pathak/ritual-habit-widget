@@ -168,7 +168,8 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit, onSkip: (() -> Unit)? = n
            second phone, and nothing else, so a first launch that cannot
            complete it should still reach the grid. Whoever waves it off finds
            the same three buttons in Account whenever they want them. */
-        if (onSkip != null) {
+        val skip = onSkip
+        if (skip != null) {
             Spacer(Modifier.height(10.dp))
             Text(
                 "Maybe later",
@@ -177,7 +178,7 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit, onSkip: (() -> Unit)? = n
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(999.dp))
-                    .clickable(onClick = onSkip)
+                    .clickable { skip() }
                     .padding(vertical = 8.dp)
             )
         }

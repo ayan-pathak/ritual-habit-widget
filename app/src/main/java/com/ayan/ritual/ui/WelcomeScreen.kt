@@ -46,10 +46,10 @@ import com.ayan.ritual.render.Mood
  * that fills a tall phone leaves a short one scrolling to reach the buttons.
  *
  * It is skipped outright when there is no Firebase project configured,
- * because a sign-in nobody can complete is a locked door — and for the same
- * reason it can be waved off, because a sign-in that fails on the day is a
- * locked door too. The squares live on the phone either way; an account is
- * what carries them to the next one.
+ * because a sign-in nobody can complete is a locked door, and for the same
+ * reason it can be waved off: a sign-in that fails on the day is a locked
+ * door too. The squares live on the phone either way, and an account is what
+ * carries them to the next one.
  */
 @Composable
 fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {

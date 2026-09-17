@@ -136,16 +136,13 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
     val habits by HabitStore.habitsState
 
     when (val r = route) {
-        is Route.Welcome -> {
-            val onward = { route = if (!Onboarding.sawTour) Route.Tour else Route.Home }
-            WelcomeScreen(
-                onSignedIn = onward,
-                onSkip = {
-                    Onboarding.markSkippedSignIn()
-                    onward()
-                }
-            )
-        }
+        is Route.Welcome -> WelcomeScreen(
+            onSignedIn = { route = if (!Onboarding.sawTour) Route.Tour else Route.Home },
+            onSkip = {
+                Onboarding.markSkippedSignIn()
+                route = if (!Onboarding.sawTour) Route.Tour else Route.Home
+            }
+        )
 
         is Route.Tour -> TourScreen(onDone = { route = Route.Home })
 

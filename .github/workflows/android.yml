@@ -52,11 +52,15 @@ jobs:
           # preinstalled Gradle is not something this repository controls.
           gradle-version: '8.14.3'
 
+      # No --stacktrace. A Kotlin compile error prints as a handful of `e:`
+      # lines and then two hundred lines of Gradle's own internals, which push
+      # the only useful part off the end of every log view there is. Without
+      # it the last thing in the log is the thing that broke.
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: gradle assembleDebug --no-daemon --console=plain
 
       - name: Build release APK
-        run: gradle assembleRelease --no-daemon --stacktrace
+        run: gradle assembleRelease --no-daemon --console=plain
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
@@ -114,7 +118,7 @@ jobs:
           # workflow in this repository, and about 29 million today against
           # Play's ceiling of 2.1 billion. A per-workflow run number cannot
           # promise either of those once two workflows can both publish.
-          gradle bundleRelease --no-daemon --stacktrace \
+          gradle bundleRelease --no-daemon --console=plain \
             -PritualVersionCode=$(( $(date +%s) / 60 )) \
             -PritualVersionName=1.0
 
