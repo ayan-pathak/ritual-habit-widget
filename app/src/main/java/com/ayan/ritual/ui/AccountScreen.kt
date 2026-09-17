@@ -86,7 +86,11 @@ fun AccountScreen(onBack: () -> Unit) {
 
         if (uid == null) {
             Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp)) {
-                SignInBlock(label = "Sign in") { }
+                // Named, not a trailing lambda: SignInBlock grew an onSkip
+                // after this argument, and a trailing lambda binds to the
+                // last parameter, so it quietly became the skip handler.
+                // There is nothing to skip to from here anyway.
+                SignInBlock(label = "Sign in", onSignedIn = {})
             }
         } else {
             Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp)) {
