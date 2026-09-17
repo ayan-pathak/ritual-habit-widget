@@ -88,7 +88,7 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit, onSkip: (() -> Unit)? = n
             )
             Spacer(Modifier.height(4.dp))
             Text(
-                buildStamp(context),
+                buildStamp(context) + "\n" + certStamp(context),
                 style = Body.copy(fontSize = 11.sp, color = InkFaint)
             )
             Spacer(Modifier.height(14.dp))
@@ -189,10 +189,10 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit, onSkip: (() -> Unit)? = n
  * Which build this is, read off the installed package rather than BuildConfig,
  * so it needs no build-system feature switched on to exist.
  *
- * It is shown under a failed sign-in and nowhere else. A version number in the
- * corner of a working screen is clutter; a version number under an error is
- * the difference between "the fix is not on the phone yet" and "the fix does
- * not work".
+ * It is shown under a failed sign-in and nowhere else, together with
+ * [certStamp]. A version number in the corner of a working screen is clutter;
+ * a version number under an error is the difference between "the fix is not
+ * on the phone yet" and "the fix does not work".
  */
 private fun buildStamp(context: android.content.Context): String = runCatching {
     val info = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -202,3 +202,43 @@ private fun buildStamp(context: android.content.Context): String = runCatching {
         else @Suppress("DEPRECATION") info.versionCode.toLong()
     "Build ${info.versionName} ($code)"
 }.getOrDefault("Build unknown")
+
+/**
+ * The SHA-1 of the certificate this copy of the app is actually signed with.
+ *
+ * Every party to a Google sign-in knows this value except the person trying to
+ * debug one. The console lists what is registered, the app is signed with
+ * whatever it is signed with, and when the two disagree the failure says
+ * nothing about certificates at all. So the app reports its own, and the
+ * comparison stops being a matter of trusting that the right row was copied
+ * out of the right page.
+ *
+ * It sits under a failed sign-in, next to the build stamp, and nowhere else.
+ */
+private fun certStamp(context: android.content.Context): String = runCatching {
+    val pm = context.packageManager
+    val signatures: Array<android.content.pm.Signature> =
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            val info = pm.getPackageInfo(
+                context.packageName,
+                android.content.pm.PackageManager.GET_SIGNING_CERTIFICATES
+            )
+            // apkContentsSigners is what a verifier sees. On a build Play
+            // re-signed it is Play's key, which is the whole point of asking.
+            info.signingInfo?.apkContentsSigners ?: emptyArray()
+        } else {
+            @Suppress("DEPRECATION")
+            pm.getPackageInfo(
+                context.packageName,
+                android.content.pm.PackageManager.GET_SIGNATURES
+            ).signatures ?: emptyArray()
+        }
+    val first = signatures.firstOrNull()
+    if (first == null) {
+        "SHA-1 unavailable"
+    } else {
+        java.security.MessageDigest.getInstance("SHA-1")
+            .digest(first.toByteArray())
+            .joinToString(":") { byte -> "%02X".format(byte) }
+    }
+}.getOrElse { "SHA-1 unreadable" }
