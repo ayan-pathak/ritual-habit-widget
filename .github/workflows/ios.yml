@@ -1,0 +1,111 @@
+name: Build iOS
+
+# The Xcode project is generated from ios/project.yml rather than checked in,
+# so the build is two steps: generate, then compile. Simulator only — a device
+# build needs a signing identity this repository does not carry.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths:
+      - 'ios/**'
+      - 'art/mochi/**'
+      - 'tools/mochi.py'
+      - '.github/workflows/ios.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'art/mochi/**'
+      - 'tools/mochi.py'
+      - '.github/workflows/ios.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the generated Mochi art matches art/mochi/*.svg
+        run: python3 tools/mochi.py --check
+
+      - name: Toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Install XcodeGen
+        run: brew install xcodegen
+
+      - name: Stage the font
+        run: ./ios/bootstrap.sh
+
+      - name: Stage the Firebase config, when there is one
+        env:
+          GOOGLE_SERVICE_INFO_PLIST: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST }}
+        run: |
+          # GoogleService-Info.plist is per-project and never checked in, so
+          # the only way it reaches a build made here is a repository secret.
+          # With no secret this is a no-op: FirebaseApp.configure() is skipped
+          # and the app runs with no cloud to reach, which is the same path a
+          # signed-out device takes.
+          if [ -n "$GOOGLE_SERVICE_INFO_PLIST" ]; then
+            printf '%s' "$GOOGLE_SERVICE_INFO_PLIST" > ios/Resources/GoogleService-Info.plist
+            echo "Firebase configured: sign-in and sync are live in this build."
+          else
+            echo "No GOOGLE_SERVICE_INFO_PLIST secret. Building without a cloud."
+          fi
+
+      - name: Generate the project
+        working-directory: ios
+        run: xcodegen generate
+
+      - name: Build for the simulator
+        working-directory: ios
+        run: |
+          set -o pipefail
+          # xcodebuild's own output is a few hundred thousand characters of
+          # compiler invocations with the diagnostics buried in it, so keep the
+          # whole thing on disk and put only the diagnostics on the console.
+          xcodebuild \
+            -project Ritual.xcodeproj \
+            -scheme Ritual \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO \
+            build > xcodebuild.log 2>&1 || status=$?
+          grep -E '(error|warning):' xcodebuild.log | sort -u || true
+          tail -40 xcodebuild.log
+          exit "${status:-0}"
+
+      - name: Package the app
+        id: stage
+        run: |
+          set -euo pipefail
+          short="${GITHUB_SHA::7}"
+          app="ios/build/Build/Products/Debug-iphonesimulator/Ritual.app"
+          test -d "$app"
+          mkdir -p out
+          ditto -c -k --sequesterRsrc --keepParent "$app" "out/ritual-ios-$short-simulator.zip"
+          echo "tag=ios-$short" >> "$GITHUB_OUTPUT"
+          echo "short=$short" >> "$GITHUB_OUTPUT"
+
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${{ steps.stage.outputs.tag }}"
+          notes="Simulator build of the iOS port from ${{ github.sha }}. Unzip and drag onto a running iOS 17 simulator, or open ios/Ritual.xcodeproj after \`xcodegen generate\`. Not installable on a phone: that needs a signing identity."
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" out/*.zip --clobber
+          else
+            gh release create "$tag" out/*.zip \
+              --title "Ritual iOS ${{ steps.stage.outputs.short }}" \
+              --notes "$notes"
+          fi

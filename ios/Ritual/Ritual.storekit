@@ -1,0 +1,27 @@
+{
+  "identifier" : "ritual-local",
+  "nonRenewingSubscriptions" : [],
+  "products" : [
+    {
+      "displayPrice" : "4.99",
+      "familyShareable" : false,
+      "internalID" : "ritual-unlimited",
+      "localizations" : [
+        {
+          "description" : "Keep as many rituals as you like, forever. One payment.",
+          "displayName" : "Ritual, unlocked",
+          "locale" : "en_US"
+        }
+      ],
+      "productID" : "com.ayan.ritual.unlimited",
+      "referenceName" : "Lifetime unlock",
+      "type" : "NonConsumable"
+    }
+  ],
+  "settings" : {},
+  "subscriptionGroups" : [],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}
