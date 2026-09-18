@@ -128,3 +128,34 @@ jobs:
           name: ${{ env.AAB_NAME }}
           path: app/build/outputs/bundle/release/*.aab
           if-no-files-found: error
+
+      # ── The bundle, made installable, on a key we control ──────────────
+      # A bundle and an APK differ in two ways at once: what signs them, and
+      # how they are packaged. Play re-signs with its own key AND splits the
+      # bundle into per-device APKs, so when the APK works and the Play build
+      # does not, either could be the reason.
+      #
+      # bundletool runs Play's own splitting over the same bundle and signs
+      # the result with the development key, the one the working APK carries.
+      # Installing this separates the two: sign-in working here means the
+      # bundle is sound and the signing certificate is the only variable
+      # left; failing here means the bundle itself is at fault.
+      - name: Make the bundle installable, for testing
+        run: |
+          curl -sSL -o bundletool.jar \
+            https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
+          java -jar bundletool.jar build-apks \
+            --bundle="$(ls app/build/outputs/bundle/release/*.aab | head -1)" \
+            --output=universal.apks --mode=universal --overwrite \
+            --ks=keystore/ritual-dev.jks --ks-pass=pass:ritualdev \
+            --ks-key-alias=ritual --key-pass=pass:ritualdev
+          unzip -o -q universal.apks -d universal
+          mv universal/universal.apk ritual-from-bundle.apk
+          ls -la ritual-from-bundle.apk
+
+      - name: Upload the installable bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ritual-from-bundle-apk
+          path: ritual-from-bundle.apk
+          if-no-files-found: error
