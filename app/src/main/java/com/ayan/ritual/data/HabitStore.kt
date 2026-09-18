@@ -28,6 +28,15 @@ object HabitStore {
     private var loaded = false
     private var bindings: MutableMap<Int, String> = mutableMapOf()
 
+    /**
+     * Called after every local change, so a mirror can follow.
+     *
+     * Nothing set here may block or fail a write: the device's own store is
+     * the source of truth, and marking a day has to work with no network and
+     * no account.
+     */
+    var onChanged: (() -> Unit)? = null
+
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
@@ -61,6 +70,16 @@ object HabitStore {
         return habit
     }
 
+    /** Replaces everything, for a merge arriving from the cloud. */
+    fun replaceAll(context: Context, habits: List<Habit>) {
+        ensureLoaded(context)
+        _habits.value = habits
+        prefs(context).edit()
+            .putString(KEY_HABITS, encodeHabits(habits))
+            .putString(KEY_WIDGETS, encodeBindings(bindings))
+            .apply()
+    }
+
     fun update(context: Context, habit: Habit) {
         ensureLoaded(context)
         _habits.value = _habits.value.map { if (it.id == habit.id) habit else it }
@@ -79,10 +98,17 @@ object HabitStore {
         ensureLoaded(context)
         val habit = _habits.value.firstOrNull { it.id == id } ?: return null
         val day = date.toEpochDay()
+        val marking = !habit.done.contains(day)
         val next = habit.copy(
-            done = if (habit.done.contains(day)) habit.done - day else habit.done + day
+            done = if (marking) habit.done + day else habit.done - day
         )
         update(context, next)
+        // The widget marks days too, and it can start the process cold, so the
+        // clock on the unlock offer is started here rather than in the UI.
+        if (marking) {
+            Onboarding.load(context)
+            Onboarding.rememberFirstMark(date)
+        }
         return next
     }
 
@@ -115,6 +141,7 @@ object HabitStore {
             .putString(KEY_HABITS, encodeHabits(_habits.value))
             .putString(KEY_WIDGETS, encodeBindings(bindings))
             .apply()
+        onChanged?.invoke()
     }
 
     private fun encodeHabits(list: List<Habit>): String {

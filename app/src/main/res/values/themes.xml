@@ -1,10 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Ritual" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/cream</item>
+    <!--
+      The window is the splash. There is no splash screen composition in this
+      app and there does not need to be one: the only thing on screen before
+      the first frame is windowBackground, so it is the dark page, and a cold
+      start opens on the colour the app is about to draw rather than flashing
+      cream at it.
+
+      The bar icons start light to match. MainActivity flips them the moment
+      someone chooses the light appearance.
+    -->
+    <style name="Theme.Ritual" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/night</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
     </style>
 </resources>

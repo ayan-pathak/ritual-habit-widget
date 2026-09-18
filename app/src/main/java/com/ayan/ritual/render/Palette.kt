@@ -34,8 +34,6 @@ data class Accent(
 val ACCENTS: List<Accent> = listOf(
     Accent("Lime", 0xFFC9F73F.toInt()),
     Accent("Red", 0xFFE5331C.toInt(), Palette.PAPER),
-    Accent("Sage", 0xFF9DB8A4.toInt()),
-    Accent("Camel", 0xFFBC9F76.toInt()),
     Accent("Butter", 0xFFEDE55C.toInt()),
     Accent("Orange", 0xFFF26A1B.toInt())
 )

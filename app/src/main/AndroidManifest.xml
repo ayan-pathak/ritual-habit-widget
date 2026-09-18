@@ -1,12 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <!-- Needed to check whether the story intent can be offered at all. -->
+    <!-- Firebase's own manifests already merge this in; stating it here means
+         the app's network use is visible in the app's own manifest. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <queries>
+        <!-- Whether the story intent can be offered at all. -->
         <package android:name="com.instagram.android" />
         <intent>
             <action android:name="android.intent.action.SEND" />
             <data android:mimeType="image/*" />
+        </intent>
+        <!-- Sign in with Apple is a web flow on Android, so it needs a browser
+             it is allowed to see. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="https" />
         </intent>
     </queries>
 

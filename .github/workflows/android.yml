@@ -12,6 +12,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Stage the Firebase config, when there is one
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: |
+          # google-services.json is per-project and never checked in, so the
+          # only way it reaches a build made here is a repository secret. With
+          # no secret this is a no-op and the app runs with no cloud to reach,
+          # which is the same path a signed-out device takes.
+          if [ -n "$GOOGLE_SERVICES_JSON" ]; then
+            printf '%s' "$GOOGLE_SERVICES_JSON" > app/google-services.json
+            echo "Firebase configured: sign-in and sync are live in this build."
+          else
+            echo "No GOOGLE_SERVICES_JSON secret. Building without a cloud."
+          fi
+
+      - name: Check the generated Mochi art matches art/mochi/*.svg
+        run: python3 tools/mochi.py --check
+
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -19,20 +37,125 @@ jobs:
           java-version: '17'
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        # v4 with an explicit package list. The v3 default is "tools
+        # platform-tools", and Google removed the obsolete `tools` package from
+        # the repository, so sdkmanager exits 1 and the job dies before it ever
+        # reaches Gradle.
+        uses: android-actions/setup-android@v4
+        with:
+          packages: 'platform-tools platforms;android-36'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          # Pinned: AGP 8.13 needs Gradle 8.13 or newer, and the runner's
+          # preinstalled Gradle is not something this repository controls.
+          gradle-version: '8.14.3'
 
+      # No --stacktrace. A Kotlin compile error prints as a handful of `e:`
+      # lines and then two hundred lines of Gradle's own internals, which push
+      # the only useful part off the end of every log view there is. Without
+      # it the last thing in the log is the thing that broke.
       - name: Build debug APK
-        run: gradle assembleDebug --no-daemon --stacktrace
+        run: gradle assembleDebug --no-daemon --console=plain
 
       - name: Build release APK
-        run: gradle assembleRelease --no-daemon --stacktrace
+        run: gradle assembleRelease --no-daemon --console=plain
 
       - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: ritual-apk
           path: app/build/outputs/apk/**/*.apk
+          if-no-files-found: error
+
+      # ── The thing Play actually takes ──────────────────────────────────
+      # An .aab, not an .apk. play-bundle.yml does this too and publishes it
+      # as a release, but workflow_dispatch only exists for workflows on the
+      # default branch, so until that file is on main this is the only way to
+      # get a bundle off a branch.
+      - name: Stage the upload key, if there is one
+        env:
+          UPLOAD_KEYSTORE_BASE64: ${{ secrets.UPLOAD_KEYSTORE_BASE64 }}
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+        run: |
+          if [ -n "$UPLOAD_KEYSTORE_BASE64" ]; then
+            printf '%s' "$UPLOAD_KEYSTORE_BASE64" | base64 -d > keystore/upload.jks
+            # Say which of the two it is here, where it is one line, rather
+            # than thirty frames into a Gradle stack trace that reports a
+            # mistyped alias and a broken keystore in identical words.
+            alias="$(printf '%s' "${UPLOAD_KEY_ALIAS:-upload}" | tr -d '[:space:]')"
+            if ! keytool -list -keystore keystore/upload.jks \
+                 -storepass "$UPLOAD_KEYSTORE_PASSWORD" -alias "$alias" >/dev/null 2>&1; then
+              echo "::error::No key called '$alias' in the upload keystore," \
+                   "or the store password is wrong. What the keystore holds:"
+              keytool -list -keystore keystore/upload.jks \
+                      -storepass "$UPLOAD_KEYSTORE_PASSWORD" 2>&1 \
+                | grep -i 'Entry,' || echo "  (could not read it at all)"
+              exit 1
+            fi
+            echo "AAB_NAME=ritual-aab" >> "$GITHUB_ENV"
+            echo "Signed with the upload key."
+          else
+            # The fallback key is the one checked into this public repository.
+            # Play would take it and then hold that public key as the upload
+            # certificate for the life of the listing, so the artifact says so
+            # in its own name rather than in a log line nobody reads.
+            echo "::warning::No UPLOAD_KEYSTORE_BASE64 secret. This bundle is" \
+                 "signed with the development key from this public repository" \
+                 "and must not be uploaded to Play."
+            echo "AAB_NAME=ritual-aab-DEV-KEY-DO-NOT-UPLOAD" >> "$GITHUB_ENV"
+          fi
+
+      - name: Build the Play bundle
+        env:
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+        run: |
+          # Minutes since the epoch: monotonic forever, unique across every
+          # workflow in this repository, and about 29 million today against
+          # Play's ceiling of 2.1 billion. A per-workflow run number cannot
+          # promise either of those once two workflows can both publish.
+          gradle bundleRelease --no-daemon --console=plain \
+            -PritualVersionCode=$(( $(date +%s) / 60 )) \
+            -PritualVersionName=1.0
+
+      - name: Upload the bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.AAB_NAME }}
+          path: app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
+      # ── The bundle, made installable, on a key we control ──────────────
+      # A bundle and an APK differ in two ways at once: what signs them, and
+      # how they are packaged. Play re-signs with its own key AND splits the
+      # bundle into per-device APKs, so when the APK works and the Play build
+      # does not, either could be the reason.
+      #
+      # bundletool runs Play's own splitting over the same bundle and signs
+      # the result with the development key, the one the working APK carries.
+      # Installing this separates the two: sign-in working here means the
+      # bundle is sound and the signing certificate is the only variable
+      # left; failing here means the bundle itself is at fault.
+      - name: Make the bundle installable, for testing
+        run: |
+          curl -sSL -o bundletool.jar \
+            https://github.com/google/bundletool/releases/download/1.17.2/bundletool-all-1.17.2.jar
+          java -jar bundletool.jar build-apks \
+            --bundle="$(ls app/build/outputs/bundle/release/*.aab | head -1)" \
+            --output=universal.apks --mode=universal --overwrite \
+            --ks=keystore/ritual-dev.jks --ks-pass=pass:ritualdev \
+            --ks-key-alias=ritual --key-pass=pass:ritualdev
+          unzip -o -q universal.apks -d universal
+          mv universal/universal.apk ritual-from-bundle.apk
+          ls -la ritual-from-bundle.apk
+
+      - name: Upload the installable bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: ritual-from-bundle-apk
+          path: ritual-from-bundle.apk
           if-no-files-found: error
