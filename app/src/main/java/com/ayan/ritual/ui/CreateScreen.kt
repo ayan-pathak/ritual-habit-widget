@@ -55,7 +55,7 @@ import java.time.LocalDate
 private val SLOTS = listOf("Morning", "Midday", "Evening", "Anytime")
 
 @Composable
-fun CreateScreen(onDone: (Habit) -> Unit, onBack: () -> Unit) {
+fun CreateScreen(identity: String = "", onDone: (Habit) -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     var slotIndex by remember { mutableIntStateOf(0) }
@@ -195,7 +195,7 @@ fun CreateScreen(onDone: (Habit) -> Unit, onBack: () -> Unit) {
             InkPill(
                 label = "Start today",
                 onClick = {
-                    val habit = HabitStore.create(context, name, SLOTS[slotIndex], accentIndex)
+                    val habit = HabitStore.create(context, name, SLOTS[slotIndex], accentIndex, identity)
                     RitualWidgetProvider.refreshAll(context)
                     onDone(habit)
                 },

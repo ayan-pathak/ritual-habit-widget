@@ -22,6 +22,7 @@ import com.ayan.ritual.ui.CreateScreen
 import com.ayan.ritual.ui.DetailScreen
 import com.ayan.ritual.ui.AccountScreen
 import com.ayan.ritual.ui.HomeScreen
+import com.ayan.ritual.ui.IdentityScreen
 import com.ayan.ritual.ui.PaywallScreen
 import com.ayan.ritual.ui.RitualTheme
 import com.ayan.ritual.ui.TourScreen
@@ -32,9 +33,13 @@ import java.time.LocalDate
 sealed interface Route {
     data object Welcome : Route
     data object Tour : Route
+    /** The sentence, asked once, before anything is tracked. */
+    data object Identity : Route
     data object Home : Route
     data class Detail(val habitId: String) : Route
-    data object Create : Route
+    /** Creating the ritual that builds [identity], which is blank when a
+        later one is added from Home. */
+    data class Create(val identity: String = "") : Route
     data object Paywall : Route
     data object Account : Route
 }
@@ -113,6 +118,9 @@ class MainActivity : ComponentActivity() {
 private fun firstRoute(): Route = when {
     Account.available && !Account.signedIn && !Onboarding.skippedSignIn -> Route.Welcome
     !Onboarding.sawTour -> Route.Tour
+    // No rituals means nothing has been claimed yet, so the first question is
+    // who they are trying to become, not what they will do about it.
+    HabitStore.habits.isEmpty() -> Route.Identity
     Onboarding.unlockIsWorthMentioning(LocalDate.now()) && !Unlock.unlocked -> {
         Onboarding.markSawPaywall()
         Route.Paywall
@@ -144,12 +152,20 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
             }
         )
 
-        is Route.Tour -> TourScreen(onDone = { route = Route.Home })
+        is Route.Tour -> TourScreen(
+            onDone = {
+                route = if (HabitStore.habits.isEmpty()) Route.Identity else Route.Home
+            }
+        )
+
+        is Route.Identity -> IdentityScreen(
+            onDone = { identity -> route = Route.Create(identity) }
+        )
 
         is Route.Home -> HomeScreen(
             habits = habits,
             onOpen = { route = Route.Detail(it.id) },
-            onCreate = { route = Route.Create },
+            onCreate = { route = Route.Create() },
             onPaywall = { route = Route.Paywall },
             onAccount = { route = Route.Account }
         )
@@ -159,6 +175,7 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
         is Route.Account -> AccountScreen(onBack = { route = Route.Home })
 
         is Route.Create -> CreateScreen(
+            identity = r.identity,
             onDone = { route = Route.Detail(it.id) },
             onBack = { route = Route.Home }
         )

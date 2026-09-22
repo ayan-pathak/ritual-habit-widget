@@ -55,7 +55,13 @@ object HabitStore {
         return _habits.value.firstOrNull { it.id == id }
     }
 
-    fun create(context: Context, name: String, slot: String, accentIndex: Int): Habit {
+    fun create(
+        context: Context,
+        name: String,
+        slot: String,
+        accentIndex: Int,
+        identity: String = ""
+    ): Habit {
         ensureLoaded(context)
         val habit = Habit(
             id = UUID.randomUUID().toString(),
@@ -63,7 +69,11 @@ object HabitStore {
             slot = slot.trim().ifEmpty { "Daily" },
             accentIndex = accentIndex,
             createdEpochDay = LocalDate.now().toEpochDay(),
-            done = emptySet()
+            done = emptySet(),
+            identity = identity.trim(),
+            // Day one is today. The thirty start when the ritual does, not
+            // when the first day is marked, or a slow start would be free.
+            goalStartEpochDay = LocalDate.now().toEpochDay()
         )
         _habits.value = _habits.value + habit
         persist(context)
