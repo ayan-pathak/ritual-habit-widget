@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ayan.ritual.billing.Unlock
 import com.ayan.ritual.data.Habit
 import com.ayan.ritual.cloud.CloudSync
 import com.ayan.ritual.data.HabitStore
@@ -47,7 +48,7 @@ import com.ayan.ritual.widget.RitualWidgetProvider
 import java.time.LocalDate
 
 @Composable
-fun DetailScreen(habit: Habit, onBack: () -> Unit) {
+fun DetailScreen(habit: Habit, onBack: () -> Unit, onPaywall: (PaywallReason) -> Unit = {}) {
     val context = LocalContext.current
     val today = LocalDate.now()
     val accent = accentAt(habit.accentIndex)
@@ -165,7 +166,12 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
         Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 28.dp)) {
             InkPill(
                 label = "Share streak",
-                onClick = { StoryShare.shareStreak(context, model) },
+                // Sharing is one of the three things the unlock buys, and the
+                // wall it opens says so in the words of the thing just tapped.
+                onClick = {
+                    if (Unlock.unlocked) StoryShare.shareStreak(context, model)
+                    else onPaywall(PaywallReason.SHARE)
+                },
                 modifier = Modifier.fillMaxWidth(),
                 background = Color(accent.block),
                 content = Ink,
@@ -189,7 +195,9 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                if (StoryShare.isInstagramInstalled(context))
+                if (!Unlock.unlocked)
+                    "Part of the unlock"
+                else if (StoryShare.isInstagramInstalled(context))
                     "Opens Instagram Stories, with the link copied for a sticker"
                 else
                     "Instagram isn't installed — you'll get the share sheet",

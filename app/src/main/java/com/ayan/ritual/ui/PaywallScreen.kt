@@ -42,10 +42,33 @@ import kotlinx.coroutines.delay
 import com.ayan.ritual.render.Mood
 
 private val INCLUDED = listOf(
-    "As many rituals as you keep",
-    "A widget for each one",
-    "Every year you have kept, in the archive"
+    "As many rituals as you keep, each with its own widget",
+    "Share any identity to Instagram",
+    "Backup, so a new phone picks up where this one left off"
 )
+
+/**
+ * Why they are standing here.
+ *
+ * The headline names the thing they reached for two seconds ago, because a
+ * wall that answers the wrong question reads as a toll booth. Everything
+ * below the headline is identical in all three, which is the point: the price
+ * must never look like it depends on how badly someone wants something.
+ */
+enum class PaywallReason(val title: String, val lede: String) {
+    ANOTHER(
+        "You built one.\nBuild the next.",
+        "Your first identity stays free forever, whatever you decide here."
+    ),
+    SHARE(
+        "Share your new\nidentity on Instagram.",
+        "The real grid and the real count, nothing invented. Telling people is the oldest trick there is for actually keeping a habit."
+    ),
+    BACKUP(
+        "It lives on this\nphone only.",
+        "Lose the phone, replace it, reset it, and the grid goes with it. Backup mirrors every square to your account."
+    )
+}
 
 /** Long enough for the two bounces of [Beat.UNLOCK] to finish. */
 private const val UNLOCK_HOLD_MS = 900L
@@ -58,7 +81,7 @@ private const val UNLOCK_HOLD_MS = 900L
  * be marked. Everything already kept stays free and stays visible.
  */
 @Composable
-fun PaywallScreen(onClose: () -> Unit) {
+fun PaywallScreen(reason: PaywallReason = PaywallReason.ANOTHER, onClose: () -> Unit) {
     val context = LocalContext.current
     val unlocked by Unlock.unlockedState
     val price = Unlock.price ?: "$4.99"
@@ -108,13 +131,13 @@ fun PaywallScreen(onClose: () -> Unit) {
             MochiTile(Mood.PLEASED, Color.Transparent, height = 72.dp, inset = 0.dp, motion = mochi)
             Spacer(Modifier.height(18.dp))
             Text(
-                "Keep your progress,\nforever.",
-                style = Display.copy(fontSize = 28.sp, lineHeight = 30.sp, color = OnLime),
+                reason.title,
+                style = Display.copy(fontSize = 26.sp, lineHeight = 28.sp, color = OnLime),
                 textAlign = TextAlign.Center
             )
             Spacer(Modifier.height(10.dp))
             Text(
-                "Your first ritual is free forever. Unlock the rest once, and every square you have filled stays yours for good.",
+                reason.lede,
                 style = Body.copy(color = OnLimeSoft),
                 textAlign = TextAlign.Center
             )
@@ -137,7 +160,29 @@ fun PaywallScreen(onClose: () -> Unit) {
             }
         }
 
-        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 12.dp)) {
+        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 6.dp)) {
+            Box(Modifier.fillMaxWidth().height(1.dp).background(InkFaint))
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 11.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Most habit apps", style = Body.copy(fontSize = 12.sp, color = InkSoft))
+                Text(
+                    "\u0024\u0035\u0030 a year",
+                    style = Body.copy(fontSize = 12.sp, color = InkFaint)
+                )
+            }
+            Row(
+                Modifier.fillMaxWidth().padding(bottom = 11.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("Ritual", style = Body.copy(fontSize = 12.sp, color = Ink))
+                Text("$price, once", style = Body.copy(fontSize = 12.sp, color = Ink))
+            }
+            Box(Modifier.fillMaxWidth().height(1.dp).background(InkFaint))
+        }
+
+        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp)) {
             InkPill(
                 label = "Unlock forever · $price",
                 onClick = { context.findActivity()?.let { Unlock.purchase(it) } },

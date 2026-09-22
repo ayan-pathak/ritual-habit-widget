@@ -25,6 +25,7 @@ import com.ayan.ritual.ui.AccountScreen
 import com.ayan.ritual.ui.BuiltScreen
 import com.ayan.ritual.ui.HomeScreen
 import com.ayan.ritual.ui.IdentityScreen
+import com.ayan.ritual.ui.PaywallReason
 import com.ayan.ritual.ui.PaywallScreen
 import com.ayan.ritual.ui.RitualTheme
 import com.ayan.ritual.ui.ShelfScreen
@@ -43,7 +44,7 @@ sealed interface Route {
     /** Creating the ritual that builds [identity], which is blank when a
         later one is added from Home. */
     data class Create(val identity: String = "") : Route
-    data object Paywall : Route
+    data class Paywall(val reason: PaywallReason = PaywallReason.ANOTHER) : Route
     data object Account : Route
     /** Thirty days cleared, waiting to be claimed. */
     data class Built(val habitId: String) : Route
@@ -130,7 +131,7 @@ private fun firstRoute(): Route = when {
     HabitStore.habits.isEmpty() -> Route.Identity
     Onboarding.unlockIsWorthMentioning(LocalDate.now()) && !Unlock.unlocked -> {
         Onboarding.markSawPaywall()
-        Route.Paywall
+        Route.Paywall()
     }
     else -> Route.Home
 }
@@ -183,12 +184,12 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
             habits = habits,
             onOpen = { route = Route.Detail(it.id) },
             onCreate = { route = Route.Create() },
-            onPaywall = { route = Route.Paywall },
+            onPaywall = { route = Route.Paywall() },
             onAccount = { route = Route.Account },
             onShelf = { route = Route.Shelf }
         )
 
-        is Route.Paywall -> PaywallScreen(onClose = { route = Route.Home })
+        is Route.Paywall -> PaywallScreen(reason = r.reason, onClose = { route = Route.Home })
 
         is Route.Account -> AccountScreen(onBack = { route = Route.Home })
 
@@ -229,7 +230,8 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
             } else {
                 DetailScreen(
                     habit = habit,
-                    onBack = { route = Route.Home }
+                    onBack = { route = Route.Home },
+                    onPaywall = { reason -> route = Route.Paywall(reason) }
                 )
             }
         }
