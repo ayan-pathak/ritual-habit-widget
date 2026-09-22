@@ -58,6 +58,9 @@ import com.ayan.ritual.render.Mood
 import com.ayan.ritual.render.SlabModel
 import com.ayan.ritual.render.SlabRenderer
 import kotlin.math.roundToInt
+import com.ayan.ritual.data.Goal
+import com.ayan.ritual.data.Habit
+import java.time.LocalDate
 
 /**
  * A rendered card, sized to its box. The bitmap is cached against the model so
@@ -380,5 +383,67 @@ fun Field(
                 inner()
             }
         )
+    }
+}
+
+/**
+ * The thirty days, and what is left of the six.
+ *
+ * Six bars rather than a percentage, and spent ones filled in red, because a
+ * budget is something a person can hold in their head and act on. "Eighty per
+ * cent" is a grade, and the moment a habit app grades someone it has become
+ * the thing this one exists to be an alternative to.
+ *
+ * A spent day is never framed as damage. The bar fills, the grid keeps every
+ * square it had, and nothing resets.
+ */
+@Composable
+fun GoalBand(habit: Habit, today: LocalDate, modifier: Modifier = Modifier) {
+    val built = habit.builtEpochDay
+    Column(modifier.fillMaxWidth()) {
+        when {
+            built != null -> {
+                CapsLabel("Built")
+                Spacer(Modifier.height(7.dp))
+                Text(
+                    "${habit.totalDone} days kept, and still counting.",
+                    style = Body.copy(fontSize = 13.sp, color = InkSoft)
+                )
+            }
+
+            habit.goalOutOfReach(today) -> {
+                CapsLabel("The thirty")
+                Spacer(Modifier.height(7.dp))
+                Text(
+                    "All six missed days are spent, so this run cannot reach " +
+                        "thirty. Every square you have stays exactly where it is.",
+                    style = Body.copy(fontSize = 13.sp, color = InkSoft)
+                )
+            }
+
+            else -> {
+                val used = habit.goalMissed(today).coerceAtMost(Goal.ALLOWED_MISSES)
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.Bottom
+                ) {
+                    CapsLabel("Day ${habit.goalElapsed(today)} of ${Goal.DAYS}")
+                    CapsLabel("$used of ${Goal.ALLOWED_MISSES} missed days used")
+                }
+                Spacer(Modifier.height(9.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                    repeat(Goal.ALLOWED_MISSES) { i ->
+                        Box(
+                            Modifier
+                                .weight(1f)
+                                .height(5.dp)
+                                .clip(RoundedCornerShape(3.dp))
+                                .background(if (i < used) Red else InkFaint)
+                        )
+                    }
+                }
+            }
+        }
     }
 }

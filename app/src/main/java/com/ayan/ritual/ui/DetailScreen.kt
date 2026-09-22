@@ -98,7 +98,23 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
             Column(Modifier.weight(1f)) {
                 CapsLabel(habit.slot)
                 Spacer(Modifier.height(5.dp))
-                Text(habit.name, style = Display.copy(fontSize = 34.sp, lineHeight = 35.sp))
+                // The identity leads and the task sits under it, because the
+                // sentence is what someone came for and the task is only how
+                // it gets paid for. A habit written before identities existed
+                // has none, and falls back to leading with its name.
+                if (habit.identity.isNotBlank()) {
+                    Text(
+                        habit.identity,
+                        style = Display.copy(fontSize = 25.sp, lineHeight = 27.sp)
+                    )
+                    Spacer(Modifier.height(7.dp))
+                    Text(
+                        habit.name,
+                        style = Body.copy(fontSize = 13.sp, color = InkSoft)
+                    )
+                } else {
+                    Text(habit.name, style = Display.copy(fontSize = 34.sp, lineHeight = 35.sp))
+                }
             }
             MochiTile(
                 mood = model.mood,
@@ -122,6 +138,10 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
                 padDp = 18f
             )
         }
+
+        // ── The thirty ──────────────────────────────────────────────────────
+        GoalBand(habit, today, Modifier.padding(horizontal = 20.dp))
+        Spacer(Modifier.height(24.dp))
 
         // ── Tally ───────────────────────────────────────────────────────────
         Row(
