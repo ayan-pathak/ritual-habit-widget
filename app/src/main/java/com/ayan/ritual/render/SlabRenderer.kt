@@ -19,7 +19,7 @@ data class SlabModel(
     val totalDone: Int,
     val remaining: Int,
     val doneToday: Boolean,
-    val mood: Mood = Mood.AWAKE
+    val mood: Mood = Mood.RESTING
 )
 
 /**
@@ -79,7 +79,7 @@ object SlabRenderer {
         }
 
         // ── Layout ──────────────────────────────────────────────────────────
-        val headerH = if (cfg.header) dp(38f) else 0f
+        val headerH = if (cfg.header) dp(42f) else 0f
         val footerH = if (cfg.footer) dp(22f) else 0f
         val actionH = if (cfg.action) dp(ACTION_HEIGHT_DP) else 0f
 
@@ -118,22 +118,17 @@ object SlabRenderer {
             var textRight = w - pad
 
             if (cfg.cat) {
-                val px = dp(1.9f)
-                val catW = Cat.widthFor(px)
-                val catH = Cat.heightFor(px)
+                val catH = dp(30f)
+                val catW = Cat.widthFor(catH)
                 val boxW = catW + dp(11f)
                 val boxH = catH + dp(9f)
                 val boxL = w - pad - boxW
                 val box = RectF(boxL, pad - dp(2f), boxL + boxW, pad - dp(2f) + boxH)
                 p.color = if (lit) model.accent.block else Palette.INK
                 canvas.drawRoundRect(box, dp(10f), dp(10f), p)
-                Cat.draw(
-                    canvas,
-                    box.centerX() - catW / 2f,
-                    box.centerY() - catH / 2f,
-                    px,
-                    model.mood
-                )
+                // Standing on the bottom edge of the box, not floating in the
+                // middle of it: the same rule the app's MochiTile follows.
+                Cat.draw(canvas, box.centerX() - catW / 2f, box.bottom - catH, catH, model.mood)
                 textRight = boxL - dp(10f)
             } else {
                 // No cat: the streak takes the corner instead.
@@ -157,9 +152,11 @@ object SlabRenderer {
 
             if (cfg.cat) {
                 val streakPaint = paint(dp(8.5f), onBlock.withAlpha(170), Fonts.semiBold(), 0.10f)
+                // 14dp below the name's baseline rather than 10: at 8.5dp the
+                // caps line was sitting in the name's descenders.
                 canvas.drawText(
                     "${model.streak} DAY STREAK",
-                    pad, pad + dp(37f), streakPaint
+                    pad, pad + dp(41f), streakPaint
                 )
             }
         }

@@ -1,0 +1,24 @@
+rules_version = '2';
+
+// A ritual is private to the person keeping it, and that is the whole model.
+//
+// CloudSync writes one document per ritual at users/{uid}/habits/{id}, so the
+// only rule needed is that the signed-in uid matches the path. Nothing here is
+// shared, published, or readable by anyone else, and there is no shape of
+// query that reaches across accounts.
+//
+// Publish with:  firebase deploy --only firestore:rules
+// or paste into Firestore Database -> Rules in the console.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{uid}/habits/{habitId} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
+    // Anything else is nobody's business.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

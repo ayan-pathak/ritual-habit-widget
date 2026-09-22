@@ -134,7 +134,7 @@ class RitualWidgetProvider : AppWidgetProvider() {
                     totalDone = 0,
                     remaining = Habit.remainingIn(year, today),
                     doneToday = false,
-                    mood = Mood.AWAKE
+                    mood = Mood.RESTING
                 )
             }
 

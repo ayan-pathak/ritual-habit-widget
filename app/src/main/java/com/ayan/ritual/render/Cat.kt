@@ -1,116 +1,207 @@
 package com.ayan.ritual.render
 
 import android.graphics.Canvas
+import android.graphics.LinearGradient
 import android.graphics.Paint
-import android.graphics.RectF
+import android.graphics.Path
+import android.graphics.Shader
 
 /** What Mochi is doing, derived from the streak — never chosen for decoration. */
-enum class Mood { AWAKE, PLEASED, RESTING, LET_DOWN }
+enum class Mood {
+    AWAKE, PLEASED, RESTING, LET_DOWN;
+
+    /**
+     * The face this one flicks to for a moment while it is idling, or null
+     * for a face that holds.
+     *
+     * A shut-eyed face cannot blink, so the calm one does the opposite and
+     * opens its eyes now and then — which is where the wide-eyed drawing
+     * earns its place back. The grin holds, because a cat that has just been
+     * given its day is not looking around.
+     */
+    val glance: Mood?
+        get() = when (this) {
+            RESTING -> AWAKE
+            AWAKE, LET_DOWN -> RESTING
+            PLEASED -> null
+        }
+
+    /** Whether this face has eyes to shut. Opening them takes longer. */
+    val opensEyes: Boolean get() = this == AWAKE || this == LET_DOWN
+}
 
 /**
- * Mochi, a 20x18 bitmap.
+ * Mochi, four drawn portraits, replayed as vector paths.
  *
- * Only the eye and mouth rows change between moods, so the silhouette never
- * shifts — that is what keeps a pixel mascot from looking redrawn each time.
+ * The four moods are one drawing with a different face. They come off a 2x2
+ * sheet, and `tools/mochi.py` windows each quadrant out of it and registers
+ * them against each other, so the head sits on the same coordinates in every
+ * mood: the silhouette never shifts and he never looks redrawn between them.
+ *
+ * The paths live in [MochiArt], generated from `art/mochi` by that same
+ * script, which also writes the Swift the iOS side reads — so the shapes the
+ * two platforms draw come out of one conversion and cannot drift.
+ *
+ * **Why this is not a VectorDrawable.** The drawing is built from shapes that
+ * abut rather than overlap, and each one antialiases its own edge, so the
+ * background shows through every boundary as a hairline. Covering it means
+ * growing each shape by half a pixel — and it has to be half a *device* pixel,
+ * because the seam is one device pixel wide however far the art is scaled. A
+ * VectorDrawable's stroke is in viewport units and scales with the drawing, so
+ * a width that closes the seam at 30dp is a fat outline at 176px. Replaying
+ * the paths means the stroke can be set per draw, from the scale in hand.
  */
 object Cat {
 
-    const val COLS = 20
-    const val ROWS = 18
+    /** Width over height, so a caller can size him from either one. */
+    const val ASPECT = MochiArt.VIEW_W / MochiArt.VIEW_H
 
-    private val BASE = arrayOf(
-        "....KK........KK....",
-        "...KDGK......KGDK...",
-        "...KGPK......KPGK...",
-        "..KGGPGKKKKKKGPGGK..",
-        "..KGGGGGGGGGGGGGGK..",
-        ".KGGGGGGGGGGGGGGGGK.",
-        ".KGGGGGGGGGGGGGGGGK.",
-        ".KGEEEGGGGGGGGEEEGK.",
-        ".KGEBEGGGGGGGGEBEGK.",
-        ".KGEEEGGGGGGGGEEEGK.",
-        ".KGGGGGGGPPGGGGGGGK.",
-        ".KGGGGGGKPPKGGGGGGK.",
-        "..KGGGGGGKKGGGGGGK..",
-        "..KKGGGGGGGGGGGGKK..",
-        "....KGGGGGGGGGGK....",
-        "....KGGGGGGGGGGK....",
-        "....KGGGGGGGGGGK....",
-        "....KKKKKKKKKKKK...."
+    /** Width Mochi occupies when he is drawn [height] tall. */
+    fun widthFor(height: Float) = height * ASPECT
+
+    // ── The art, parsed once ────────────────────────────────────────────
+
+    private class Item(
+        val path: Path,
+        val alpha: Int,
+        val solid: Int,
+        val gradient: IntArray?,
+        val x0: Float, val y0: Float, val x1: Float, val y1: Float
     )
 
-    private fun rowsFor(mood: Mood): Array<String> {
-        val r = BASE.copyOf()
-        when (mood) {
-            Mood.AWAKE -> Unit
-            Mood.PLEASED -> {
-                r[7] = ".KGGKGGGGGGGGGGKGGK."
-                r[8] = ".KGKGKGGGGGGGGKGKGK."
-                r[9] = ".KGGGGGGGGGGGGGGGGK."
-                r[11] = ".KGGGGGKKPPKKGGGGGK."
-            }
-            Mood.RESTING -> {
-                r[7] = ".KGGGGGGGGGGGGGGGGK."
-                r[8] = ".KGKKKGGGGGGGGKKKGK."
-                r[9] = ".KGGGGGGGGGGGGGGGGK."
-            }
-            Mood.LET_DOWN -> {
-                r[7] = ".KGKGKGGGGGGGGKGKGK."
-                r[8] = ".KGGKGGGGGGGGGGKGGK."
-                r[9] = ".KGGGGGGGGGGGGGGGGK."
-                r[12] = "..KGGGGKGGGGKGGGGK.."
-            }
-        }
-        return r
+    private val cache = HashMap<Mood, List<Item>>(4)
+
+    private fun source(mood: Mood) = when (mood) {
+        Mood.AWAKE -> MochiArt.awake
+        Mood.PLEASED -> MochiArt.pleased
+        Mood.RESTING -> MochiArt.resting
+        Mood.LET_DOWN -> MochiArt.letDown
     }
 
-    private fun colorOf(ch: Char): Int = when (ch) {
-        'K' -> 0xFF12120F.toInt()   // outline
-        'D' -> 0xFF56564E.toInt()   // ear shadow
-        'G' -> 0xFF8A8A80.toInt()   // coat
-        'P' -> 0xFFE0A3A3.toInt()   // ear pink, nose
-        'E' -> 0xFFCFE85F.toInt()   // eye — carries the brand colour
-        'B' -> 0xFF12120F.toInt()   // pupil
-        else -> 0
+    private fun items(mood: Mood): List<Item> = cache.getOrPut(mood) {
+        source(mood).lineSequence().mapNotNull { line ->
+            if (line.isEmpty()) return@mapNotNull null
+            val f = line.split('\t')
+            when (f.getOrNull(0)) {
+                "S" -> Item(
+                    parse(f[3]), alphaOf(f[2]), f[1].toLong(16).toInt(),
+                    null, 0f, 0f, 0f, 0f
+                )
+                "G" -> Item(
+                    parse(f[8]), alphaOf(f[7]), 0,
+                    intArrayOf(f[1].toLong(16).toInt(), f[2].toLong(16).toInt()),
+                    f[3].toFloat(), f[4].toFloat(), f[5].toFloat(), f[6].toFloat()
+                )
+                else -> null
+            }
+        }.toList()
     }
 
-    /** Width this cat occupies when each pixel is [px] wide. */
-    fun widthFor(px: Float) = COLS * px
-
-    /** Height this cat occupies when each pixel is [px] wide. */
-    fun heightFor(px: Float) = ROWS * px
+    private fun alphaOf(text: String) =
+        (text.toFloat().coerceIn(0f, 1f) * 255f).toInt()
 
     /**
-     * Draws Mochi with his top-left at [left], [top], one bitmap pixel per
-     * [px] device pixels. Pixels are drawn a hair oversized so no seams show
-     * between them at fractional scales.
+     * Absolute `M`/`L`/`C`/`Z` only, which is all the converter ever emits.
+     * Scanned over the raw chars rather than split into tokens, because this
+     * runs over tens of thousands of numbers the first time a mood is drawn.
      */
-    fun draw(canvas: Canvas, left: Float, top: Float, px: Float, mood: Mood) {
-        val paint = Paint()
-        val bleed = 0.5f
-        val rows = rowsFor(mood)
-        val rect = RectF()
-        for (y in 0 until ROWS) {
-            val row = rows[y]
-            for (x in 0 until COLS) {
-                val c = colorOf(row[x])
-                if (c == 0) continue
-                paint.color = c
-                rect.set(
-                    left + x * px,
-                    top + y * px,
-                    left + x * px + px + bleed,
-                    top + y * px + px + bleed
-                )
-                canvas.drawRect(rect, paint)
+    private fun parse(d: String): Path {
+        val path = Path()
+        var i = 0
+        var startX = 0f
+        var startY = 0f
+
+        fun number(): Float {
+            while (i < d.length && (d[i] == ' ' || d[i] == ',')) i++
+            var sign = 1f
+            if (i < d.length && d[i] == '-') { sign = -1f; i++ }
+            var value = 0.0
+            while (i < d.length && d[i] in '0'..'9') {
+                value = value * 10 + (d[i] - '0'); i++
+            }
+            if (i < d.length && d[i] == '.') {
+                i++
+                var scale = 0.1
+                while (i < d.length && d[i] in '0'..'9') {
+                    value += (d[i] - '0') * scale
+                    scale /= 10
+                    i++
+                }
+            }
+            return sign * value.toFloat()
+        }
+
+        while (i < d.length) {
+            when (d[i]) {
+                'M' -> {
+                    i++
+                    startX = number(); startY = number()
+                    path.moveTo(startX, startY)
+                }
+                'L' -> { i++; path.lineTo(number(), number()) }
+                'C' -> {
+                    i++
+                    path.cubicTo(number(), number(), number(), number(), number(), number())
+                }
+                'Z', 'z' -> { i++; path.close() }
+                else -> i++
             }
         }
+        return path
     }
 
-    /** The mood the app should show given today's state and the running streak. */
-    fun moodFor(doneToday: Boolean, streak: Int, missedYesterday: Boolean): Mood = when {
-        doneToday -> Mood.PLEASED
-        missedYesterday && streak == 0 -> Mood.LET_DOWN
-        else -> Mood.AWAKE
+    // ── Drawing ─────────────────────────────────────────────────────────
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+    /**
+     * Draws Mochi into the box whose top-left is ([left], [top]) and whose
+     * height is [height].
+     */
+    fun draw(canvas: Canvas, left: Float, top: Float, height: Float, mood: Mood) {
+        if (height <= 0f) return
+        val scale = height / MochiArt.VIEW_H
+        canvas.save()
+        canvas.translate(left, top)
+        canvas.scale(scale, scale)
+
+        // One device pixel, expressed in the coordinates now in force. Half of
+        // it lands outside each shape, which is exactly the seam.
+        paint.style = Paint.Style.FILL_AND_STROKE
+        paint.strokeWidth = 1f / scale
+        paint.strokeJoin = Paint.Join.ROUND
+
+        for (item in items(mood)) {
+            if (item.gradient == null) {
+                paint.shader = null
+                paint.color = item.solid
+            } else {
+                paint.color = 0xFF000000.toInt()
+                paint.shader = LinearGradient(
+                    item.x0, item.y0, item.x1, item.y1,
+                    item.gradient[0], item.gradient[1], Shader.TileMode.CLAMP
+                )
+            }
+            paint.alpha = item.alpha
+            canvas.drawPath(item.path, paint)
+        }
+        paint.shader = null
+        canvas.restore()
     }
+
+    /**
+     * The mood the app should show given today's state and the running streak.
+     *
+     * Both faces smile with their eyes closed. [Mood.AWAKE]'s wide green eyes
+     * read as a stare at the sizes he is actually drawn at — a 24dp badge is
+     * two bright discs and not much else — so they are not used, and neither
+     * is [Mood.LET_DOWN]: a sad cat is a punishment for a missed day, and a
+     * missed day is already its own empty square.
+     *
+     * What is left still carries the reward. [Mood.RESTING] is a calm closed
+     * smile and [Mood.PLEASED] is a blushing grin, so marking today still
+     * changes his face, and that change still only ever answers state.
+     */
+    fun moodFor(doneToday: Boolean, streak: Int, missedYesterday: Boolean): Mood =
+        if (doneToday) Mood.PLEASED else Mood.RESTING
 }

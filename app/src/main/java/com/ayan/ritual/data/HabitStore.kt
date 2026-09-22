@@ -28,6 +28,15 @@ object HabitStore {
     private var loaded = false
     private var bindings: MutableMap<Int, String> = mutableMapOf()
 
+    /**
+     * Called after every local change, so a mirror can follow.
+     *
+     * Nothing set here may block or fail a write: the device's own store is
+     * the source of truth, and marking a day has to work with no network and
+     * no account.
+     */
+    var onChanged: (() -> Unit)? = null
+
     private fun prefs(context: Context) =
         context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
 
@@ -46,7 +55,13 @@ object HabitStore {
         return _habits.value.firstOrNull { it.id == id }
     }
 
-    fun create(context: Context, name: String, slot: String, accentIndex: Int): Habit {
+    fun create(
+        context: Context,
+        name: String,
+        slot: String,
+        accentIndex: Int,
+        identity: String = ""
+    ): Habit {
         ensureLoaded(context)
         val habit = Habit(
             id = UUID.randomUUID().toString(),
@@ -54,11 +69,38 @@ object HabitStore {
             slot = slot.trim().ifEmpty { "Daily" },
             accentIndex = accentIndex,
             createdEpochDay = LocalDate.now().toEpochDay(),
-            done = emptySet()
+            done = emptySet(),
+            identity = identity.trim(),
+            // Day one is today. The thirty start when the ritual does, not
+            // when the first day is marked, or a slow start would be free.
+            goalStartEpochDay = LocalDate.now().toEpochDay()
         )
         _habits.value = _habits.value + habit
         persist(context)
         return habit
+    }
+
+    /** Replaces everything, for a merge arriving from the cloud. */
+    fun replaceAll(context: Context, habits: List<Habit>) {
+        ensureLoaded(context)
+        _habits.value = habits
+        prefs(context).edit()
+            .putString(KEY_HABITS, encodeHabits(habits))
+            .putString(KEY_WIDGETS, encodeBindings(bindings))
+            .apply()
+    }
+
+    /**
+     * Puts a ritual on the shelf.
+     *
+     * Only the day is recorded. Everything the shelf shows is derived from
+     * the grid it already had, so claiming adds a fact and destroys nothing.
+     */
+    fun markBuilt(context: Context, id: String, day: LocalDate = LocalDate.now()) {
+        ensureLoaded(context)
+        val found = _habits.value.firstOrNull { it.id == id } ?: return
+        if (found.isBuilt) return
+        update(context, found.copy(builtEpochDay = day.toEpochDay()))
     }
 
     fun update(context: Context, habit: Habit) {
@@ -79,10 +121,17 @@ object HabitStore {
         ensureLoaded(context)
         val habit = _habits.value.firstOrNull { it.id == id } ?: return null
         val day = date.toEpochDay()
+        val marking = !habit.done.contains(day)
         val next = habit.copy(
-            done = if (habit.done.contains(day)) habit.done - day else habit.done + day
+            done = if (marking) habit.done + day else habit.done - day
         )
         update(context, next)
+        // The widget marks days too, and it can start the process cold, so the
+        // clock on the unlock offer is started here rather than in the UI.
+        if (marking) {
+            Onboarding.load(context)
+            Onboarding.rememberFirstMark(date)
+        }
         return next
     }
 
@@ -115,6 +164,7 @@ object HabitStore {
             .putString(KEY_HABITS, encodeHabits(_habits.value))
             .putString(KEY_WIDGETS, encodeBindings(bindings))
             .apply()
+        onChanged?.invoke()
     }
 
     private fun encodeHabits(list: List<Habit>): String {
@@ -129,6 +179,9 @@ object HabitStore {
                     .put("slot", h.slot)
                     .put("accent", h.accentIndex)
                     .put("created", h.createdEpochDay)
+                    .put("identity", h.identity)
+                    .put("goalStart", h.goalStartEpochDay)
+                    .put("built", h.builtEpochDay ?: JSONObject.NULL)
                     .put("done", days)
             )
         }
@@ -141,6 +194,7 @@ object HabitStore {
             val arr = JSONArray(raw)
             (0 until arr.length()).map { i ->
                 val o = arr.getJSONObject(i)
+                val created = o.optLong("created", LocalDate.now().toEpochDay())
                 val daysArr = o.optJSONArray("done") ?: JSONArray()
                 val days = HashSet<Long>(daysArr.length())
                 for (j in 0 until daysArr.length()) days.add(daysArr.getLong(j))
@@ -149,8 +203,14 @@ object HabitStore {
                     name = o.optString("name", "Untitled"),
                     slot = o.optString("slot", "Daily"),
                     accentIndex = o.optInt("accent", 0),
-                    createdEpochDay = o.optLong("created", LocalDate.now().toEpochDay()),
-                    done = days
+                    createdEpochDay = created,
+                    done = days,
+                    // Everything below arrived after the first release, so a
+                    // habit written by an older build reads back as one with
+                    // no identity and a goal that started when it did.
+                    identity = o.optString("identity", ""),
+                    goalStartEpochDay = o.optLong("goalStart", created),
+                    builtEpochDay = if (o.isNull("built")) null else o.optLong("built")
                 )
             }
         }.getOrDefault(emptyList())

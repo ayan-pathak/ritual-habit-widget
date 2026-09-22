@@ -37,7 +37,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ayan.ritual.billing.Unlock
 import com.ayan.ritual.data.Habit
+import com.ayan.ritual.cloud.CloudSync
 import com.ayan.ritual.data.HabitStore
 import com.ayan.ritual.render.MONTH_INITIALS
 import com.ayan.ritual.render.accentAt
@@ -46,7 +48,7 @@ import com.ayan.ritual.widget.RitualWidgetProvider
 import java.time.LocalDate
 
 @Composable
-fun DetailScreen(habit: Habit, onBack: () -> Unit) {
+fun DetailScreen(habit: Habit, onBack: () -> Unit, onPaywall: (PaywallReason) -> Unit = {}) {
     val context = LocalContext.current
     val today = LocalDate.now()
     val accent = accentAt(habit.accentIndex)
@@ -97,12 +99,28 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
             Column(Modifier.weight(1f)) {
                 CapsLabel(habit.slot)
                 Spacer(Modifier.height(5.dp))
-                Text(habit.name, style = Display.copy(fontSize = 34.sp, lineHeight = 35.sp))
+                // The identity leads and the task sits under it, because the
+                // sentence is what someone came for and the task is only how
+                // it gets paid for. A habit written before identities existed
+                // has none, and falls back to leading with its name.
+                if (habit.identity.isNotBlank()) {
+                    Text(
+                        habit.identity,
+                        style = Display.copy(fontSize = 25.sp, lineHeight = 27.sp)
+                    )
+                    Spacer(Modifier.height(7.dp))
+                    Text(
+                        habit.name,
+                        style = Body.copy(fontSize = 13.sp, color = InkSoft)
+                    )
+                } else {
+                    Text(habit.name, style = Display.copy(fontSize = 34.sp, lineHeight = 35.sp))
+                }
             }
             MochiTile(
                 mood = model.mood,
                 tile = Color(accent.block),
-                pixel = 3.dp,
+                height = 48.dp,
                 corner = 18.dp,
                 inset = 11.dp
             )
@@ -121,6 +139,10 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
                 padDp = 18f
             )
         }
+
+        // ── The thirty ──────────────────────────────────────────────────────
+        GoalBand(habit, today, Modifier.padding(horizontal = 20.dp))
+        Spacer(Modifier.height(24.dp))
 
         // ── Tally ───────────────────────────────────────────────────────────
         Row(
@@ -144,7 +166,12 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
         Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 28.dp)) {
             InkPill(
                 label = "Share streak",
-                onClick = { StoryShare.shareStreak(context, model) },
+                // Sharing is one of the three things the unlock buys, and the
+                // wall it opens says so in the words of the thing just tapped.
+                onClick = {
+                    if (Unlock.unlocked) StoryShare.shareStreak(context, model)
+                    else onPaywall(PaywallReason.SHARE)
+                },
                 modifier = Modifier.fillMaxWidth(),
                 background = Color(accent.block),
                 content = Ink,
@@ -168,8 +195,10 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
             )
             Spacer(Modifier.height(8.dp))
             Text(
-                if (StoryShare.isInstagramInstalled(context))
-                    "Opens Instagram Stories"
+                if (!Unlock.unlocked)
+                    "Part of the unlock"
+                else if (StoryShare.isInstagramInstalled(context))
+                    "Opens Instagram Stories, with the link copied for a sticker"
                 else
                     "Instagram isn't installed — you'll get the share sheet",
                 style = Body.copy(fontSize = 12.sp, color = InkFaint),
@@ -236,6 +265,7 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit) {
                 InkPill(
                     label = "Delete forever",
                     onClick = {
+                        CloudSync.markDeleted(habit.id)
                         HabitStore.delete(context, habit.id)
                         RitualWidgetProvider.refreshAll(context)
                         onBack()

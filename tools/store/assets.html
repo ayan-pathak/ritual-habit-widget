@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Ritual store assets</title>
+
+<!--
+  Every picture Google Play gets, drawn by the app's own renderers.
+
+  docs/assets/ritual.js is a port of Palette.kt, GridGeo.kt, Habit.kt, Cat.kt,
+  SlabRenderer.kt and ShareCardRenderer.kt, so the cards and the cat in these
+  assets are the same pixels the phone draws rather than a designer's idea of
+  them. Nothing here is a mockup of the product; the product is in the frame.
+
+  One page, one asset at a time: ?a=icon, ?a=feature, ?a=s1 … ?a=s6. The size
+  comes from SIZES below and tools/store/shoot.mjs sets the viewport to match,
+  so a screenshot of the page is the asset at its exact pixel size.
+-->
+
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&display=swap">
+<style>
+  :root {
+    --cream: #E7E3D4;
+    --paper: #F4F2EA;
+    --ink:   #12120F;
+    --lime:  #C9F73F;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body {
+    font-family: Archivo, system-ui, sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    overflow: hidden;
+  }
+  canvas { display: block; }
+
+  .frame {
+    width: 100%; height: 100%;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  /* ── Screenshots: caption at the top, the product underneath ─────────
+     Play shows these at thumbnail size first, so the claim is set large
+     enough to survive that and the picture is given the rest. */
+  .shot { padding: 96px 72px 72px; background: var(--cream); }
+  .shot > :not(.stage) { flex: none; }
+  .shot.dark { background: var(--ink); color: var(--paper); }
+  .shot .eyebrow {
+    font-size: 30px; font-weight: 700; letter-spacing: .22em;
+    text-transform: uppercase; opacity: .5; margin-bottom: 26px;
+  }
+  .shot h1 {
+    margin: 0; font-size: 92px; line-height: .98; font-weight: 800;
+    letter-spacing: -0.035em; max-width: 15ch;
+  }
+  .shot .sub {
+    margin: 26px 0 0; font-size: 34px; line-height: 1.4; font-weight: 500;
+    opacity: .58; max-width: 26ch;
+  }
+  .stage {
+    flex: 1; min-height: 0; margin-top: 64px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .stage.bottom { align-items: flex-end; }
+
+  /* ── The phone, for the widget and the story ─────────────────────── */
+  .phone {
+    width: 760px; background: #2A2823; border-radius: 74px;
+    padding: 34px 26px; display: flex; flex-direction: column; gap: 28px;
+  }
+  .phone .bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 0 18px; font: 700 26px/1 Archivo, sans-serif; color: #F2EFE3;
+  }
+  .phone .bars { display: flex; gap: 6px; align-items: flex-end; height: 24px; }
+  .phone .bars i { width: 8px; border-radius: 3px; background: #F2EFE3; display: block; }
+  .icons { display: flex; justify-content: space-between; padding: 0 10px; }
+  .icons i {
+    width: 116px; height: 116px; border-radius: 32px;
+    background: rgba(244, 242, 234, .13); display: block;
+  }
+  .phone canvas { width: 100%; border-radius: 40px; }
+
+  /* The story sits in a phone with no home screen around it. */
+  .story-phone {
+    width: 620px; background: #2A2823; border-radius: 74px; padding: 18px;
+  }
+  .story { position: relative; border-radius: 58px; overflow: hidden; background: var(--cream); }
+  .story canvas { width: 100%; }
+  .story .chrome {
+    position: absolute; left: 0; right: 0; padding: 22px 24px;
+    background: rgba(18, 18, 15, .38);
+    display: flex; flex-direction: column; gap: 18px;
+  }
+  .story .chrome.top { top: 0; }
+  .story .chrome.bottom { bottom: 0; flex-direction: row; align-items: center; }
+  .story .segs { display: flex; gap: 6px; }
+  .story .segs i { flex: 1; height: 5px; border-radius: 999px; background: rgba(255,255,255,.35); }
+  .story .segs i.on { background: #fff; }
+  .story .who { display: flex; align-items: center; gap: 16px; }
+  .story .av { width: 48px; height: 48px; border-radius: 999px; background: rgba(255,255,255,.6); }
+  .story .name { font: 600 21px/1 Archivo, sans-serif; color: #fff; }
+  .story .when { font: 600 21px/1 Archivo, sans-serif; color: rgba(255,255,255,.6); }
+  .story .reply {
+    flex: 1; border-radius: 999px; padding: 18px 26px;
+    box-shadow: inset 0 0 0 2px rgba(255,255,255,.5);
+    font: 600 21px/1 Archivo, sans-serif; color: rgba(255,255,255,.8);
+  }
+
+  .cards { display: flex; flex-direction: column; gap: 34px; width: 100%; }
+  .cards canvas { width: 100%; border-radius: 44px; }
+  .tally {
+    display: flex; gap: 70px; margin-bottom: 34px;
+    font-variant-numeric: tabular-nums;
+  }
+  .figure { display: flex; flex-direction: column; gap: 8px; }
+  .figure b { font-size: 88px; font-weight: 800; letter-spacing: -0.04em; line-height: 1; }
+  .figure span {
+    font-size: 25px; font-weight: 700; letter-spacing: .16em;
+    text-transform: uppercase; opacity: .5;
+  }
+
+  .price { display: flex; align-items: baseline; gap: 28px; }
+  .price b { font-size: 150px; font-weight: 800; letter-spacing: -0.05em; line-height: 1; }
+  .price span { font-size: 40px; font-weight: 700; opacity: .55; }
+  .rule { height: 2px; background: currentColor; opacity: .14; margin: 46px 0; }
+  .lines { display: flex; flex-direction: column; gap: 22px; font-size: 34px; }
+  .lines div { display: flex; align-items: center; gap: 22px; }
+  .lines i {
+    width: 22px; height: 22px; border-radius: 6px; background: var(--lime);
+    display: block; flex: none;
+  }
+
+  /* ── Icon: the launcher's own geometry, at store size ─────────────── */
+  .icon { width: 100%; height: 100%; background: var(--lime); }
+
+  /* ── Feature graphic ─────────────────────────────────────────────── */
+  .feature {
+    width: 100%; height: 100%; background: var(--lime); color: var(--ink);
+    display: flex; flex-direction: row; align-items: center;
+    padding: 0 0 0 76px; gap: 40px;
+    overflow: hidden;
+  }
+  .feature h1 {
+    margin: 0; font-size: 104px; font-weight: 800; letter-spacing: -0.045em;
+    line-height: .95;
+  }
+  .feature p {
+    margin: 20px 0 0; font-size: 33px; font-weight: 600; opacity: .62;
+    max-width: 17ch; line-height: 1.25;
+  }
+  .feature .art { margin-left: auto; align-self: flex-end; display: flex; }
+</style>
+</head>
+<body>
+
+<div id="root" class="frame"></div>
+
+<script src="../../docs/assets/mochi.js"></script>
+<script src="../../docs/assets/ritual.js"></script>
+<script>
+(() => {
+"use strict";
+
+/** Every asset Play asks for, at the size it asks for it. */
+const SIZES = {
+  icon:    [512, 512],
+  feature: [1024, 500],
+  s1: [1080, 1920], s2: [1080, 1920], s3: [1080, 1920],
+  s4: [1080, 1920], s5: [1080, 1920], s6: [1080, 1920],
+};
+
+const which = new URLSearchParams(location.search).get("a") || "s1";
+const [W, H] = SIZES[which];
+for (const node of [document.documentElement, document.body]) {
+  node.style.width = W + "px";
+  node.style.height = H + "px";
+}
+
+/* ── A year that looks lived in ────────────────────────────────────────
+   Each of these gets its own seed, so six cards side by side read as six
+   people's years rather than one pattern in six colours. */
+function model(o) {
+  const now = new Date(), year = now.getFullYear();
+  const jan = Date.UTC(year, 0, 1);
+  const today = Math.floor(Date.UTC(year, now.getMonth(), now.getDate()) / 86400000);
+  const doy = Math.floor((Date.UTC(year, now.getMonth(), now.getDate()) - jan) / 86400000) + 1;
+  const len = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
+  const hash = d => {
+    const x = Math.sin(d * 127.1 + (o.seed || 3) * 97.3) * 43758.5453;
+    return x - Math.floor(x);
+  };
+  const from = Math.max(1, Math.round(doy * (1 - (o.span == null ? .95 : o.span))));
+  const done = new Set();
+  for (let d = from; d <= doy; d++) if (hash(d) < (o.pct == null ? .82 : o.pct)) done.add(d);
+  const run = o.run == null ? 9 : o.run;
+  for (let d = doy - run + 1; d <= doy; d++) if (d >= 1) done.add(d);
+  if (!o.marked) done.delete(doy);
+
+  let streak = 0;
+  for (let d = o.marked ? doy : doy - 1; d >= 1 && done.has(d); d--) streak++;
+  let best = 0, runLen = 0;
+  for (let d = 1; d <= doy; d++) {
+    if (done.has(d)) { runLen++; if (runLen > best) best = runLen; } else runLen = 0;
+  }
+
+  return {
+    m: {
+      title: o.title || "Read before sleep", slot: o.slot || "Evening",
+      accent: Ritual.accentAt(o.accent || 0),
+      year, today, doneDaysOfYear: done, streak,
+      totalDone: done.size, remaining: len - doy,
+      doneToday: !!o.marked, mood: o.marked ? "pleased" : "resting",
+    },
+    days: done.size, best, doy, left: len - doy,
+  };
+}
+
+/** A card canvas at a given pixel width. */
+function card(width, opts, cfg) {
+  const c = document.createElement("canvas");
+  const ratio = (cfg && cfg.ratio) || 353 / 172;
+  const h = Math.round(width / ratio);
+  c.width = width; c.height = h;
+  c.style.width = width + "px";
+  Ritual.Slab.draw(c.getContext("2d"), width, h,
+                   opts.m ? opts.m : opts, Object.assign({ scale: width / 353 }, cfg || {}));
+  return c;
+}
+
+/** Mochi standing on the bottom edge of whatever holds him. */
+function cat(height, mood) {
+  const c = document.createElement("canvas");
+  const w = Math.ceil(Ritual.Cat.widthFor(height));
+  c.width = w; c.height = Math.ceil(height);
+  c.style.width = w + "px"; c.style.height = Math.ceil(height) + "px";
+  Ritual.Cat.draw(c.getContext("2d"), 0, 0, height, mood || "pleased", 1);
+  return c;
+}
+
+const el = (tag, cls, html) => {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (html != null) n.innerHTML = html;
+  return n;
+};
+
+/** Caption block, then a stage for the picture. */
+function shot(opts) {
+  const root = document.getElementById("root");
+  root.classList.add("shot");
+  if (opts.dark) root.classList.add("dark");
+  if (opts.eyebrow) root.append(el("p", "eyebrow", opts.eyebrow));
+  root.append(el("h1", null, opts.title));
+  if (opts.sub) root.append(el("p", "sub", opts.sub));
+  const stage = el("div", "stage" + (opts.bottom ? " bottom" : ""));
+  root.append(stage);
+  return stage;
+}
+
+function phone(cardCanvas) {
+  const box = el("div", "phone");
+  const bar = el("div", "bar", "<span>9:41</span>");
+  const bars = el("span", "bars");
+  [10, 14, 18, 24].forEach(h => {
+    const i = document.createElement("i");
+    i.style.height = h + "px";
+    bars.append(i);
+  });
+  bar.append(bars);
+  const row = () => {
+    const r = el("div", "icons");
+    for (let i = 0; i < 4; i++) r.append(document.createElement("i"));
+    return r;
+  };
+  box.append(bar, row(), cardCanvas, row());
+  return box;
+}
+
+/* ── The assets ────────────────────────────────────────────────────── */
+const build = {
+
+  /**
+   * The launcher icon at store size, off tools/mochi.py's own numbers: the
+   * head box, centred at (54, 52) of the 108 canvas. The store icon and the
+   * icon on the phone are the same drawing at two sizes.
+   *
+   * The width is the one thing that differs, and it has to. A launcher masks
+   * the icon to a circle, so mochi.py sizes the head to the 66dp that always
+   * survives and lets the chest run off the canvas to be cropped. Play masks
+   * nothing but the corners, so the same number leaves a band of lime under
+   * his chest and he floats in the square. He is meant to grow out of the
+   * bottom edge of whatever holds him, so here the head is wider and the
+   * chest runs off the bottom the way the mask would have cut it.
+   */
+  icon() {
+    const K = 512 / 108;
+    const HEAD = [69.9, 7.4, 794.8, 644.3];
+    const s = (76 / (HEAD[2] - HEAD[0])) * K;
+    const cx = (HEAD[0] + HEAD[2]) / 2, cy = (HEAD[1] + HEAD[3]) / 2;
+
+    const c = document.createElement("canvas");
+    c.width = 512; c.height = 512;
+    c.style.width = "512px"; c.style.height = "512px";
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = Ritual.LIME;
+    ctx.fillRect(0, 0, 512, 512);
+    Ritual.Cat.draw(ctx, 54 * K - s * cx, 52 * K - s * cy,
+                    s * Ritual.Cat.VH, "pleased", 1);
+    const root = document.getElementById("root");
+    root.classList.add("icon");
+    root.append(c);
+  },
+
+  feature() {
+    const root = document.getElementById("root");
+    root.classList.add("feature");
+    const copy = el("div");
+    copy.append(el("h1", null, "Ritual"));
+    copy.append(el("p", null, "A year of habits, on your home screen."));
+    const art = el("div", "art");
+    art.append(cat(400, "pleased"));
+    root.append(copy, art);
+  },
+
+  // 1. What it is and where it lives.
+  s1() {
+    const stage = shot({
+      eyebrow: "Habit tracker",
+      title: "Your whole year, on your home screen.",
+      sub: "One tap fills today. No app to open, no reminder to dismiss.",
+    });
+    stage.append(phone(card(708, model({ marked: false, run: 9 }),
+                           { action: true, ratio: 361 / 156 })));
+  },
+
+  // 2. The flip, which is the whole reward.
+  s2() {
+    const stage = shot({
+      eyebrow: "One tap a day",
+      title: "Tap it, and the card flips to ink.",
+      sub: "A glance at your home screen tells you what you have already done today.",
+    });
+    const wrap = el("div", "cards");
+    wrap.append(card(936, model({ marked: false, run: 9 })));
+    wrap.append(card(936, model({ marked: true, run: 9 })));
+    stage.append(wrap);
+  },
+
+  // 3. The thing every other tracker punishes you for.
+  s3() {
+    const y = model({ marked: true, run: 21, span: .96, pct: .74 });
+    const stage = shot({
+      eyebrow: "No streaks to break",
+      title: "Miss a day. Nothing resets.",
+      sub: "That day stays empty and every other square stays exactly where it was.",
+    });
+    const wrap = el("div", "cards");
+    const tally = el("div", "tally");
+    [[y.days, "days kept"], [y.best, "longest run"], [y.left, "squares left"]]
+      .forEach(([n, label]) => {
+        const f = el("div", "figure");
+        f.append(el("b", null, String(n)), el("span", null, label));
+        wrap.append();
+        tally.append(f);
+      });
+    wrap.append(tally, card(936, y, { ratio: 353 / 150 }));
+    stage.append(wrap);
+  },
+
+  // 4. What the $4.99 buys, shown rather than stated.
+  s4() {
+    const stage = shot({
+      eyebrow: "As many as you like",
+      title: "Every habit gets its own colour.",
+      sub: "And its own time of day, and its own widget.",
+    });
+    const wrap = el("div", "cards");
+    [
+      { title: "Morning run",     slot: "Morning", accent: 1, seed: 11, run: 3,  span: .62, pct: .71 },
+      { title: "Practice guitar", slot: "Evening", accent: 2, seed: 19, run: 14, span: .81, pct: .9 },
+      { title: "No phone in bed", slot: "Night",   accent: 3, seed: 27, run: 5,  span: .44, pct: .66 },
+    ].forEach(o => wrap.append(card(872, model(o))));
+    stage.append(wrap);
+  },
+
+  // 5. Proof, which is what makes people keep going.
+  s5() {
+    const stage = shot({
+      eyebrow: "Share it",
+      title: "Proof you can put in front of someone.",
+      sub: "One tap turns your year into a story card for Instagram.",
+    });
+    const box = el("div", "story-phone");
+    const story = el("div", "story");
+    const c = document.createElement("canvas");
+    const w = 584, h = Math.round(w * (Ritual.Story.H / Ritual.Story.W));
+    c.width = w; c.height = h;
+    Ritual.Story.paint(c, h, model({ marked: true, run: 10 }).m);
+    c.style.width = w + "px";
+    const top = el("div", "chrome top");
+    const segs = el("span", "segs", "<i class='on'></i><i></i><i></i><i></i>");
+    const who = el("span", "who",
+      "<span class='av'></span><span class='name'>your story</span><span class='when'>now</span>");
+    top.append(segs, who);
+    const bottom = el("div", "chrome bottom");
+    bottom.append(el("span", "reply", "Send message"));
+    story.append(top, c, bottom);
+    box.append(story);
+    stage.append(box);
+  },
+
+  // 6. The price, said plainly, with the cat who has been there all along.
+  s6() {
+    const stage = shot({
+      dark: true,
+      eyebrow: "Pricing",
+      title: "Pay once. Or never.",
+      bottom: true,
+    });
+    const root = document.getElementById("root");
+    const block = el("div");
+    block.style.cssText = "margin-top:40px";
+    const price = el("div", "price");
+    price.append(el("b", null, "$4.99"), el("span", null, "one time, for unlimited habits"));
+    const lines = el("div", "lines");
+    [
+      "Your first habit is free, forever",
+      "No subscription and no renewal",
+      "No ads, no trackers, no notifications",
+    ].forEach(t => {
+      const d = el("div");
+      d.append(el("i"), el("span", null, t));
+      lines.append(d);
+    });
+    block.append(price, el("div", "rule"), lines);
+    root.insertBefore(block, stage);
+    stage.append(cat(520, "pleased"));
+  },
+};
+
+// Archivo has to be real before anything measures text, or the cards come
+// out laid to a fallback and the captions reflow after the shutter.
+const ready = document.fonts
+  ? document.fonts.load("800 92px Archivo")
+      .then(() => document.fonts.load("700 30px Archivo"))
+      .then(() => document.fonts.ready)
+  : Promise.resolve();
+
+ready.then(() => {
+  build[which]();
+  document.body.dataset.done = "true";
+}, () => {
+  build[which]();
+  document.body.dataset.done = "true";
+});
+})();
+</script>
+</body>
+</html>

@@ -62,18 +62,19 @@ object ShareCardRenderer {
         )
 
         // ── Mochi ───────────────────────────────────────────────────────────
-        val px = s(11f)
-        val catW = Cat.widthFor(px)
-        val catH = Cat.heightFor(px)
+        val catH = s(176f)
+        val catW = Cat.widthFor(catH)
         val catBox = RectF(
             block.right - pad - catW - s(38f),
             block.top + s(250f),
             block.right - pad + s(2f),
             block.top + s(250f) + catH + s(38f)
         )
-        p.color = if (model.doneToday) Palette.INK else Palette.PAPER
+        // Ink, and standing on the bottom edge of it: the same two rules the
+        // card and the app's tile follow, so he is the same cat everywhere.
+        p.color = Palette.INK
         canvas.drawRoundRect(catBox, s(34f), s(34f), p)
-        Cat.draw(canvas, catBox.centerX() - catW / 2f, catBox.centerY() - catH / 2f, px, model.mood)
+        Cat.draw(canvas, catBox.centerX() - catW / 2f, catBox.bottom - catH, catH, model.mood)
 
         // ── The year ────────────────────────────────────────────────────────
         val cols = GridGeo.colsFor(model.year)
