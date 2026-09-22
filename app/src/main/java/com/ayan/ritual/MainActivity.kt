@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,10 +22,12 @@ import com.ayan.ritual.render.Fonts
 import com.ayan.ritual.ui.CreateScreen
 import com.ayan.ritual.ui.DetailScreen
 import com.ayan.ritual.ui.AccountScreen
+import com.ayan.ritual.ui.BuiltScreen
 import com.ayan.ritual.ui.HomeScreen
 import com.ayan.ritual.ui.IdentityScreen
 import com.ayan.ritual.ui.PaywallScreen
 import com.ayan.ritual.ui.RitualTheme
+import com.ayan.ritual.ui.ShelfScreen
 import com.ayan.ritual.ui.TourScreen
 import com.ayan.ritual.ui.WelcomeScreen
 import com.ayan.ritual.widget.RitualWidgetProvider
@@ -42,6 +45,10 @@ sealed interface Route {
     data class Create(val identity: String = "") : Route
     data object Paywall : Route
     data object Account : Route
+    /** Thirty days cleared, waiting to be claimed. */
+    data class Built(val habitId: String) : Route
+    /** Every sentence that is now true, with its evidence. */
+    data object Shelf : Route
 }
 
 class MainActivity : ComponentActivity() {
@@ -142,6 +149,16 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
     }
 
     val habits by HabitStore.habitsState
+    val context = LocalContext.current
+
+    // Thirty days that were cleared and never claimed. Checked here rather
+    // than inside the screen that marked the day, so it also catches someone
+    // who was away on day thirty and comes back on day thirty five.
+    LaunchedEffect(habits) {
+        val today = LocalDate.now()
+        val ready = habits.firstOrNull { !it.isBuilt && it.goalMet(today) }
+        if (ready != null && route !is Route.Built) route = Route.Built(ready.id)
+    }
 
     when (val r = route) {
         is Route.Welcome -> WelcomeScreen(
@@ -167,12 +184,37 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
             onOpen = { route = Route.Detail(it.id) },
             onCreate = { route = Route.Create() },
             onPaywall = { route = Route.Paywall },
-            onAccount = { route = Route.Account }
+            onAccount = { route = Route.Account },
+            onShelf = { route = Route.Shelf }
         )
 
         is Route.Paywall -> PaywallScreen(onClose = { route = Route.Home })
 
         is Route.Account -> AccountScreen(onBack = { route = Route.Home })
+
+        is Route.Built -> {
+            val habit = habits.firstOrNull { it.id == r.habitId }
+            if (habit == null) {
+                route = Route.Home
+            } else {
+                BuiltScreen(
+                    habit = habit,
+                    onClaim = {
+                        HabitStore.markBuilt(context, habit.id)
+                        route = Route.Shelf
+                    },
+                    // Not now is not never: it stays unclaimed and the check
+                    // above will offer it again on the next launch.
+                    onLater = { route = Route.Home }
+                )
+            }
+        }
+
+        is Route.Shelf -> ShelfScreen(
+            habits = habits,
+            onBack = { route = Route.Home },
+            onShare = { }
+        )
 
         is Route.Create -> CreateScreen(
             identity = r.identity,

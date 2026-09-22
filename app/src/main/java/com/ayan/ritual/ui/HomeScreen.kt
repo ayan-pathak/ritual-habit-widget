@@ -51,7 +51,8 @@ fun HomeScreen(
     onOpen: (Habit) -> Unit,
     onCreate: () -> Unit,
     onPaywall: () -> Unit = {},
-    onAccount: () -> Unit = {}
+    onAccount: () -> Unit = {},
+    onShelf: () -> Unit = {}
 ) {
     val unlocked by Unlock.unlockedState
     val canCreate = unlocked || habits.size < Unlock.FREE_LIMIT
@@ -113,6 +114,20 @@ fun HomeScreen(
                     Text(
                         "Day ${today.dayOfYear} of $yearLen",
                         style = Body.copy(fontSize = 13.sp, color = InkSoft)
+                    )
+                }
+                // The shelf only announces itself once there is something on
+                // it. An empty room with a sign on the door is worse than no
+                // door, and before day thirty there is nothing to see.
+                if (habits.any { it.isBuilt }) {
+                    Spacer(Modifier.height(16.dp))
+                    Text(
+                        "What I have built",
+                        style = Body.copy(fontSize = 14.sp, color = Ink),
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(999.dp))
+                            .clickable(onClick = onShelf)
+                            .padding(vertical = 6.dp, horizontal = 2.dp)
                     )
                 }
             }

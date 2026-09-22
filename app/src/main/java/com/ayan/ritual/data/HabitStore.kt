@@ -90,6 +90,19 @@ object HabitStore {
             .apply()
     }
 
+    /**
+     * Puts a ritual on the shelf.
+     *
+     * Only the day is recorded. Everything the shelf shows is derived from
+     * the grid it already had, so claiming adds a fact and destroys nothing.
+     */
+    fun markBuilt(context: Context, id: String, day: LocalDate = LocalDate.now()) {
+        ensureLoaded(context)
+        val found = _habits.value.firstOrNull { it.id == id } ?: return
+        if (found.isBuilt) return
+        update(context, found.copy(builtEpochDay = day.toEpochDay()))
+    }
+
     fun update(context: Context, habit: Habit) {
         ensureLoaded(context)
         _habits.value = _habits.value.map { if (it.id == habit.id) habit else it }
