@@ -76,13 +76,20 @@ object CloudSync {
                     ?.mapNotNull { (it as? Number)?.toLong() }
                     ?.toSet() ?: emptySet()
                 if (doc.getBoolean("deleted") == true) return@mapNotNull null
+                val created = doc.getLong("created") ?: 0L
                 Habit(
                     id = id,
                     name = doc.getString("name") ?: "Untitled",
                     slot = doc.getString("slot") ?: "Daily",
                     accentIndex = (doc.getLong("accent") ?: 0L).toInt(),
-                    createdEpochDay = doc.getLong("created") ?: 0L,
-                    done = days
+                    createdEpochDay = created,
+                    done = days,
+                    // A document written by an older build carries none of
+                    // these, and must read back as a habit with no identity
+                    // rather than as one whose identity was cleared.
+                    identity = doc.getString("identity") ?: "",
+                    goalStartEpochDay = doc.getLong("goalStart") ?: created,
+                    builtEpochDay = doc.getLong("built")
                 ) to stamp
             }
 
@@ -142,6 +149,9 @@ object CloudSync {
                     "slot" to habit.slot,
                     "accent" to habit.accentIndex,
                     "created" to habit.createdEpochDay,
+                    "identity" to habit.identity,
+                    "goalStart" to habit.goalStartEpochDay,
+                    "built" to habit.builtEpochDay,
                     "done" to habit.done.sorted(),
                     "updatedAt" to stamp,
                     "deleted" to false

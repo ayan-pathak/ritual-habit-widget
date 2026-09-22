@@ -156,6 +156,9 @@ object HabitStore {
                     .put("slot", h.slot)
                     .put("accent", h.accentIndex)
                     .put("created", h.createdEpochDay)
+                    .put("identity", h.identity)
+                    .put("goalStart", h.goalStartEpochDay)
+                    .put("built", h.builtEpochDay ?: JSONObject.NULL)
                     .put("done", days)
             )
         }
@@ -168,6 +171,7 @@ object HabitStore {
             val arr = JSONArray(raw)
             (0 until arr.length()).map { i ->
                 val o = arr.getJSONObject(i)
+                val created = o.optLong("created", LocalDate.now().toEpochDay())
                 val daysArr = o.optJSONArray("done") ?: JSONArray()
                 val days = HashSet<Long>(daysArr.length())
                 for (j in 0 until daysArr.length()) days.add(daysArr.getLong(j))
@@ -176,8 +180,14 @@ object HabitStore {
                     name = o.optString("name", "Untitled"),
                     slot = o.optString("slot", "Daily"),
                     accentIndex = o.optInt("accent", 0),
-                    createdEpochDay = o.optLong("created", LocalDate.now().toEpochDay()),
-                    done = days
+                    createdEpochDay = created,
+                    done = days,
+                    // Everything below arrived after the first release, so a
+                    // habit written by an older build reads back as one with
+                    // no identity and a goal that started when it did.
+                    identity = o.optString("identity", ""),
+                    goalStartEpochDay = o.optLong("goalStart", created),
+                    builtEpochDay = if (o.isNull("built")) null else o.optLong("built")
                 )
             }
         }.getOrDefault(emptyList())

@@ -21,12 +21,14 @@ object Onboarding {
     private const val KEY_SAW_PAYWALL = "saw_paywall_v1"
     private const val KEY_FIRST_MARK = "first_mark_epoch_day_v1"
     private const val KEY_SKIPPED_SIGN_IN = "skipped_sign_in_v1"
+    private const val KEY_NAME = "name_v1"
 
     private var prefs: SharedPreferences? = null
     private var _sawTour = false
     private var _sawPaywall = false
     private var _firstMark = -1L
     private var _skippedSignIn = false
+    private var _name = ""
 
     /** Safe to call on every launch; the widget receiver never needs this. */
     fun load(context: Context) {
@@ -37,6 +39,7 @@ object Onboarding {
         _sawPaywall = p.getBoolean(KEY_SAW_PAYWALL, false)
         _firstMark = p.getLong(KEY_FIRST_MARK, -1L)
         _skippedSignIn = p.getBoolean(KEY_SKIPPED_SIGN_IN, false)
+        _name = p.getString(KEY_NAME, "") ?: ""
     }
 
     /** Whether the three panels have been walked through. */
@@ -54,6 +57,25 @@ object Onboarding {
         _sawPaywall = true
         prefs?.edit()?.putBoolean(KEY_SAW_PAYWALL, true)?.apply()
     }
+
+    /**
+     * What to call them, or blank.
+     *
+     * It exists so an identity can be a sentence about a person rather than a
+     * line of app copy. "Ayan is someone who reads regularly" is a claim;
+     * "You are someone who reads regularly" is a compliment, and people
+     * discount compliments from software. Blank is a supported answer: the
+     * sentence simply starts at "I am".
+     */
+    val name: String get() = _name
+
+    fun setName(value: String) {
+        _name = value.trim()
+        prefs?.edit()?.putString(KEY_NAME, _name)?.apply()
+    }
+
+    /** How a sentence about them should start, with or without a name. */
+    fun sentenceStart(): String = if (_name.isBlank()) "I am someone who " else "$_name is someone who "
 
     /**
      * Whether the way in was declined once.
