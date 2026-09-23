@@ -7,7 +7,7 @@ name: Build iOS
 on:
   workflow_dispatch:
   push:
-    branches: ['claude/**']
+    branches: [ios]
     paths:
       - 'ios/**'
       - 'art/mochi/**'

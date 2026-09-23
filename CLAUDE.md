@@ -1,5 +1,12 @@
 # Ritual — working notes
 
+> **This is the `ios` branch. Change `ios/` only.**
+> The repo holds three products, one long-lived branch each: `android` (`app/`),
+> `ios` (`ios/`) and `web` (`docs/`). Shared files — `firebase/`, `art/mochi/`,
+> `tools/`, `.gitignore` — change on `main` and are merged in with `git merge main`.
+> Every push here that touches `ios/` runs the iOS build (`.github/workflows/ios.yml`).
+> Ship by opening a pull request from `ios` into `main`.
+
 A daily habit tracker built around one idea: **a year is a grid of empty squares, and each day you keep a practice, one fills in.** The home-screen widget is the product; the app exists to feed it.
 
 ## Build
