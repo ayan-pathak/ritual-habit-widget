@@ -1,9 +1,23 @@
 name: Build APK
 
+# The check on the way into main. Pushes to the android branch are built and
+# published by apk-release.yml instead, so they are not built twice.
 on:
   push:
     branches: [main]
+    paths:
+      - 'app/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/android.yml'
   pull_request:
+    paths:
+      - 'app/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/android.yml'
   workflow_dispatch:
 
 jobs:

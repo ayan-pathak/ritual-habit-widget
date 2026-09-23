@@ -4,10 +4,18 @@ name: Publish APK
 # them awkward to hand to a phone. This publishes the same two APKs as a release
 # asset instead, so they can be installed from a plain link.
 
+# Every push to the android branch publishes an installable APK. Pushes that
+# only touch the other products (ios/, docs/) are skipped.
 on:
   workflow_dispatch:
   push:
-    branches: ['claude/**']
+    branches: [android]
+    paths:
+      - 'app/**'
+      - 'build.gradle.kts'
+      - 'settings.gradle.kts'
+      - 'gradle.properties'
+      - '.github/workflows/apk-release.yml'
 
 permissions:
   contents: write

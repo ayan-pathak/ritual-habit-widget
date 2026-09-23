@@ -1,5 +1,12 @@
 # Ritual — working notes
 
+> **This is the `android` branch. Change `app/` (and the Gradle files) only.**
+> The repo holds three products, one long-lived branch each: `android` (`app/`),
+> `ios` (`ios/`) and `web` (`docs/`). Shared files — `firebase/`, `art/mochi/`,
+> `tools/`, `.gitignore` — change on `main` and are merged in with `git merge main`.
+> Every push here publishes an installable APK (`.github/workflows/apk-release.yml`).
+> Ship by opening a pull request from `android` into `main`.
+
 A daily habit tracker built around one idea: **a year is a grid of empty squares, and each day you keep a practice, one fills in.** The home-screen widget is the product; the app exists to feed it.
 
 ## Build
