@@ -239,5 +239,6 @@ fun Habit.toModel(today: LocalDate, year: Int): SlabModel = SlabModel(
     totalDone = totalIn(year),
     remaining = Habit.remainingIn(year, today),
     doneToday = isDone(today),
-    mood = Cat.moodFor(isDone(today), streak(today), missedYesterday(today))
+    mood = Cat.moodFor(isDone(today), streak(today), missedYesterday(today)),
+    identity = identity
 )

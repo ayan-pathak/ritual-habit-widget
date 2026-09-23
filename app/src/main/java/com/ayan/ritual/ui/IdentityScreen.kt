@@ -1,56 +1,60 @@
 package com.ayan.ritual.ui
 
-import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.text.TextRange
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ayan.ritual.data.Onboarding
 import com.ayan.ritual.render.accentAt
+import kotlinx.coroutines.delay
 
-/**
+/*
  * Who they are trying to become, asked before anything is tracked.
  *
  * Nobody wants a habit. A habit is a means, and the thing someone actually
@@ -62,240 +66,277 @@ import com.ayan.ritual.render.accentAt
  * a form. The name comes first and is skippable; without it the sentence
  * simply starts at "I am".
  */
-private enum class Step { NAME, IDENTITY }
 
-/** Four sentences, as examples rather than options. */
-private val SUGGESTIONS = listOf(
-    "reads regularly",
-    "works out consistently",
-    "is off junk",
-    "keeps a protein heavy diet"
+/** Sentence endings, offered as examples rather than options. */
+internal val SUGGESTIONS = listOf(
+    "reads before bed",
+    "moves every day",
+    "drinks enough water",
+    "writes a little daily",
+    "sleeps on time",
+    "is off junk food"
 )
 
-@Composable
-fun IdentityScreen(onDone: (String) -> Unit) {
-    var step by remember { mutableStateOf(Step.NAME) }
-    var name by remember { mutableStateOf(Onboarding.name) }
+/** How a sentence about them starts, with or without a name. */
+internal fun sentenceStart(name: String): String =
+    if (name.isBlank()) "I am someone who " else "${name.trim()} is someone who "
 
-    when (step) {
-        Step.NAME -> NameStep(
-            name = name,
-            onName = { name = it },
-            onNext = {
-                Onboarding.setName(name)
-                step = Step.IDENTITY
-            }
-        )
-
-        Step.IDENTITY -> IdentityStep(
-            start = Onboarding.sentenceStart(),
-            onDone = onDone
-        )
-    }
-}
+/** The colour a sentence ending is shown in: its chip's, or lime for their own words. */
+internal fun accentIndexFor(tail: String): Int =
+    SUGGESTIONS.indexOf(tail.trim()).coerceAtLeast(0)
 
 @Composable
-private fun NameStep(name: String, onName: (String) -> Unit, onNext: () -> Unit) {
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(Cream)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .imePadding()
-            .padding(horizontal = 20.dp, vertical = 18.dp)
-    ) {
-        Text("Ritual", style = Display.copy(fontSize = 30.sp, lineHeight = 32.sp))
-        Spacer(Modifier.height(28.dp))
-        Text(
-            "What should we call you?",
-            style = Display.copy(fontSize = 24.sp, lineHeight = 27.sp)
-        )
+internal fun NameStep(name: String, onName: (String) -> Unit, onNext: () -> Unit, onSkip: () -> Unit) {
+    Column(Modifier.fillMaxSize()) {
+        CapsLabel("Nice to meet you")
+        Spacer(Modifier.height(8.dp))
+        Text("What should we\ncall you?", style = Display.copy(fontSize = 32.sp, lineHeight = 34.sp))
         Spacer(Modifier.height(12.dp))
         Text(
-            "It goes on your own page and nowhere else. Skip it and Ritual will just say \"I\".",
-            style = Body.copy(fontSize = 13.sp, color = InkSoft)
+            "Only you see it. It's how your sentence will start on the next screen.",
+            style = Body.copy(color = InkSoft)
         )
-        Spacer(Modifier.height(22.dp))
+        Spacer(Modifier.height(28.dp))
         PlainField(
             value = name,
             onValueChange = { if (it.length <= 20) onName(it) },
-            placeholder = "Ayan"
+            placeholder = "Your first name"
         )
 
         Spacer(Modifier.weight(1f))
 
         InkPill(label = "Continue", onClick = onNext, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(10.dp))
-        Text(
-            "Skip",
-            style = Body.copy(fontSize = 13.sp, color = InkFaint),
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(CircleShape)
-                .clickable { onName(""); onNext() }
-                .padding(vertical = 9.dp),
-            textAlign = TextAlign.Center
+        QuietLink("Skip, just say “I”", onSkip)
+    }
+}
+
+/**
+ * The sentence, finished rather than composed.
+ *
+ * The sentence is the hero of the screen and it is never empty: while nothing
+ * is chosen it types its own examples out, one after another, so the shape of
+ * an answer is obvious before anyone has to think of one. Tapping an example
+ * lands it in the sentence in that example's colour; writing their own does
+ * the same in lime. Nothing here advances on its own, so trying one on is
+ * free.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+internal fun IdentityStep(start: String, tail: String, onTail: (String) -> Unit, onNext: () -> Unit) {
+    val chosen = tail.isNotBlank()
+    val accent = accentAt(accentIndexFor(tail))
+
+    Column(Modifier.fillMaxSize()) {
+        Column(
+            Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState())
+        ) {
+            CapsLabel("One small sentence")
+            Spacer(Modifier.height(8.dp))
+            Text("Finish this\nsentence.", style = Display.copy(fontSize = 32.sp, lineHeight = 34.sp))
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "Something small you'd like to be true about you. It doesn't have to be true yet. That's what the next thirty days are for.",
+                style = Body.copy(color = InkSoft)
+            )
+            Spacer(Modifier.height(22.dp))
+
+            SentenceCard(start = start, tail = tail, accentBlock = Color(accent.block), accentOn = Color(accent.onBlock))
+
+            Spacer(Modifier.height(20.dp))
+            CapsLabel(if (chosen) "Try another" else "Tap one to try it on")
+            Spacer(Modifier.height(10.dp))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                SUGGESTIONS.forEachIndexed { i, s ->
+                    SuggestionChip(
+                        text = s,
+                        index = i,
+                        selected = tail.trim() == s,
+                        onClick = { onTail(s) }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(22.dp))
+            CapsLabel("Or in your own words")
+            Spacer(Modifier.height(6.dp))
+            PlainField(
+                value = if (SUGGESTIONS.contains(tail.trim())) "" else tail,
+                onValueChange = { if (it.length <= 48) onTail(it) },
+                placeholder = "plays guitar on weekends",
+                capitalization = KeyboardCapitalization.None
+            )
+            Spacer(Modifier.height(18.dp))
+        }
+
+        Spacer(Modifier.height(12.dp))
+        InkPill(
+            label = if (chosen) "That's me" else "Pick one to continue",
+            onClick = { if (chosen) onNext() },
+            modifier = Modifier.fillMaxWidth(),
+            background = if (chosen) Ink else InkFaint,
+            content = if (chosen) Paper else InkSoft
         )
     }
 }
 
+/** The sentence on its own card, typing examples until it has a real ending. */
 @Composable
-private fun IdentityStep(start: String, onDone: (String) -> Unit) {
-    // The field opens already started, with the caret after the prefix, so
-    // writing your own means finishing a sentence rather than composing one.
-    var field by remember {
-        mutableStateOf(TextFieldValue(start, TextRange(start.length)))
+private fun SentenceCard(start: String, tail: String, accentBlock: Color, accentOn: Color) {
+    val typing = typewriter(SUGGESTIONS, active = tail.isBlank())
+    val caret by rememberInfiniteTransition(label = "caret").animateFloat(
+        initialValue = 1f,
+        targetValue = 0f,
+        animationSpec = infiniteRepeatable(tween(530), RepeatMode.Reverse),
+        label = "caretAlpha"
+    )
+    // The ending pops a little when it changes, so a tap visibly lands.
+    var pop by remember { mutableStateOf(1f) }
+    LaunchedEffect(tail) {
+        if (tail.isNotBlank()) {
+            pop = 1.04f
+            delay(140)
+        }
+        pop = 1f
+    }
+    val scale by animateFloatAsState(pop, spring(dampingRatio = 0.45f), label = "pop")
+
+    val sentence = buildAnnotatedString {
+        withStyle(SpanStyle(color = Ink)) { append(start) }
+        if (tail.isNotBlank()) {
+            withStyle(SpanStyle(color = accentOn, background = accentBlock)) { append(" ${tail.trim()}") }
+            withStyle(SpanStyle(color = Ink)) { append(".") }
+        } else {
+            withStyle(SpanStyle(color = InkSoft)) { append(typing) }
+            withStyle(SpanStyle(color = Ink.copy(alpha = caret))) { append("|") }
+        }
     }
 
-    Column(
+    Box(
         Modifier
-            .fillMaxSize()
-            .background(Cream)
-            .statusBarsPadding()
-            .navigationBarsPadding()
-            .imePadding()
-            .padding(horizontal = 20.dp, vertical = 18.dp)
+            .fillMaxWidth()
+            .heightIn(min = 150.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .background(Paper)
+            .padding(horizontal = 22.dp, vertical = 22.dp)
     ) {
         Text(
-            "What identity are you building through consistency?",
-            style = Display.copy(fontSize = 24.sp, lineHeight = 27.sp)
-        )
-
-        // The examples come before the field, and loose rather than listed. A
-        // list reads as a menu you must choose from; four cards at different
-        // heights read as things lying about that you may pick up. Either way
-        // nobody meets an empty box with no idea what shape of answer fits.
-        Box(Modifier.weight(1f).fillMaxWidth()) {
-            SuggestionCloud(start = start, onPick = onDone)
-        }
-
-        CapsLabel("Or write your own")
-        Spacer(Modifier.height(8.dp))
-        // The prefix is theirs to delete if they want a different sentence,
-        // but it is never re-added underneath them.
-        SentenceField(value = field, onValueChange = { if (it.text.length <= 72) field = it })
-
-        Spacer(Modifier.height(20.dp))
-        InkPill(
-            label = "Continue",
-            onClick = { onDone(field.text.trim()) },
-            modifier = Modifier.fillMaxWidth()
+            sentence,
+            style = Display.copy(fontSize = 27.sp, lineHeight = 34.sp),
+            modifier = Modifier.scale(scale)
         )
     }
 }
 
 /**
- * The four examples, adrift.
- *
- * Each carries its own phase so they never move as a block, which is the
- * difference between paper on a desk and a carousel. The motion is six pixels
- * and eight seconds: enough to read as loose, not enough to chase.
+ * One example as a flat block of its own colour. They arrive one after
+ * another rather than all at once, which is most of what makes the screen
+ * feel alive, and the chosen one is ringed in ink.
  */
 @Composable
-private fun SuggestionCloud(start: String, onPick: (String) -> Unit) {
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val w = maxWidth
-        val h = maxHeight
-        val drift = rememberInfiniteTransition(label = "drift")
+private fun SuggestionChip(text: String, index: Int, selected: Boolean, onClick: () -> Unit) {
+    val accent = accentAt(index)
+    var shown by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        delay(120L + index * 70L)
+        shown = true
+    }
+    val enter by animateFloatAsState(
+        targetValue = if (shown) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.6f, stiffness = 380f),
+        label = "chipIn"
+    )
+    val ring by animateColorAsState(if (selected) Ink else Color.Transparent, label = "ring")
 
-        SUGGESTIONS.forEachIndexed { i, tail ->
-            val phase by drift.animateFloat(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = infiniteRepeatable(
-                    animation = tween(7600 + i * 900, easing = LinearEasing),
-                    repeatMode = RepeatMode.Restart
-                ),
-                label = "drift$i"
-            )
-            val lift = kotlin.math.sin((phase + i * 0.27f) * 2f * Math.PI).toFloat() * 5f
-            val fromLeft = i % 2 == 0
-            val x = if (fromLeft) w * (if (i == 0) 0f else 0.06f) else w * 0.10f
-            val y = h * (0.03f + i * 0.245f)
+    Box(
+        Modifier
+            .scale(0.85f + 0.15f * enter)
+            .alpha(enter.coerceIn(0f, 1f))
+            .heightIn(min = 48.dp)
+            .clip(CircleShape)
+            .background(Color(accent.block))
+            .border(BorderStroke(2.5.dp, ring), CircleShape)
+            .clickable(onClick = onClick)
+            .padding(horizontal = 16.dp, vertical = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            if (selected) "✓  $text" else text,
+            style = Body.copy(fontSize = 14.sp, lineHeight = 18.sp, color = Color(accent.onBlock))
+        )
+    }
+}
 
-            Box(
-                Modifier
-                    .offset(x = x, y = y + lift.dp)
-                    .align(if (fromLeft) Alignment.TopStart else Alignment.TopEnd)
-                    .widthIn(max = w * 0.9f)
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(Paper)
-                    .border(1.dp, InkFaint, RoundedCornerShape(16.dp))
-                    .clickable { onPick(start + tail) }
-                    .padding(horizontal = 13.dp, vertical = 10.dp)
-            ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(9.dp)
-                ) {
-                    Box(
-                        Modifier
-                            .size(7.dp)
-                            .clip(CircleShape)
-                            .background(Color(accentAt(i).block))
-                    )
-                    Text(
-                        start + tail,
-                        style = Body.copy(fontSize = 13.sp, color = Ink)
-                    )
-                }
-            }
+/** Types each example out and takes it back, forever, while [active]. */
+@Composable
+private fun typewriter(examples: List<String>, active: Boolean): String {
+    var shown by remember { mutableStateOf("") }
+    LaunchedEffect(active) {
+        if (!active) return@LaunchedEffect
+        var i = 0
+        while (true) {
+            val word = examples[i % examples.size]
+            for (n in 1..word.length) { shown = word.take(n); delay(55) }
+            delay(1400)
+            for (n in word.length downTo 0) { shown = word.take(n); delay(22) }
+            delay(260)
+            i++
         }
     }
+    return shown
+}
+
+/** A secondary way out: readable, and a full-size target, but never loud. */
+@Composable
+internal fun QuietLink(label: String, onClick: () -> Unit) {
+    Text(
+        label,
+        style = Body.copy(fontSize = 14.sp, color = InkSoft),
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 6.dp)
+            .clip(CircleShape)
+            .clickable(onClick = onClick)
+            .padding(vertical = 14.dp)
+    )
 }
 
 /** A line to write on, with nothing around it but the rule underneath. */
 @Composable
-private fun PlainField(value: String, onValueChange: (String) -> Unit, placeholder: String) {
-    Ruled {
+private fun PlainField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    capitalization: KeyboardCapitalization = KeyboardCapitalization.Words
+) {
+    Column(Modifier.fillMaxWidth()) {
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
             singleLine = true,
-            textStyle = Body.copy(fontSize = 17.sp, lineHeight = 22.sp, color = Ink),
+            textStyle = Body.copy(fontSize = 18.sp, lineHeight = 24.sp, color = Ink),
             cursorBrush = SolidColor(Ink),
             keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Words,
+                capitalization = capitalization,
                 imeAction = ImeAction.Done
             ),
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
             decorationBox = { inner ->
                 if (value.isEmpty()) {
                     Text(
                         placeholder,
-                        style = Body.copy(fontSize = 17.sp, lineHeight = 22.sp, color = InkFaint)
+                        style = Body.copy(fontSize = 18.sp, lineHeight = 24.sp, color = InkSoft.copy(alpha = 0.45f))
                     )
                 }
                 inner()
             }
         )
-    }
-}
-
-/** The same line, for a sentence that arrives already started. */
-@Composable
-private fun SentenceField(value: TextFieldValue, onValueChange: (TextFieldValue) -> Unit) {
-    Ruled {
-        BasicTextField(
-            value = value,
-            onValueChange = onValueChange,
-            textStyle = Body.copy(fontSize = 17.sp, lineHeight = 23.sp, color = Ink),
-            cursorBrush = SolidColor(Ink),
-            keyboardOptions = KeyboardOptions(
-                capitalization = KeyboardCapitalization.Sentences,
-                imeAction = ImeAction.Done
-            ),
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-@Composable
-private fun Ruled(content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxWidth()) {
-        content()
-        Spacer(Modifier.height(10.dp))
+        Spacer(Modifier.height(6.dp))
         Box(Modifier.fillMaxWidth().height(2.dp).background(InkFaint))
     }
 }

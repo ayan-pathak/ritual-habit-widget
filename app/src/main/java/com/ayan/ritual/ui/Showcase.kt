@@ -1,5 +1,9 @@
 package com.ayan.ritual.ui
 
+// Pieces the onboarding flow shows rather than describes: the theme choice,
+// a home screen with the card on it, and the card as a story. Each takes the
+// real model when there is one, so what someone sees is their own ritual.
+
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -45,85 +49,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.data.Habit
-import com.ayan.ritual.data.Onboarding
 import com.ayan.ritual.render.Mood
 import com.ayan.ritual.render.ShareCardRenderer
 import com.ayan.ritual.render.SlabModel
 import com.ayan.ritual.render.accentAt
 import java.time.LocalDate
 
-/**
- * Three panels, once, before the grid.
- *
- * Each one shows the thing rather than describing it: the card as it will
- * look, the card on a home screen, the card as a story. The tour is short
- * because the app is — there is one gesture in it, and the panels exist to
- * say where that gesture pays off rather than to teach it.
- *
- * How it should look is asked first, on its own, because everything after it
- * is then shown the way it will actually be seen. A theme question at the end
- * asks someone to imagine the screens they have just been walked through.
- */
-@Composable
-fun TourScreen(onDone: () -> Unit) {
-    var step by remember { mutableIntStateOf(0) }
-    val steps = PANELS.size + 1          // the look question, then the three panels
-    val last = steps - 1
-
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(Cream)
-            .statusBarsPadding()
-            .padding(horizontal = 20.dp)
-    ) {
-        Spacer(Modifier.height(18.dp))
-        ProgressRail(step = step, of = steps)
-
-        Spacer(Modifier.height(30.dp))
-
-        // The stage keeps its height across panels, so the pill at the bottom
-        // never moves while someone is tapping it four times.
-        Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.TopStart) {
-            if (step == 0) LookPanel() else TellPanel(PANELS[step - 1])
-        }
-
-        InkPill(
-            label = if (step == last) "Let\u2019s start a new habit" else "Next",
-            onClick = {
-                if (step == last) {
-                    Onboarding.markSawTour()
-                    onDone()
-                } else step++
-            },
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(Modifier.height(10.dp))
-        Box(Modifier.fillMaxWidth().height(34.dp), contentAlignment = Alignment.Center) {
-            if (step != last) {
-                Text(
-                    "Skip",
-                    style = Body.copy(fontSize = 13.sp, color = InkFaint),
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(999.dp))
-                        .clickable {
-                            Onboarding.markSawTour()
-                            onDone()
-                        }
-                        .padding(vertical = 8.dp)
-                )
-            }
-        }
-        Spacer(Modifier.height(18.dp))
-        Spacer(Modifier.navigationBarsPadding())
-    }
-}
-
 /** A segment per panel, filling as they are walked. */
 @Composable
-private fun ProgressRail(step: Int, of: Int) {
+internal fun ProgressRail(step: Int, of: Int) {
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(of) { i ->
             // Each segment fills rather than switching on, so the rail reads as
@@ -152,79 +86,8 @@ private fun ProgressRail(step: Int, of: Int) {
     }
 }
 
-private class Panel(
-    val caps: String,
-    val title: String,
-    val body: String,
-    val art: @Composable () -> Unit
-)
-
-private val PANELS: List<Panel> = listOf(
-    Panel(
-        caps = "One gesture",
-        title = "Name it.\nThen keep it.",
-        body = "A name and a colour. Every day you keep it, one square fills in, and the card turns to ink to say so.",
-        art = { CardArt(marked = false) }
-    ),
-    Panel(
-        caps = "On your home screen",
-        title = "Never open\nthe app.",
-        body = "Your year sits on the home screen, and the pill marks today without the app opening.",
-        art = { PhoneHomeScreen() }
-    ),
-    Panel(
-        caps = "When it is worth showing",
-        title = "A year,\nas a story.",
-        body = "The grid you actually filled, sized for a story. No watermark, nothing to sign up for.",
-        art = { StoryArt() }
-    )
-)
-
 @Composable
-private fun TellPanel(panel: Panel) {
-    Column(Modifier.fillMaxSize()) {
-        CapsLabel(panel.caps)
-        Spacer(Modifier.height(8.dp))
-        Text(panel.title, style = Display.copy(fontSize = 28.sp, lineHeight = 30.sp))
-        Spacer(Modifier.height(10.dp))
-        Text(panel.body, style = Body.copy(fontSize = 13.sp, lineHeight = 19.sp))
-        Spacer(Modifier.height(20.dp))
-        // Whatever the copy leaves is the picture's, and the picture fits it.
-        Box(Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.TopCenter) {
-            panel.art()
-        }
-        Spacer(Modifier.height(8.dp))
-    }
-}
-
-/**
- * The one question the tour asks rather than answers.
- *
- * It is answered by tapping the thing itself: two slabs of the actual colours,
- * and the whole app repaints behind the one that is tapped. A row of radio
- * buttons would be asking someone to read the word "dark" and imagine it.
- */
-@Composable
-private fun LookPanel() {
-    Column(Modifier.fillMaxWidth()) {
-        CapsLabel("Before anything else")
-        Spacer(Modifier.height(8.dp))
-        Text("How should\nit look?", style = Display.copy(fontSize = 32.sp, lineHeight = 34.sp))
-        Spacer(Modifier.height(12.dp))
-        Text(
-            "Pick one and the rest of this walkthrough is shown that way. It is in the settings afterwards, so nothing here is final.",
-            style = Body
-        )
-        Spacer(Modifier.height(26.dp))
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            LookChoice("Light", Appearance.LIGHT, Modifier.weight(1f))
-            LookChoice("Dark", Appearance.DARK, Modifier.weight(1f))
-        }
-    }
-}
-
-@Composable
-private fun LookChoice(label: String, value: Appearance, modifier: Modifier = Modifier) {
+internal fun LookChoice(label: String, value: Appearance, modifier: Modifier = Modifier) {
     val chosen = Look.appearance == value
     val page = if (value == Appearance.DARK) Color(0xFF16150F) else Color(0xFFE7E3D4)
     val mark = if (value == Appearance.DARK) Color(0xFFEDE9DA) else Color(0xFF12120F)
@@ -268,7 +131,7 @@ private fun LookChoice(label: String, value: Appearance, modifier: Modifier = Mo
 
 // ── The three things it is showing ──────────────────────────────────────────
 
-private fun demoModel(marked: Boolean): SlabModel {
+internal fun demoModel(marked: Boolean): SlabModel {
     val today = LocalDate.now()
     val year = today.year
     val doy = today.dayOfYear
@@ -296,11 +159,6 @@ private fun demoModel(marked: Boolean): SlabModel {
     )
 }
 
-@Composable
-private fun CardArt(marked: Boolean) {
-    RitualCard(model = demoModel(marked), height = 172.dp)
-}
-
 /**
  * The widget where it lives: the top of a home screen, at the size it really is.
  *
@@ -315,7 +173,7 @@ private fun CardArt(marked: Boolean) {
  * anything else on that phone would be someone else's brand in our onboarding.
  */
 @Composable
-private fun PhoneHomeScreen() {
+internal fun PhoneHomeScreen(model: SlabModel = demoModel(false)) {
     // The panel is 353dp across, so treating it as a 353dp-wide phone makes
     // every dp inside it the dp it would be on the real thing.
     Column(
@@ -352,7 +210,7 @@ private fun PhoneHomeScreen() {
         Spacer(Modifier.height(16.dp))
 
         RitualCard(
-            model = demoModel(false),
+            model = model,
             height = 156.dp,
             action = true,
             cornerDp = 26f,
@@ -395,7 +253,7 @@ private val WALL_INK = Color(0xFFF2EFE3)
  * top and bottom read as the safe area they are, rather than as a mistake.
  */
 @Composable
-private fun StoryArt() {
+internal fun StoryArt(model: SlabModel = demoModel(true)) {
     val density = LocalDensity.current
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val ratio = ShareCardRenderer.STORY_W.toFloat() / ShareCardRenderer.STORY_H
@@ -403,7 +261,6 @@ private fun StoryArt() {
         // the panel allows.
         val width = minOf(maxWidth, maxHeight * ratio)
         val height = width / ratio
-        val model = demoModel(true)
         val bitmap = remember(model, width) {
             with(density) {
                 ShareCardRenderer.render(model, width.roundToPx(), height.roundToPx())
@@ -411,6 +268,7 @@ private fun StoryArt() {
         }
         Box(
             Modifier
+                .align(Alignment.TopCenter)
                 .size(width, height)
                 .clip(RoundedCornerShape(18.dp))
                 // Cream on cream: without an edge the frame vanishes into the page.

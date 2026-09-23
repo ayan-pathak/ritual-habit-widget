@@ -22,6 +22,10 @@ object Onboarding {
     private const val KEY_FIRST_MARK = "first_mark_epoch_day_v1"
     private const val KEY_SKIPPED_SIGN_IN = "skipped_sign_in_v1"
     private const val KEY_NAME = "name_v1"
+    private const val KEY_STAGE = "flow_stage_v2"
+    private const val KEY_DRAFT_IDENTITY = "flow_identity_v2"
+    private const val KEY_FIRST_HABIT = "flow_first_habit_v2"
+    private const val KEY_FLOW_DONE = "flow_done_v2"
 
     private var prefs: SharedPreferences? = null
     private var _sawTour = false
@@ -76,6 +80,56 @@ object Onboarding {
 
     /** How a sentence about them should start, with or without a name. */
     fun sentenceStart(): String = if (_name.isBlank()) "I am someone who " else "$_name is someone who "
+
+    /**
+     * Where the one onboarding flow has got to, or blank before it starts.
+     *
+     * Kept on disk rather than in the composition, so rotating the phone, a
+     * trip out to a browser for sign-in, or Android reclaiming the process
+     * resumes the step someone was on instead of asking everything again.
+     */
+    val stage: String get() = prefs?.getString(KEY_STAGE, "") ?: ""
+
+    fun setStage(value: String) {
+        prefs?.edit()?.putString(KEY_STAGE, value)?.apply()
+    }
+
+    /** The identity sentence while it is still being written. */
+    val draftIdentity: String get() = prefs?.getString(KEY_DRAFT_IDENTITY, "") ?: ""
+
+    fun setDraftIdentity(value: String) {
+        prefs?.edit()?.putString(KEY_DRAFT_IDENTITY, value)?.apply()
+    }
+
+    /** The ritual the flow created, so the widget and share steps can show it. */
+    val firstHabitId: String get() = prefs?.getString(KEY_FIRST_HABIT, "") ?: ""
+
+    fun setFirstHabitId(value: String) {
+        prefs?.edit()?.putString(KEY_FIRST_HABIT, value)?.apply()
+    }
+
+    /**
+     * Whether the flow still has something to ask.
+     *
+     * Someone who installed before this flow existed already has rituals and
+     * no stage on disk, and must never be walked through it. Someone who has
+     * just built their first ritual inside it has both, and still has the
+     * widget and the share card ahead of them.
+     */
+    fun needsFlow(hasRituals: Boolean): Boolean {
+        if (prefs?.getBoolean(KEY_FLOW_DONE, false) == true) return false
+        return !hasRituals || stage.isNotEmpty()
+    }
+
+    fun finishFlow() {
+        _sawTour = true
+        prefs?.edit()
+            ?.putBoolean(KEY_FLOW_DONE, true)
+            ?.putBoolean(KEY_SAW_TOUR, true)
+            ?.remove(KEY_STAGE)
+            ?.remove(KEY_DRAFT_IDENTITY)
+            ?.apply()
+    }
 
     /**
      * Whether the way in was declined once.

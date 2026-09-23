@@ -55,11 +55,18 @@ import java.time.LocalDate
 private val SLOTS = listOf("Morning", "Midday", "Evening", "Anytime")
 
 @Composable
-fun CreateScreen(identity: String = "", onDone: (Habit) -> Unit, onBack: () -> Unit) {
+fun CreateScreen(
+    identity: String = "",
+    title: String = "New ritual",
+    lead: String? = null,
+    initialAccent: Int = 0,
+    onDone: (Habit) -> Unit,
+    onBack: () -> Unit
+) {
     val context = LocalContext.current
     var name by remember { mutableStateOf("") }
     var slotIndex by remember { mutableIntStateOf(0) }
-    var accentIndex by remember { mutableIntStateOf(0) }
+    var accentIndex by remember { mutableIntStateOf(initialAccent) }
     val accent = accentAt(accentIndex)
     val today = LocalDate.now()
 
@@ -83,10 +90,17 @@ fun CreateScreen(identity: String = "", onDone: (Habit) -> Unit, onBack: () -> U
         }
 
         Text(
-            "New ritual",
+            title,
             style = Display,
             modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 18.dp)
         )
+        if (lead != null) {
+            Text(
+                lead,
+                style = Body.copy(color = InkSoft),
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp)
+            )
+        }
 
         // ── Name ────────────────────────────────────────────────────────────
         Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp)) {
@@ -192,14 +206,20 @@ fun CreateScreen(identity: String = "", onDone: (Habit) -> Unit, onBack: () -> U
         }
 
         Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp)) {
+            // A ritual needs a name to be kept; the placeholder is an example,
+            // and saving it as "Untitled" behind someone's back helped nobody.
+            val named = name.isNotBlank()
             InkPill(
-                label = "Start today",
+                label = if (named) "Start today" else "Name it to start",
                 onClick = {
-                    val habit = HabitStore.create(context, name, SLOTS[slotIndex], accentIndex, identity)
+                    if (!named) return@InkPill
+                    val habit = HabitStore.create(context, name.trim(), SLOTS[slotIndex], accentIndex, identity)
                     RitualWidgetProvider.refreshAll(context)
                     onDone(habit)
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                background = if (named) Ink else InkFaint,
+                content = if (named) Paper else InkSoft
             )
             Spacer(Modifier.height(34.dp))
             Spacer(Modifier.navigationBarsPadding())

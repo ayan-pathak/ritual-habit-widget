@@ -19,7 +19,9 @@ data class SlabModel(
     val totalDone: Int,
     val remaining: Int,
     val doneToday: Boolean,
-    val mood: Mood = Mood.RESTING
+    val mood: Mood = Mood.RESTING,
+    /** The sentence this ritual is evidence for; only the story card says it. */
+    val identity: String = ""
 )
 
 /**

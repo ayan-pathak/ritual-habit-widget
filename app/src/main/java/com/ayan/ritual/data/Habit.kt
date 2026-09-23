@@ -98,9 +98,18 @@ data class Habit(
         return done.count { it in goalStartEpochDay..last }
     }
 
-    /** Days spent from the allowance. Never negative, never over the cap. */
-    fun goalMissed(today: LocalDate): Int =
-        (goalElapsed(today) - goalKept()).coerceAtLeast(0)
+    /**
+     * Days spent from the allowance. Never negative, never over the cap.
+     *
+     * Only days that are over can be missed: today is still open until
+     * midnight, so it counts once it is kept and never before. Counting it
+     * early put "1 of 6 missed" on screen seconds after someone started.
+     */
+    fun goalMissed(today: LocalDate): Int {
+        val closed = goalElapsed(today.minusDays(1))
+        val keptClosed = done.count { it >= goalStartEpochDay && it < goalStartEpochDay + closed }
+        return (closed - keptClosed).coerceAtLeast(0)
+    }
 
     /** What is left of the six. Zero means the next miss ends it. */
     fun allowanceLeft(today: LocalDate): Int =

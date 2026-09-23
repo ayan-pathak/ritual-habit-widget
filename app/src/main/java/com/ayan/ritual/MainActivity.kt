@@ -24,21 +24,19 @@ import com.ayan.ritual.ui.DetailScreen
 import com.ayan.ritual.ui.AccountScreen
 import com.ayan.ritual.ui.BuiltScreen
 import com.ayan.ritual.ui.HomeScreen
-import com.ayan.ritual.ui.IdentityScreen
+import com.ayan.ritual.ui.OnboardingFlow
 import com.ayan.ritual.ui.PaywallReason
 import com.ayan.ritual.ui.PaywallScreen
 import com.ayan.ritual.ui.RitualTheme
 import com.ayan.ritual.ui.ShelfScreen
-import com.ayan.ritual.ui.TourScreen
 import com.ayan.ritual.ui.WelcomeScreen
 import com.ayan.ritual.widget.RitualWidgetProvider
 import java.time.LocalDate
 
 sealed interface Route {
     data object Welcome : Route
-    data object Tour : Route
-    /** The sentence, asked once, before anything is tracked. */
-    data object Identity : Route
+    /** The one way in: look, name, sentence, bet, ritual, widget, story. */
+    data object Onboarding : Route
     data object Home : Route
     data class Detail(val habitId: String) : Route
     /** Creating the ritual that builds [identity], which is blank when a
@@ -119,16 +117,14 @@ class MainActivity : ComponentActivity() {
  * signed in, and nobody has waved it off. Without a project — a checkout with
  * no google-services.json — there is nothing to sign in to and it falls
  * through; waved off once, it falls through the same way and lives in Account
- * from then on. Then the tour, once. Then the unlock, but only on a launch
+ * from then on. Then the onboarding flow, resumed wherever it was left. Then the unlock, but only on a launch
  * that finds a streak already worth keeping, which is the whole point of not
  * asking sooner.
  */
 private fun firstRoute(): Route = when {
     Account.available && !Account.signedIn && !Onboarding.skippedSignIn -> Route.Welcome
-    !Onboarding.sawTour -> Route.Tour
-    // No rituals means nothing has been claimed yet, so the first question is
-    // who they are trying to become, not what they will do about it.
-    HabitStore.habits.isEmpty() -> Route.Identity
+    // One flow, resumed wherever it was left: nothing is asked twice.
+    Onboarding.needsFlow(HabitStore.habits.isNotEmpty()) -> Route.Onboarding
     Onboarding.unlockIsWorthMentioning(LocalDate.now()) && !Unlock.unlocked -> {
         Onboarding.markSawPaywall()
         Route.Paywall()
@@ -158,26 +154,26 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
     LaunchedEffect(habits) {
         val today = LocalDate.now()
         val ready = habits.firstOrNull { !it.isBuilt && it.goalMet(today) }
-        if (ready != null && route !is Route.Built) route = Route.Built(ready.id)
+        // Never over the way in, or over a purchase someone is in the middle of.
+        val busy = route is Route.Built || route is Route.Onboarding || route is Route.Paywall
+        if (ready != null && !busy) route = Route.Built(ready.id)
     }
 
     when (val r = route) {
         is Route.Welcome -> WelcomeScreen(
-            onSignedIn = { route = if (!Onboarding.sawTour) Route.Tour else Route.Home },
+            onSignedIn = { route = firstRoute() },
             onSkip = {
                 Onboarding.markSkippedSignIn()
-                route = if (!Onboarding.sawTour) Route.Tour else Route.Home
+                route = firstRoute()
             }
         )
 
-        is Route.Tour -> TourScreen(
-            onDone = {
-                route = if (HabitStore.habits.isEmpty()) Route.Identity else Route.Home
+        is Route.Onboarding -> OnboardingFlow(
+            habits = habits,
+            onFinished = { id ->
+                Onboarding.finishFlow()
+                route = id?.let { Route.Detail(it) } ?: Route.Home
             }
-        )
-
-        is Route.Identity -> IdentityScreen(
-            onDone = { identity -> route = Route.Create(identity) }
         )
 
         is Route.Home -> HomeScreen(

@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
+import com.ayan.ritual.data.Goal
 import java.time.LocalDate
 
 /**
@@ -43,6 +44,31 @@ object ShareCardRenderer {
         val onBlock = accent.onBlock
         val pad = s(64f)
 
+        // ── The sentence ────────────────────────────────────────────────────
+        // Above the block, in the clear band under Instagram's own chrome: it
+        // is the claim, and the block below is the evidence for it.
+        if (model.identity.isNotBlank()) {
+            // Said as a sentence, full stop and all.
+            val said = model.identity.trim().let { if (it.last() in ".!?") it else "$it." }
+            val text = android.text.TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = Palette.INK
+                textSize = s(54f)
+                typeface = Fonts.extraBold()
+                letterSpacing = -0.03f
+            }
+            val width = (block.width()).toInt()
+            val layout = android.text.StaticLayout.Builder
+                .obtain(said, 0, said.length, text, width)
+                .setMaxLines(3)
+                .setEllipsize(android.text.TextUtils.TruncateAt.END)
+                .setLineSpacing(0f, 0.98f)
+                .build()
+            canvas.save()
+            canvas.translate(block.left + s(8f), block.top - s(44f) - layout.height)
+            layout.draw(canvas)
+            canvas.restore()
+        }
+
         // ── Ritual name ─────────────────────────────────────────────────────
         val slot = SlabRenderer.paint(s(30f), onBlock.withAlpha(160), Fonts.semiBold(), 0.10f)
         canvas.drawText(model.slot.uppercase(), block.left + pad, block.top + pad + s(26f), slot)
@@ -53,11 +79,21 @@ object ShareCardRenderer {
 
         // ── The number that matters ─────────────────────────────────────────
         val bigPaint = SlabRenderer.paint(s(300f), onBlock, Fonts.extraBold(), -0.05f)
-        canvas.drawText(model.streak.toString(), block.left + pad - s(8f), block.top + s(430f), bigPaint)
+        // Before a single day is kept, a streak of zero says nothing worth
+        // posting. What is true on day one is the bet itself, so say that.
+        val starting = model.streak == 0 && model.totalDone == 0
+        canvas.drawText(
+            if (starting) Goal.DAYS.toString() else model.streak.toString(),
+            block.left + pad - s(8f), block.top + s(430f), bigPaint
+        )
 
         val unit = SlabRenderer.paint(s(38f), onBlock.withAlpha(190), Fonts.extraBold(), 0.02f)
         canvas.drawText(
-            if (model.streak == 1) "DAY IN A ROW" else "DAYS IN A ROW",
+            when {
+                starting -> "DAYS, STARTING TODAY"
+                model.streak == 1 -> "DAY IN A ROW"
+                else -> "DAYS IN A ROW"
+            },
             block.left + pad, block.top + s(492f), unit
         )
 
