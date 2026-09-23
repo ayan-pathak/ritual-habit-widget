@@ -65,9 +65,10 @@ class MainActivity : ComponentActivity() {
         Account.start()
 
         // The cloud copy follows the device, never the other way round: every
-        // local write is mirrored after it has already landed on disk.
+        // local write is mirrored after it has already landed on disk. Whether
+        // there is a cloud copy at all is decided in RitualApp: backup is part
+        // of the unlock, so it runs only for someone signed in who has it.
         HabitStore.onChanged = { CloudSync.pushAll(applicationContext) }
-        Account.uid?.let { CloudSync.start(this, it) }
         pendingHabitId.value = intent?.getStringExtra(RitualWidgetProvider.EXTRA_HABIT_ID)
 
         setContent {
@@ -148,6 +149,15 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
     val habits by HabitStore.habitsState
     val context = LocalContext.current
 
+    // Backup: signed in *and* unlocked. Signing in alone is an account, not a
+    // backup; the squares stay on this phone until the unlock turns it on.
+    val uid by Account.uidState
+    val unlocked by Unlock.unlockedState
+    LaunchedEffect(uid, unlocked) {
+        val id = uid
+        if (id != null && unlocked) CloudSync.start(context, id) else CloudSync.stop()
+    }
+
     // Thirty days that were cleared and never claimed. Checked here rather
     // than inside the screen that marked the day, so it also catches someone
     // who was away on day thirty and comes back on day thirty five.
@@ -187,7 +197,10 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
 
         is Route.Paywall -> PaywallScreen(reason = r.reason, onClose = { route = Route.Home })
 
-        is Route.Account -> AccountScreen(onBack = { route = Route.Home })
+        is Route.Account -> AccountScreen(
+            onBack = { route = Route.Home },
+            onBackup = { route = Route.Paywall(PaywallReason.BACKUP) }
+        )
 
         is Route.Built -> {
             val habit = habits.firstOrNull { it.id == r.habitId }

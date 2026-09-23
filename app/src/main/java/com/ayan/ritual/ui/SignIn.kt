@@ -24,7 +24,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.cloud.Account
-import com.ayan.ritual.cloud.CloudSync
 import kotlinx.coroutines.launch
 
 /**
@@ -61,13 +60,9 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit, onSkip: (() -> Unit)? = n
     var password by remember { mutableStateOf("") }
     var emailChosen by remember { mutableStateOf(false) }
 
-    // Whoever they came in as, the mirror starts on the same uid.
-    val landed: (Boolean) -> Unit = { ok ->
-        if (ok) {
-            Account.uid?.let { CloudSync.start(context, it) }
-            onSignedIn()
-        }
-    }
+    // Signing in is an account and nothing more. Backup is part of the
+    // unlock, and RitualApp starts it once both are true.
+    val landed: (Boolean) -> Unit = { ok -> if (ok) onSignedIn() }
 
     Column(Modifier.fillMaxWidth()) {
         /* Whatever fails, the reason lands here. It used to sit inside the
@@ -172,14 +167,14 @@ fun SignInBlock(label: String, onSignedIn: () -> Unit, onSkip: (() -> Unit)? = n
         if (skip != null) {
             Spacer(Modifier.height(10.dp))
             Text(
-                "Maybe later",
-                style = Body.copy(fontSize = 13.sp, color = InkFaint),
+                "Continue without an account",
+                style = Body.copy(fontSize = 14.sp, color = InkSoft),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(999.dp))
                     .clickable { skip() }
-                    .padding(vertical = 8.dp)
+                    .padding(vertical = 14.dp)
             )
         }
     }

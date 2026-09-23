@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- What the widget picker and the pin dialog show. The live layout is a bare
+     ImageView filled at runtime, so previewing it drew nothing. -->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:adjustViewBounds="true"
+    android:contentDescription="@string/widget_description"
+    android:scaleType="fitCenter"
+    android:src="@drawable/widget_preview" />

@@ -12,7 +12,8 @@
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen"
     android:initialLayout="@layout/widget_ritual"
-    android:previewLayout="@layout/widget_ritual"
+    android:previewImage="@drawable/widget_preview"
+    android:previewLayout="@layout/widget_preview"
     android:configure="com.ayan.ritual.widget.WidgetConfigActivity"
     android:widgetFeatures="reconfigurable|configuration_optional"
     android:description="@string/widget_description" />

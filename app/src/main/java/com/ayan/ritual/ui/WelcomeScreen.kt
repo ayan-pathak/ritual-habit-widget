@@ -114,8 +114,8 @@ fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {
             Column {
                 Spacer(Modifier.height(22.dp))
                 Text(
-                    "Every square you fill is mirrored to your account, so a new " +
-                        "phone picks up exactly where the old one left off.",
+                    "Everything you mark is saved right here on this phone. " +
+                        "Sign in if you'd like an account, or just continue.",
                     style = Body.copy(fontSize = 13.sp, color = InkSoft)
                 )
                 Spacer(Modifier.height(16.dp))

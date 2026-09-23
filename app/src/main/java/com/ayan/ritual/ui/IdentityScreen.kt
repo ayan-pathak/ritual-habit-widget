@@ -81,10 +81,6 @@ internal val SUGGESTIONS = listOf(
 internal fun sentenceStart(name: String): String =
     if (name.isBlank()) "I am someone who " else "${name.trim()} is someone who "
 
-/** The colour a sentence ending is shown in: its chip's, or lime for their own words. */
-internal fun accentIndexFor(tail: String): Int =
-    SUGGESTIONS.indexOf(tail.trim()).coerceAtLeast(0)
-
 @Composable
 internal fun NameStep(name: String, onName: (String) -> Unit, onNext: () -> Unit, onSkip: () -> Unit) {
     Column(Modifier.fillMaxSize()) {
@@ -116,15 +112,16 @@ internal fun NameStep(name: String, onName: (String) -> Unit, onNext: () -> Unit
  * The sentence is the hero of the screen and it is never empty: while nothing
  * is chosen it types its own examples out, one after another, so the shape of
  * an answer is obvious before anyone has to think of one. Tapping an example
- * lands it in the sentence in that example's colour; writing their own does
- * the same in lime. Nothing here advances on its own, so trying one on is
- * free.
+ * or writing their own lands it in the sentence, marked in green, the colour
+ * their ritual starts in. Nothing here advances on its own, so trying one on
+ * is free.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun IdentityStep(start: String, tail: String, onTail: (String) -> Unit, onNext: () -> Unit) {
     val chosen = tail.isNotBlank()
-    val accent = accentAt(accentIndexFor(tail))
+    // Green whatever was picked: the ritual starts green, so the sentence does.
+    val accent = accentAt(0)
 
     Column(Modifier.fillMaxSize()) {
         Column(
