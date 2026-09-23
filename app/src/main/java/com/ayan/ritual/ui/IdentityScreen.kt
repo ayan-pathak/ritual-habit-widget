@@ -131,10 +131,13 @@ internal fun IdentityStep(start: String, tail: String, onTail: (String) -> Unit,
         ) {
             CapsLabel("One small sentence")
             Spacer(Modifier.height(8.dp))
-            Text("Finish this\nsentence.", style = Display.copy(fontSize = 32.sp, lineHeight = 34.sp))
+            Text(
+                "What's something you'd like to be true about you?",
+                style = Display.copy(fontSize = 32.sp, lineHeight = 34.sp)
+            )
             Spacer(Modifier.height(12.dp))
             Text(
-                "Something small you'd like to be true about you. It doesn't have to be true yet. That's what the next thirty days are for.",
+                "It doesn't have to be true yet. That's what the next thirty days are for.",
                 style = Body.copy(color = InkSoft)
             )
             Spacer(Modifier.height(22.dp))

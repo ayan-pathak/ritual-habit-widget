@@ -28,7 +28,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalContext
@@ -54,8 +58,16 @@ private val INCLUDED = listOf(
  * wall that answers the wrong question reads as a toll booth. Everything
  * below the headline is identical in all three, which is the point: the price
  * must never look like it depends on how badly someone wants something.
+ *
+ * [WELCOME] is the exception: it is shown once, right after the first ritual
+ * is set up, before anyone has reached for anything, so it names all three
+ * things the unlock buys and shows each rather than listing them.
  */
 enum class PaywallReason(val title: String, val lede: String) {
+    WELCOME(
+        "Your first ritual\nis free forever.",
+        "One payment unlocks everything else Ritual does. No subscription."
+    ),
     ANOTHER(
         "You built one.\nBuild the next.",
         "Your first identity stays free forever, whatever you decide here."
@@ -143,7 +155,27 @@ fun PaywallScreen(reason: PaywallReason = PaywallReason.ANOTHER, onClose: () -> 
             )
         }
 
-        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp)) {
+        if (reason == PaywallReason.WELCOME) {
+            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp, bottom = 22.dp)) {
+                Feature(
+                    "Build more than one identity",
+                    "As many rituals as you keep, each with its own widget on your home screen.",
+                    ::drawGrid
+                )
+                Spacer(Modifier.height(18.dp))
+                Feature(
+                    "Share it on Instagram",
+                    "Your sentence and your real grid as a story, whenever it is worth showing.",
+                    ::drawInstagram
+                )
+                Spacer(Modifier.height(18.dp))
+                Feature(
+                    "Back it up",
+                    "Every square saved to your account, so a new phone picks up where this one left off.",
+                    ::drawCloud
+                )
+            }
+        } else Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp)) {
             INCLUDED.forEach { line ->
                 Row(Modifier.padding(bottom = 14.dp)) {
                     Box(Modifier.size(15.dp)) {
@@ -189,16 +221,22 @@ fun PaywallScreen(reason: PaywallReason = PaywallReason.ANOTHER, onClose: () -> 
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(10.dp))
-            Text(
-                "Restore a previous purchase",
-                style = Body.copy(fontSize = 13.sp),
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(999.dp))
-                    .clickable { Unlock.refresh() }
-                    .padding(vertical = 8.dp)
-            )
+            // Nobody asked for the first wall, so the way past it is the
+            // quiet link; the others were reached for, and keep Restore.
+            if (reason == PaywallReason.WELCOME) {
+                QuietLink("Not now", onClose)
+            } else {
+                Text(
+                    "Restore a previous purchase",
+                    style = Body.copy(fontSize = 13.sp),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(999.dp))
+                        .clickable { Unlock.refresh() }
+                        .padding(vertical = 8.dp)
+                )
+            }
             Spacer(Modifier.height(18.dp))
             Text(
                 "One payment. No subscription, no account, nothing to cancel.",
@@ -210,6 +248,60 @@ fun PaywallScreen(reason: PaywallReason = PaywallReason.ANOTHER, onClose: () -> 
             Spacer(Modifier.navigationBarsPadding())
         }
     }
+}
+
+/** One thing the unlock buys, with a drawn mark for it. */
+@Composable
+private fun Feature(title: String, body: String, mark: DrawScope.(Color) -> Unit) {
+    val ink = Ink
+    Row {
+        Box(
+            Modifier
+                .size(44.dp)
+                .clip(RoundedCornerShape(14.dp))
+                .background(Paper),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.foundation.Canvas(Modifier.size(20.dp)) { mark(ink) }
+        }
+        Spacer(Modifier.size(14.dp))
+        Column {
+            Spacer(Modifier.height(2.dp))
+            Text(title, style = Display.copy(fontSize = 16.sp, lineHeight = 20.sp, letterSpacing = (-0.3).sp))
+            Spacer(Modifier.height(3.dp))
+            Text(body, style = Body.copy(fontSize = 13.sp, lineHeight = 19.sp))
+        }
+    }
+}
+
+/** Four squares: more than one ritual. */
+private fun drawGrid(scope: DrawScope, ink: Color) = with(scope) {
+    val s = size.width * 0.36f
+    val g = size.width * 0.1f
+    val o = (size.width - s * 2 - g) / 2f
+    for (x in 0..1) for (y in 0..1) {
+        drawRoundRect(ink, Offset(o + x * (s + g), o + y * (s + g)), Size(s, s), CornerRadius(s * 0.26f))
+    }
+}
+
+/** Instagram's rounded square with a ring and a corner dot. */
+private fun drawInstagram(scope: DrawScope, ink: Color) = with(scope) {
+    val w = size.width
+    drawRoundRect(ink, Offset(w * .08f, w * .08f), Size(w * .84f, w * .84f), CornerRadius(w * .26f), style = Stroke(w * .11f))
+    drawCircle(ink, radius = w * .2f, center = Offset(w * .5f, w * .5f), style = Stroke(w * .11f))
+    drawCircle(ink, radius = w * .06f, center = Offset(w * .72f, w * .28f))
+}
+
+/** A cloud with an arrow going up into it. */
+private fun drawCloud(scope: DrawScope, ink: Color) = with(scope) {
+    val w = size.width
+    drawCircle(ink, radius = w * .2f, center = Offset(w * .33f, w * .52f))
+    drawCircle(ink, radius = w * .26f, center = Offset(w * .56f, w * .42f))
+    drawRoundRect(ink, Offset(w * .1f, w * .5f), Size(w * .8f, w * .26f), CornerRadius(w * .13f))
+    val hole = Paper
+    drawLine(hole, Offset(w * .5f, w * .7f), Offset(w * .5f, w * .44f), w * .09f, StrokeCap.Round)
+    drawLine(hole, Offset(w * .4f, w * .53f), Offset(w * .5f, w * .43f), w * .09f, StrokeCap.Round)
+    drawLine(hole, Offset(w * .6f, w * .53f), Offset(w * .5f, w * .43f), w * .09f, StrokeCap.Round)
 }
 
 /** Play needs the Activity, and Compose only hands us a Context. */
