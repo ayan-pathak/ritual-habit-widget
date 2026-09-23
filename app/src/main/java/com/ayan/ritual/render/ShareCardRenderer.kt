@@ -45,56 +45,59 @@ object ShareCardRenderer {
         val pad = s(64f)
 
         // ── The sentence ────────────────────────────────────────────────────
-        // Above the block, in the clear band under Instagram's own chrome: it
-        // is the claim, and the block below is the evidence for it.
-        if (model.identity.isNotBlank()) {
-            // Said as a sentence, full stop and all.
-            val said = model.identity.trim().let { if (it.last() in ".!?") it else "$it." }
-            val text = android.text.TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-                color = Palette.INK
-                textSize = s(54f)
-                typeface = Fonts.extraBold()
-                letterSpacing = -0.03f
-            }
-            val width = (block.width()).toInt()
-            val layout = android.text.StaticLayout.Builder
-                .obtain(said, 0, said.length, text, width)
-                .setMaxLines(3)
-                .setEllipsize(android.text.TextUtils.TruncateAt.END)
-                .setLineSpacing(0f, 0.98f)
-                .build()
-            canvas.save()
-            canvas.translate(block.left + s(8f), block.top - s(44f) - layout.height)
-            layout.draw(canvas)
-            canvas.restore()
-        }
-
-        // ── Ritual name ─────────────────────────────────────────────────────
+        // The headline, and the only words on the card. A story says who
+        // someone is becoming; the task that gets them there is their own
+        // business, and printing both made the card say two different things.
+        // It shrinks rather than truncates, so the claim is never cut short.
         val slot = SlabRenderer.paint(s(30f), onBlock.withAlpha(160), Fonts.semiBold(), 0.10f)
         canvas.drawText(model.slot.uppercase(), block.left + pad, block.top + pad + s(26f), slot)
 
-        val namePaint = SlabRenderer.paint(s(76f), onBlock, Fonts.extraBold(), -0.03f)
-        val name = SlabRenderer.fit(namePaint, model.title, block.width() - pad * 2)
-        canvas.drawText(name, block.left + pad, block.top + pad + s(110f), namePaint)
+        val said = if (model.identity.isNotBlank()) {
+            model.identity.trim().let { if (it.last() in ".!?") it else "$it." }
+        } else {
+            model.title.trim()
+        }
+        val head = android.text.TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = onBlock
+            typeface = Fonts.extraBold()
+            letterSpacing = -0.02f
+        }
+        val textW = (block.width() - pad * 2).toInt()
+        fun layoutAt(size: Float) = android.text.StaticLayout.Builder
+            .obtain(said, 0, said.length, head.apply { textSize = s(size) }, textW)
+            .setMaxLines(3)
+            .setEllipsize(android.text.TextUtils.TruncateAt.END)
+            .setLineSpacing(0f, 0.94f)
+            .build()
+        var size = 60f
+        var layout = layoutAt(size)
+        while (size > 42f && (layout.lineCount > 3 || layout.getEllipsisCount(layout.lineCount - 1) > 0)) {
+            size -= 6f
+            layout = layoutAt(size)
+        }
+        canvas.save()
+        canvas.translate(block.left + pad, block.top + s(118f))
+        layout.draw(canvas)
+        canvas.restore()
 
         // ── The number that matters ─────────────────────────────────────────
-        val bigPaint = SlabRenderer.paint(s(300f), onBlock, Fonts.extraBold(), -0.05f)
+        val bigPaint = SlabRenderer.paint(s(220f), onBlock, Fonts.extraBold(), -0.05f)
         // Before a single day is kept, a streak of zero says nothing worth
         // posting. What is true on day one is the bet itself, so say that.
         val starting = model.streak == 0 && model.totalDone == 0
         canvas.drawText(
             if (starting) Goal.DAYS.toString() else model.streak.toString(),
-            block.left + pad - s(8f), block.top + s(430f), bigPaint
+            block.left + pad - s(6f), block.top + s(540f), bigPaint
         )
 
-        val unit = SlabRenderer.paint(s(38f), onBlock.withAlpha(190), Fonts.extraBold(), 0.02f)
+        val unit = SlabRenderer.paint(s(36f), onBlock.withAlpha(190), Fonts.extraBold(), 0.02f)
         canvas.drawText(
             when {
                 starting -> "DAYS, STARTING TODAY"
                 model.streak == 1 -> "DAY IN A ROW"
                 else -> "DAYS IN A ROW"
             },
-            block.left + pad, block.top + s(492f), unit
+            block.left + pad, block.top + s(590f), unit
         )
 
         // ── Mochi ───────────────────────────────────────────────────────────
@@ -102,9 +105,9 @@ object ShareCardRenderer {
         val catW = Cat.widthFor(catH)
         val catBox = RectF(
             block.right - pad - catW - s(38f),
-            block.top + s(250f),
+            block.top + s(350f),
             block.right - pad + s(2f),
-            block.top + s(250f) + catH + s(38f)
+            block.top + s(350f) + catH + s(38f)
         )
         // Ink, and standing on the bottom edge of it: the same two rules the
         // card and the app's tile follow, so he is the same cat everywhere.
@@ -118,7 +121,7 @@ object ShareCardRenderer {
         val gridW = block.width() - pad * 2
         val cell = gridW / (cols + gapRatio * (cols - 1))
         val gap = cell * gapRatio
-        val gridTop = block.top + s(620f)
+        val gridTop = block.top + s(650f)
         val startOff = GridGeo.startOffset(model.year)
         val yearLen = GridGeo.lengthOf(model.year)
         val todayDoy = if (model.today.year == model.year) model.today.dayOfYear else -1
