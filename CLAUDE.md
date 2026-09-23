@@ -1,5 +1,12 @@
 # Ritual — working notes
 
+> **This is the `web` branch. Change `docs/` only — it is the website.**
+> The repo holds three products, one long-lived branch each: `android` (`app/`),
+> `ios` (`ios/`) and `web` (`docs/`). Shared files change on `main` and are
+> merged in with `git merge main`.
+> GitHub Pages serves `docs/` from this branch, so every push here goes live at
+> https://ayan-pathak.github.io/ritual-habit-widget/ within a minute or two.
+
 A daily habit tracker built around one idea: **a year is a grid of empty squares, and each day you keep a practice, one fills in.** The home-screen widget is the product; the app exists to feed it.
 
 ## Build
