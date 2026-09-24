@@ -18,6 +18,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,6 +28,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,14 +43,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.data.Goal
 import com.ayan.ritual.data.Habit
 import com.ayan.ritual.data.Onboarding
 import com.ayan.ritual.render.Mood
+import com.ayan.ritual.render.Pose
 import com.ayan.ritual.render.SlabModel
 import com.ayan.ritual.render.accentAt
 import com.ayan.ritual.widget.RitualWidgetProvider
@@ -224,7 +229,8 @@ private fun LookStep(onNext: () -> Unit) {
             LookChoice("Light", Appearance.LIGHT, Modifier.weight(1f))
             LookChoice("Dark", Appearance.DARK, Modifier.weight(1f))
         }
-        Spacer(Modifier.weight(1f))
+        // Mochi peeks up from behind the button, in whatever room is left.
+        MochiRoom(Pose.PEEK, 200.dp, Alignment.BottomCenter, Modifier.weight(1f))
         InkPill(label = "Next", onClick = onNext, modifier = Modifier.fillMaxWidth())
     }
 }
@@ -253,7 +259,11 @@ private fun CommitStep(identity: String, tail: String, onNext: () -> Unit) {
             style = Body.copy(color = InkSoft)
         )
         Spacer(Modifier.height(16.dp))
-        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) { StoryArt(post) }
+        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+            StoryArt(post)
+            // Cheering beside the post, standing on the same floor as it.
+            MochiPose(Pose.CHEER, 156.dp, Modifier.align(Alignment.BottomEnd).offset(x = 6.dp))
+        }
         Spacer(Modifier.height(14.dp))
         InkPill(label = "Start your ritual", onClick = onNext, modifier = Modifier.fillMaxWidth())
     }
@@ -304,7 +314,17 @@ private fun WidgetStep(habit: Habit, onNext: () -> Unit) {
             style = Body.copy(color = InkSoft)
         )
         Spacer(Modifier.height(20.dp))
-        Box(Modifier.weight(1f).fillMaxWidth()) { PhoneHomeScreen(model) }
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            PhoneHomeScreen(model)
+            // Sitting on top of their widget with his feet over its edge. The
+            // card's top is where PhoneHomeScreen puts it: the status row, 18dp,
+            // a row of 56dp icons and 16dp. Lifted by the whole frame, less the
+            // share of it below his seat, so the seat lands on that edge.
+            MochiPose(
+                Pose.PERCH, PERCH_HEIGHT,
+                Modifier.align(Alignment.TopEnd).padding(end = 58.dp).offset(y = WIDGET_TOP - PERCH_HEIGHT)
+            )
+        }
         Spacer(Modifier.height(12.dp))
         InkPill(
             label = if (manual) "Done" else "Add to home screen",
@@ -314,6 +334,21 @@ private fun WidgetStep(habit: Habit, onNext: () -> Unit) {
             modifier = Modifier.fillMaxWidth()
         )
         QuietLink("I'll do it later", onNext)
+    }
+}
+
+private val PERCH_HEIGHT = 132.dp
+private val WIDGET_TOP = 118.dp
+
+/**
+ * Mochi in the room a flexible gap leaves, never taller than [height], and
+ * gone when the gap is too small to show him properly. He stands on the
+ * gap's bottom edge, and anything of him below it is clipped.
+ */
+@Composable
+private fun MochiRoom(pose: Pose, height: Dp, align: Alignment, modifier: Modifier = Modifier) {
+    BoxWithConstraints(modifier.fillMaxWidth().clipToBounds(), contentAlignment = align) {
+        if (maxHeight > 64.dp) MochiPose(pose, minOf(height, maxHeight))
     }
 }
 

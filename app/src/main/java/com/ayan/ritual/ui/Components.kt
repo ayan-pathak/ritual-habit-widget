@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -28,6 +29,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,7 +42,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
@@ -54,8 +58,10 @@ import com.ayan.ritual.render.Accent
 import com.ayan.ritual.render.Beat
 import com.ayan.ritual.render.Cat
 import com.ayan.ritual.render.MochiArt
+import com.ayan.ritual.render.MochiBody
 import com.ayan.ritual.render.MochiMotion
 import com.ayan.ritual.render.Mood
+import com.ayan.ritual.render.Pose
 import com.ayan.ritual.render.SlabModel
 import com.ayan.ritual.render.SlabRenderer
 import kotlin.math.roundToInt
@@ -214,6 +220,50 @@ fun MochiTile(
             }) {
                 drawImage(image)
             }
+        }
+    }
+}
+
+/**
+ * Mochi with his whole body, in the [pose] for the screen he is on.
+ *
+ * He stands on the bottom edge of the box that holds him: the frame is pulled
+ * down so its ground line lands exactly on that edge, and a parent that clips
+ * hides the few pixels below it. [height] is the whole frame, headroom for a
+ * hop included. Bump [kick] to make him hop in answer to something tapped;
+ * the first composition never counts, so opening a screen does not start him.
+ *
+ * The frame is a function of the clock alone, so this only keeps time. With
+ * animations off he holds a single frame.
+ */
+@Composable
+fun MochiPose(pose: Pose, height: Dp, modifier: Modifier = Modifier, kick: Int = 0) {
+    val animated = animationsAllowed()
+    val seed = remember { (Math.random() * 100).toFloat() }
+    val phase = remember { (Math.random() * 2).toFloat() }
+    var clock by remember { mutableFloatStateOf(0.9f) }
+    var kickAt by remember { mutableFloatStateOf(-10f) }
+    var seen by remember { mutableIntStateOf(kick) }
+
+    LaunchedEffect(kick) {
+        if (kick != seen) { seen = kick; kickAt = clock }
+    }
+    LaunchedEffect(animated) {
+        if (!animated) return@LaunchedEffect
+        var first = 0L
+        while (true) {
+            withFrameNanos { now ->
+                if (first == 0L) first = now
+                clock = phase + (now - first) / 1_000_000_000f
+            }
+        }
+    }
+
+    val sink = height * (1f - MochiBody.groundAt(pose))
+    Canvas(modifier.offset(y = sink).size(height * MochiBody.RATIO, height)) {
+        val t = if (animated) clock else 0.9f
+        drawIntoCanvas {
+            MochiBody.draw(it.nativeCanvas, size.height, pose, t, if (animated) t - kickAt else -1f, seed)
         }
     }
 }

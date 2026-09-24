@@ -34,6 +34,7 @@ import com.ayan.ritual.data.Habit
 import com.ayan.ritual.render.ACCENTS
 import com.ayan.ritual.render.Cat
 import com.ayan.ritual.render.Mood
+import com.ayan.ritual.render.Pose
 import com.ayan.ritual.render.SlabModel
 import com.ayan.ritual.render.accentAt
 import java.time.LocalDate
@@ -206,7 +207,8 @@ private fun EmptyState(onCreate: () -> Unit) {
                 Modifier.fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                MochiTile(Mood.RESTING, Color.Transparent, height = 72.dp, inset = 0.dp)
+                // Dozing, with nothing yet to keep.
+                MochiPose(Pose.SLEEP, 156.dp)
                 Spacer(Modifier.height(20.dp))
                 Text(
                     "Nothing to keep yet.",

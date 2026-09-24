@@ -63,6 +63,10 @@ His mood is derived from streak state (`Cat.moodFor`), never chosen for decorati
 
 **He grows out of the bottom edge of whatever holds him**, never floats in the middle of it. A portrait cropped by its own frame reads as a character; one centred in a box reads as a sticker. Where there is no box he stands straight on the colour, and there is never a pale tile behind him: two near-whites meeting was the one place he lost his edges.
 
+### Full body
+
+`render/MochiBody.kt` gives him a sitting body for the bigger moments, one `Pose` per screen: waving on Welcome, peeking over Next, saying hi on the name step, perched on the sentence card, cheering beside the day-thirty post, sitting on the widget, a key / card / selfie / cloud on the four paywalls, a party on day thirty, and dozing on an empty home. The head and chest are still the real portrait (rasterised once per size); the body below is drawn in the portrait's own greys and outline weight, every limb one curved outline with toes, so nothing reads as a straight line next to the face. Each frame is a pure function of the clock, and `MochiPose` in `ui/Components.kt` only keeps time and stands the frame's ground line on the bottom edge of its box. Badges, the detail header and the widget keep the head-only `MochiTile`.
+
 ### Motion
 
 `render/MochiMotion.kt` is the beat table and a clock, with no Compose and no `android.graphics` in it, so iOS can run the same timings against its own drawing. `MochiTile` advances it once a frame and moves a rasterised mood rather than redrawing seventy-five paths.

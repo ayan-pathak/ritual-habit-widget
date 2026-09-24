@@ -14,6 +14,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -33,6 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,6 +43,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
@@ -51,6 +55,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ayan.ritual.render.Pose
 import com.ayan.ritual.render.accentAt
 import kotlinx.coroutines.delay
 
@@ -99,7 +104,13 @@ internal fun NameStep(name: String, onName: (String) -> Unit, onNext: () -> Unit
             placeholder = "Your first name"
         )
 
-        Spacer(Modifier.weight(1f))
+        // Sitting on the button, saying hello.
+        BoxWithConstraints(
+            Modifier.weight(1f).fillMaxWidth().clipToBounds(),
+            contentAlignment = Alignment.BottomEnd
+        ) {
+            if (maxHeight > 64.dp) MochiPose(Pose.HELLO, minOf(180.dp, maxHeight), Modifier.padding(end = 6.dp))
+        }
 
         InkPill(label = "Continue", onClick = onNext, modifier = Modifier.fillMaxWidth())
         QuietLink("Skip, just say “I”", onSkip)
@@ -122,6 +133,8 @@ internal fun IdentityStep(start: String, tail: String, onTail: (String) -> Unit,
     val chosen = tail.isNotBlank()
     // Green whatever was picked: the ritual starts green, so the sentence does.
     val accent = accentAt(0)
+    // Mochi hops each time an example is tried on.
+    var hop by remember { mutableIntStateOf(0) }
 
     Column(Modifier.fillMaxSize()) {
         Column(
@@ -138,11 +151,23 @@ internal fun IdentityStep(start: String, tail: String, onTail: (String) -> Unit,
             Spacer(Modifier.height(12.dp))
             Text(
                 "It doesn't have to be true yet. That's what the next thirty days are for.",
-                style = Body.copy(color = InkSoft)
+                style = Body.copy(color = InkSoft),
+                // Room on the right for Mochi, who sits on the card below.
+                modifier = Modifier.padding(end = 96.dp)
             )
             Spacer(Modifier.height(22.dp))
 
-            SentenceCard(start = start, tail = tail, accentBlock = Color(accent.block), accentOn = Color(accent.onBlock))
+            Box {
+                SentenceCard(start = start, tail = tail, accentBlock = Color(accent.block), accentOn = Color(accent.onBlock))
+                // Sitting on the card's top edge: lifted by his whole frame,
+                // less the share of it that MochiPose already sinks below
+                // his seat.
+                MochiPose(
+                    Pose.SIT, 100.dp,
+                    Modifier.align(Alignment.TopEnd).padding(end = 10.dp).offset(y = (-100).dp),
+                    kick = hop
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
             CapsLabel(if (chosen) "Try another" else "Tap one to try it on")
@@ -156,7 +181,7 @@ internal fun IdentityStep(start: String, tail: String, onTail: (String) -> Unit,
                         text = s,
                         index = i,
                         selected = tail.trim() == s,
-                        onClick = { onTail(s) }
+                        onClick = { onTail(s); hop++ }
                     )
                 }
             }

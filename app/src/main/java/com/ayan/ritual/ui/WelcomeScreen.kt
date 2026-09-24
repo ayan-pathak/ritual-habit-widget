@@ -22,10 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ayan.ritual.render.Mood
+import com.ayan.ritual.render.Pose
 
 /**
  * The first thing a new install shows.
@@ -97,16 +96,14 @@ fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {
                             .align(Alignment.TopStart)
                             .padding(26.dp)
                     )
-                    // On the bottom edge of the block, the way he stands on
-                    // every other surface in the app, and with no tile behind
-                    // him: a pale panel under a pale cat was the one place two
-                    // near-whites met and he lost his edges to it.
-                    MochiTile(
-                        mood = Mood.PLEASED,
-                        tile = Color.Transparent,
-                        height = block * 0.54f,
-                        inset = 0.dp,
-                        modifier = Modifier.align(Alignment.BottomCenter)
+                    // Sitting on the bottom edge of the block and waving, with
+                    // no tile behind him: a pale panel under a pale cat was the
+                    // one place two near-whites met and he lost his edges to it.
+                    // Capped so his ears never reach the headline.
+                    MochiPose(
+                        Pose.WAVE,
+                        height = minOf(block * 0.88f, block - 118.dp),
+                        modifier = Modifier.align(Alignment.BottomEnd)
                     )
                 }
             }
