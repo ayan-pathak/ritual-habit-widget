@@ -25,7 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.data.Goal
 import com.ayan.ritual.data.Habit
-import com.ayan.ritual.render.Mood
+import com.ayan.ritual.render.Pose
 import com.ayan.ritual.render.accentAt
 import java.time.LocalDate
 
@@ -103,15 +103,10 @@ fun BuiltScreen(habit: Habit, onClaim: () -> Unit, onLater: () -> Unit) {
                         )
                     )
                 }
-                // On the bottom edge, as everywhere. He is pleased because
-                // they earned it, not because the app wants something.
-                MochiTile(
-                    mood = Mood.PLEASED,
-                    tile = Color.Transparent,
-                    height = block * 0.42f,
-                    inset = 0.dp,
-                    modifier = Modifier.align(Alignment.BottomCenter)
-                )
+                // On the bottom edge, as everywhere, and jumping for joy with
+                // confetti: they earned it, and the app is not asking for
+                // anything.
+                MochiPose(Pose.PARTY, block * 0.7f, Modifier.align(Alignment.BottomCenter))
             }
 
             Spacer(Modifier.weight(1f))

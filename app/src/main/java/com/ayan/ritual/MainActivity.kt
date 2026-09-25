@@ -42,7 +42,8 @@ sealed interface Route {
     /** Creating the ritual that builds [identity], which is blank when a
         later one is added from Home. */
     data class Create(val identity: String = "") : Route
-    data class Paywall(val reason: PaywallReason = PaywallReason.ANOTHER) : Route
+    /** [then] is where closing it goes; Home when there is nowhere better. */
+    data class Paywall(val reason: PaywallReason = PaywallReason.ANOTHER, val then: Route? = null) : Route
     data object Account : Route
     /** Thirty days cleared, waiting to be claimed. */
     data class Built(val habitId: String) : Route
@@ -182,7 +183,11 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
             habits = habits,
             onFinished = { id ->
                 Onboarding.finishFlow()
-                route = id?.let { Route.Detail(it) } ?: Route.Home
+                val landing = id?.let { Route.Detail(it) } ?: Route.Home
+                // The first ritual is set up, which is the one moment to say
+                // once, and in general, what the unlock buys. Closing it lands
+                // exactly where finishing the flow always did.
+                route = if (Unlock.unlocked) landing else Route.Paywall(PaywallReason.WELCOME, then = landing)
             }
         )
 
@@ -195,7 +200,7 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
             onShelf = { route = Route.Shelf }
         )
 
-        is Route.Paywall -> PaywallScreen(reason = r.reason, onClose = { route = Route.Home })
+        is Route.Paywall -> PaywallScreen(reason = r.reason, onClose = { route = r.then ?: Route.Home })
 
         is Route.Account -> AccountScreen(
             onBack = { route = Route.Home },
