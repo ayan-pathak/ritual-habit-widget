@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -21,6 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -42,6 +44,8 @@ import com.ayan.ritual.data.Habit
 import com.ayan.ritual.cloud.CloudSync
 import com.ayan.ritual.data.HabitStore
 import com.ayan.ritual.render.MONTH_INITIALS
+import com.ayan.ritual.render.MochiBody
+import com.ayan.ritual.render.Pose
 import com.ayan.ritual.render.accentAt
 import com.ayan.ritual.share.StoryShare
 import com.ayan.ritual.widget.RitualWidgetProvider
@@ -53,6 +57,8 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit, onPaywall: (PaywallReason) ->
     val today = LocalDate.now()
     val accent = accentAt(habit.accentIndex)
     var confirmingDelete by remember { mutableStateOf(false) }
+    var celebrate by remember { mutableIntStateOf(0) }
+    var celebrating by remember { mutableStateOf(false) }
 
     val firstYear = remember(habit.createdEpochDay, habit.done) {
         val earliest = minOf(habit.createdEpochDay, habit.done.minOrNull() ?: habit.createdEpochDay)
@@ -210,40 +216,57 @@ fun DetailScreen(habit: Habit, onBack: () -> Unit, onPaywall: (PaywallReason) ->
         // ── The act ─────────────────────────────────────────────────────────
         Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 22.dp)) {
             if (viewingNow) {
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    InkPill(
-                        label = if (model.doneToday) "Marked today" else "Mark today",
-                        onClick = {
-                            HabitStore.toggle(context, habit.id, today)
-                            RitualWidgetProvider.refreshAll(context)
-                        },
-                        modifier = Modifier.weight(1f),
-                        background = if (model.doneToday) Cream else Ink,
-                        content = if (model.doneToday) Ink else Paper,
-                        border = if (model.doneToday) Ink else null,
-                        leading = if (model.doneToday) {
-                            {
-                                Canvas(Modifier.size(16.dp)) {
-                                    drawLine(Ink, Offset(size.width * .18f, size.height * .53f),
-                                        Offset(size.width * .4f, size.height * .74f), size.width * .15f, StrokeCap.Round)
-                                    drawLine(Ink, Offset(size.width * .4f, size.height * .74f),
-                                        Offset(size.width * .82f, size.height * .29f), size.width * .15f, StrokeCap.Round)
+                // When the day is kept, Mochi pops up from behind the button that
+                // kept it, grins, hops with hearts, and ducks back down.
+                BoxWithConstraints {
+                    val popWidth = POP_HEIGHT * MochiBody.RATIO
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        InkPill(
+                            label = if (model.doneToday) "Marked today" else "Mark today",
+                            onClick = {
+                                val marking = !model.doneToday
+                                HabitStore.toggle(context, habit.id, today)
+                                RitualWidgetProvider.refreshAll(context)
+                                if (marking) { celebrate++; celebrating = true } else celebrating = false
+                            },
+                            modifier = Modifier.weight(1f),
+                            background = if (model.doneToday) Cream else Ink,
+                            content = if (model.doneToday) Ink else Paper,
+                            border = if (model.doneToday) Ink else null,
+                            leading = if (model.doneToday) {
+                                {
+                                    Canvas(Modifier.size(16.dp)) {
+                                        drawLine(Ink, Offset(size.width * .18f, size.height * .53f),
+                                            Offset(size.width * .4f, size.height * .74f), size.width * .15f, StrokeCap.Round)
+                                        drawLine(Ink, Offset(size.width * .4f, size.height * .74f),
+                                            Offset(size.width * .82f, size.height * .29f), size.width * .15f, StrokeCap.Round)
+                                    }
                                 }
+                            } else null
+                        )
+                        RoundButton(
+                            onClick = { confirmingDelete = !confirmingDelete },
+                            background = if (confirmingDelete) Red else Color.Transparent,
+                            border = if (confirmingDelete) Red else Ink
+                        ) {
+                            Canvas(Modifier.size(18.dp)) {
+                                val c = if (confirmingDelete) Paper else Ink
+                                drawLine(c, Offset(size.width * .22f, size.height * .22f),
+                                    Offset(size.width * .78f, size.height * .78f), size.width * .13f, StrokeCap.Round)
+                                drawLine(c, Offset(size.width * .78f, size.height * .22f),
+                                    Offset(size.width * .22f, size.height * .78f), size.width * .13f, StrokeCap.Round)
                             }
-                        } else null
-                    )
-                    RoundButton(
-                        onClick = { confirmingDelete = !confirmingDelete },
-                        background = if (confirmingDelete) Red else Color.Transparent,
-                        border = if (confirmingDelete) Red else Ink
-                    ) {
-                        Canvas(Modifier.size(18.dp)) {
-                            val c = if (confirmingDelete) Paper else Ink
-                            drawLine(c, Offset(size.width * .22f, size.height * .22f),
-                                Offset(size.width * .78f, size.height * .78f), size.width * .13f, StrokeCap.Round)
-                            drawLine(c, Offset(size.width * .78f, size.height * .22f),
-                                Offset(size.width * .22f, size.height * .78f), size.width * .13f, StrokeCap.Round)
                         }
+                    }
+                    if (celebrating) key(celebrate) {
+                        // Centred on the pill (the row less the round button and
+                        // its gap), paws over its top edge.
+                        MochiPose(
+                            Pose.POP, POP_HEIGHT,
+                            Modifier.floating(x = (maxWidth - 68.dp - popWidth) / 2f, y = -(POP_HEIGHT - 14.dp)),
+                            cheer = true,
+                            onDone = { celebrating = false }
+                        )
                     }
                 }
             } else {
@@ -346,3 +369,6 @@ private fun YearStep(pointsLeft: Boolean, enabled: Boolean, onClick: () -> Unit)
         }
     }
 }
+
+/** Mochi popping up over the mark button when a day is kept. */
+private val POP_HEIGHT = 190.dp

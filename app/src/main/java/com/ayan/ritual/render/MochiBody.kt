@@ -27,7 +27,17 @@ import kotlin.math.sin
 enum class Pose(val mood: Mood) {
     WAVE(Mood.PLEASED), HELLO(Mood.RESTING), PEEK(Mood.RESTING), SIT(Mood.RESTING),
     CHEER(Mood.PLEASED), PERCH(Mood.PLEASED), KEY(Mood.PLEASED), CARD(Mood.PLEASED),
-    SELFIE(Mood.PLEASED), CLOUD(Mood.RESTING), PARTY(Mood.PLEASED), SLEEP(Mood.RESTING)
+    SELFIE(Mood.PLEASED), CLOUD(Mood.RESTING), PARTY(Mood.PLEASED), SLEEP(Mood.RESTING),
+
+    /** A waddle, facing you. The caller moves him; this is only the gait. */
+    WALK(Mood.PLEASED),
+
+    /**
+     * Once, from behind whatever he is anchored to: up, a look around, back
+     * down. With [MochiBody.Extras.cheer] he comes up grinning and hops with
+     * hearts. Lasts [MochiBody.popSeconds].
+     */
+    POP(Mood.RESTING)
 }
 
 /**
@@ -62,12 +72,30 @@ object MochiBody {
     const val RATIO = CW / CH
 
     /**
+     * What a caller can tell a pose beyond the clock: a name to say back, a
+     * pop that celebrates, which way a walk is heading and how high off the
+     * ground it walks.
+     */
+    class Extras(
+        val say: String? = null,
+        val cheer: Boolean = false,
+        val dir: Float = -1f,
+        val walkLift: Float = 0f
+    )
+
+    /** How long a [Pose.POP] lasts, after which the caller removes him. */
+    fun popSeconds(cheer: Boolean) = if (cheer) 3.4f else 3.0f
+
+    /** How long a change of pose takes to blend from one to the next. */
+    const val BLEND = 0.45f
+
+    /**
      * Where the ground line sits, as a fraction of the frame's height, so a
      * caller can stand him on the edge of something. When peeking, his paws
      * grip the frame's own bottom edge.
      */
     fun groundAt(pose: Pose): Float = when (pose) {
-        Pose.PEEK -> 1f
+        Pose.PEEK, Pose.POP -> 1f
         Pose.PERCH -> (OY + GROUND - 300f) / CH
         else -> (OY + GROUND) / CH
     }
@@ -124,23 +152,42 @@ object MochiBody {
         var tail = Tail(sway = 0.25f, f = 2f)
         var dy = 0f; var peek = false; var prop: Prop? = null; var dangle = false
         var breathe = sin(t * 1.8f) * 0.014f; var flash = -1f; var cardY = 0f; var wig = 0f
+        var liftL = 0f; var liftR = 0f; var sway = 0f; var pawUp = 1f
+        var tailFrom: Tail? = null; var tailMix = 1f
     }
 
-    /** A hop with weight: squash on landing and before take-off, stretch in the air. */
+    /**
+     * A hop with weight: squash on landing and before take-off, stretch on
+     * the way up and down. Every part starts and ends at zero, so nothing
+     * snaps between frames: the stretch eases in after take-off and out
+     * before the apex, and each squash is one smooth dip on the ground.
+     */
     private fun P.jump(t: Float, period: Float, height: Float, air: Float) {
         val u = cyc(t, period)
         if (u < air) {
             val k = u / air
-            hop = sin(PI * k) * height; sq = abs(cos(PI * k)) * 0.7f; land = -1f
+            hop = sin(PI * k) * height; sq = 0.7f * sin(PI * k) * abs(cos(PI * k)); land = -1f
         } else {
             val v = (u - air) / (1f - air)
-            hop = 0f; sq = -(exp(-v * 9f) + 0.8f * exp(-(1f - v) * 9f)); land = v
+            val l = min(0.5f, 0.32f / ((1f - air) * period))
+            var s = 0f
+            if (v < l) s -= 0.6f * sin(PI * v / l)
+            if (v > 1f - l) s -= 0.5f * sin(PI * (v - (1f - l)) / l)
+            hop = 0f; sq = s; land = v
         }
+    }
+
+    /** The same hop, once: a dip, a jump, a dip, zero at both ends. */
+    private fun hopOnce(u: Float, height: Float): Pair<Float, Float> = when {
+        u < 0f || u > 1f -> 0f to 0f
+        u < 0.24f -> 0f to -0.5f * sin(PI * u / 0.24f)
+        u < 0.76f -> { val k = (u - 0.24f) / 0.52f; sin(PI * k) * height to 0.7f * sin(PI * k) * abs(cos(PI * k)) }
+        else -> 0f to -0.55f * sin(PI * (u - 0.76f) / 0.24f)
     }
 
     private fun tail(f: Float, sway: Float) = Tail(sway = sway, f = f)
 
-    private fun params(pose: Pose, t: Float): P {
+    private fun params(pose: Pose, t: Float, x: Extras): P {
         val p = P(t)
         when (pose) {
             Pose.WAVE -> {
@@ -148,17 +195,19 @@ object MochiBody {
                 p.tilt = 0.04f + sin(t * 1.7f) * 0.05f; p.tail = tail(2.4f, 0.3f); p.jump(t, 3.4f, 26f, 0.18f)
             }
             Pose.HELLO -> {
-                val u = cyc(t, 4.4f); val on = u < 0.6f
-                p.tilt = if (on) 0.12f * smooth(u / 0.12f) * (1f - smooth((u - 0.5f) / 0.1f)) else sin(t * 1.3f) * 0.03f
-                p.armL = 2.0f + if (on) 0.45f * smooth(u / 0.08f) * (1f - smooth((u - 0.5f) / 0.1f)) + sin(t * 14f) * 0.1f else 0f
-                p.wristL = if (on) sin(t * 14f - 0.8f) * 0.4f else 0.2f; p.padL = true
+                // One envelope rises and falls around the greeting, so the wave
+                // eases into and out of his resting pose instead of switching on.
+                val u = cyc(t, 4.4f); val e = smooth(u / 0.08f) * (1f - smooth((u - 0.5f) / 0.1f))
+                p.tilt = e * 0.12f + (1f - e) * sin(t * 1.3f) * 0.03f
+                p.armL = 2.0f + e * (0.45f + sin(t * 14f) * 0.1f)
+                p.wristL = 0.2f + e * (sin(t * 14f - 0.8f) * 0.4f - 0.2f); p.padL = true
                 p.tail = tail(2f, 0.34f)
-                if (u < 0.16f) p.jump(u * 4.4f, 0.7f, 40f, 0.5f)
+                val (h, q) = hopOnce(u * 4.4f / 1.1f, 40f); p.hop = h; p.sq = q
             }
             Pose.PEEK -> {
                 val u = cyc(t, 6.5f)
                 val up = when {
-                    u < 0.14f -> pop(u / 0.14f)
+                    u < 0.2f -> pop(u / 0.2f)
                     u < 0.8f -> 1f
                     u < 0.92f -> 1f - smooth((u - 0.8f) / 0.12f)
                     else -> 0f
@@ -201,7 +250,7 @@ object MochiBody {
                 p.tail = Tail(a0 = 1.2f, curl = 0.03f, sway = 0.4f, f = 1.6f, bx = 760f, by = 1250f)
             }
             Pose.PARTY -> {
-                p.jump(t, 0.78f, 200f, 0.56f); val up = p.hop / 200f
+                p.jump(t, 0.92f, 200f, 0.55f); val up = p.hop / 200f
                 p.armL = 2.45f + up * 0.45f; p.armR = -2.45f - up * 0.45f
                 p.wristL = sin(t * 15f) * 0.35f; p.wristR = -sin(t * 15f) * 0.35f
                 p.padL = true; p.padR = true; p.tail = tail(6f, 0.5f); p.tilt = sin(t * 4f) * 0.05f
@@ -210,11 +259,52 @@ object MochiBody {
                 val u = cyc(t, 5.2f)
                 val nod = if (u < 0.86f) smooth(u / 0.86f) else 1f - smooth((u - 0.86f) / 0.05f)
                 p.tilt = 0.04f + 0.2f * nod; p.bob = 8f + nod * 26f; p.breathe = sin(t * 1.5f) * 0.035f
-                if (u > 0.86f && u < 0.96f) { p.hop = sin((u - 0.86f) / 0.1f * PI) * 26f; p.sq = 0.3f }
+                if (u > 0.86f && u < 0.96f) { val b = sin((u - 0.86f) / 0.1f * PI); p.hop = b * 26f; p.sq = 0.3f * b }
                 p.tail = Tail(a0 = PI - 0.05f, curl = 0.035f, sway = 0.12f, f = 0.9f, bx = 700f, by = 1262f, front = true)
+            }
+            Pose.WALK -> {
+                // Weight rocks from paw to paw, each front paw lifts in turn,
+                // and he leans a little into the way he is going.
+                val s = sin(t * 7.2f)
+                p.liftL = max(0f, s) * 50f; p.liftR = max(0f, -s) * 50f; p.sway = s * 0.06f
+                p.hop = abs(s) * 16f; p.tilt = -s * 0.05f + x.dir * 0.05f; p.dy = x.walkLift
+                p.tail = tail(3.6f, 0.45f)
+            }
+            Pose.POP -> {
+                val u = clamp(t / popSeconds(x.cheer), 0f, 1f)
+                val up = when {
+                    u < 0.16f -> pop(u / 0.16f)
+                    u < 0.78f -> 1f
+                    else -> 1f - smooth((u - 0.78f) / 0.17f)
+                }
+                p.peek = true; p.dy = 1340f - 640f * up; p.wig = sin(t * 8f) * 6f
+                p.pawUp = smooth(u / 0.1f) * (1f - smooth((u - 0.86f) / 0.1f))
+                p.tilt = if (x.cheer) sin(t * 3f) * 0.05f
+                         else if (u > 0.2f && u < 0.74f) sin((u - 0.2f) / 0.54f * TAU) * 0.15f else 0f
+                if (x.cheer) { val (h, q) = hopOnce((u - 0.2f) / 0.42f, 110f); p.hop = h; p.sq = q }
             }
         }
         return p
+    }
+
+    /**
+     * Blends two frames' parameters. An arm that is down in one of them is
+     * treated as hanging straight, so a paw can rise out of a sitting pose;
+     * each tail keeps its own rhythm and the drawn shape moves between them.
+     */
+    private fun blend(a: P, b: P, e: Float): P {
+        fun mix(u: Float, v: Float) = u + (v - u) * e
+        b.hop = mix(a.hop, b.hop); b.sq = mix(a.sq, b.sq); b.tilt = mix(a.tilt, b.tilt); b.bob = mix(a.bob, b.bob)
+        b.dy = mix(a.dy, b.dy); b.breathe = mix(a.breathe, b.breathe); b.cardY = mix(a.cardY, b.cardY)
+        b.liftL = mix(a.liftL, b.liftL); b.liftR = mix(a.liftR, b.liftR); b.sway = mix(a.sway, b.sway)
+        b.wristL = mix(a.wristL, b.wristL); b.wristR = mix(a.wristR, b.wristR); b.pawUp = mix(a.pawUp, b.pawUp); b.wig = mix(a.wig, b.wig)
+        b.armL = if (a.armL.isNaN() && b.armL.isNaN()) Float.NaN
+                 else mix(if (a.armL.isNaN()) 0.04f else a.armL, if (b.armL.isNaN()) 0.04f else b.armL)
+        b.armR = if (a.armR.isNaN() && b.armR.isNaN()) Float.NaN
+                 else mix(if (a.armR.isNaN()) -0.04f else a.armR, if (b.armR.isNaN()) -0.04f else b.armR)
+        if (e < 0.5f) { b.padL = a.padL; b.padR = a.padR }
+        b.tailFrom = a.tail; b.tailMix = e
+        return b
     }
 
     // ── Paint ──────────────────────────────────────────────────────────────
@@ -528,9 +618,9 @@ object MochiBody {
     }
 
     /** A front leg standing: chubby at the top, narrowing, then the paw. */
-    private fun Canvas.leg(cx: Float) {
+    private fun Canvas.leg(cx: Float, lift: Float) {
         val m = if (cx < 434f) -1f else 1f
-        limb(Limb(cx, 925f, 0f, 318f, bend = 0.05f * m, widths = LEG_W, depth = 0.5f, stripes = floatArrayOf(0.46f, 0.62f)))
+        limb(Limb(cx, 925f, 0f, 318f - lift, bend = 0.05f * m, widths = LEG_W, depth = 0.5f, stripes = floatArrayOf(0.46f, 0.62f)))
     }
 
     private class ArmPlan(val bend: Float, val length: Float, val paw: Pt, val head: Float)
@@ -562,12 +652,20 @@ object MochiBody {
      * The tail as a chain whose links each lag the one before, so a swish
      * travels from the base out to the tip. Tapered, ringed, dark-tipped.
      */
-    private fun Canvas.tail(tl: Tail, t: Float) {
+    private fun Canvas.tail(tl: Tail, t: Float, from: Tail? = null, e: Float = 1f) {
         val n = 13; val seg = 29f
-        val pts = ArrayList<Pt>(n + 1); pts.add(Pt(tl.bx, tl.by))
-        for (i in 1..n) {
-            val a = tl.a0 + tl.curl * i + tl.sway * sin(t * tl.f - i * 0.42f) * (0.25f + i / n.toFloat())
-            val prev = pts[i - 1]; pts.add(Pt(prev.x + seg * cos(a), prev.y + seg * sin(a)))
+        fun chain(c: Tail): List<Pt> {
+            val q = ArrayList<Pt>(n + 1); q.add(Pt(c.bx, c.by))
+            for (i in 1..n) {
+                val a = c.a0 + c.curl * i + c.sway * sin(t * c.f - i * 0.42f) * (0.25f + i / n.toFloat())
+                val prev = q[i - 1]; q.add(Pt(prev.x + seg * cos(a), prev.y + seg * sin(a)))
+            }
+            return q
+        }
+        var pts = chain(tl)
+        if (from != null && e < 1f) {
+            val a = chain(from)
+            pts = pts.mapIndexed { i, q -> Pt(a[i].x + (q.x - a[i].x) * e, a[i].y + (q.y - a[i].y) * e) }
         }
         val w = { u: Float -> 76f - 22f * u }
         val (l, r) = ribbon(pts, w)
@@ -701,16 +799,21 @@ object MochiBody {
         }
     }
 
+    /** A speech bubble as wide as what it says, its tail toward his face. */
     private fun Canvas.bubble(cx: Float, cy: Float, s: Float, say: String) {
         if (s <= 0.02f) return
-        save(); translate(cx, cy); scale(s, s)
+        save(); translate(cx, cy); scale(s * 1.45f, s * 1.45f)
+        text.typeface = Fonts.extraBold(); text.textSize = 88f
+        var size = 88f; var tw = text.measureText(say)
+        if (tw > 420f) { size = 88f * 420f / tw; tw = 420f }
+        val hw = max(130f, tw / 2f + 60f)
         val shape = Path().apply {
-            addRoundRect(RectF(-130f, -95f, 130f, 55f), 60f, 60f, Path.Direction.CW)
-            moveTo(-70f, 50f); lineTo(-110f, 110f); lineTo(-20f, 52f); close()
+            addRoundRect(RectF(-hw, -95f, hw, 55f), 60f, 60f, Path.Direction.CW)
+            moveTo(-hw + 60f, 50f); lineTo(-hw + 20f, 115f); lineTo(-hw + 130f, 52f); close()
         }
         fillPath(shape, CREAM); strokePath(shape, K, 16f)
-        fillPath(Path().apply { addRect(RectF(-80f, 40f, -10f, 60f), Path.Direction.CW) }, CREAM)
-        label(say, 0f, -18f, 96f, INK, Paint.Align.CENTER, middle = true)
+        fillPath(Path().apply { addRect(RectF(-hw + 50f, 40f, -hw + 140f, 60f), Path.Direction.CW) }, CREAM)
+        label(say, 0f, -18f, size, INK, Paint.Align.CENTER, middle = true)
         restore()
     }
 
@@ -740,7 +843,7 @@ object MochiBody {
     }
 
     /** Effects drawn over him, in the space he hops in. */
-    private fun Canvas.front(pose: Pose, t: Float, p: P, pawL: Pt, pawR: Pt) {
+    private fun Canvas.front(pose: Pose, t: Float, p: P, pawL: Pt, pawR: Pt, x: Extras) {
         when (pose) {
             Pose.WAVE -> for (i in 0 until 2) {
                 val u = cyc(t, 2.6f, i * 1.3f)
@@ -749,7 +852,8 @@ object MochiBody {
             }
             Pose.HELLO -> {
                 val u = cyc(t, 4.4f)
-                bubble(900f, 20f, if (u < 0.6f) pop(u / 0.1f) * (1f - smooth((u - 0.52f) / 0.08f)) else 0f, "hi!")
+                bubble(640f, -150f, if (u < 0.6f) pop(u / 0.1f) * (1f - smooth((u - 0.52f) / 0.08f)) else 0f,
+                    if (x.say.isNullOrBlank()) "hi!" else "hi, ${x.say}!")
             }
             Pose.CHEER -> if (p.hop > 90f) {
                 val k = (p.hop - 90f) / 40f
@@ -797,6 +901,11 @@ object MochiBody {
                 sparkle(790f, 110f, 46f * k, k, LIME, 0f)
             }
             Pose.SLEEP -> zzz(t)
+            Pose.POP -> if (x.cheer) for (i in 0 until 5) {
+                val k = clamp((t / popSeconds(true) - 0.26f - i * 0.035f) / 0.45f, 0f, 1f); val side = i - 2
+                heart(434f + side * 80f + side * 170f * k, 140f - 420f * k + abs(side) * 60f * k,
+                    pop(k * 4f) * (1f - k.pow(4)) * (1.25f - abs(side) * 0.12f), 1f - k.pow(3), if (i % 2 == 1) PINK else RED)
+            }
             else -> Unit
         }
     }
@@ -823,14 +932,20 @@ object MochiBody {
      * Draws [pose] at clock [t], seconds, into a frame [height] pixels tall
      * whose top-left is the canvas origin. [kickAge] is seconds since the
      * last kick, a hop answering something just tapped; negative for none.
+     * [from] is the pose he is leaving, [sinceSwitch] seconds ago; the two
+     * blend over [BLEND] seconds rather than cutting.
      */
-    fun draw(canvas: Canvas, height: Float, pose: Pose, t: Float, kickAge: Float = -1f, seed: Float = 0f, mood: Mood = pose.mood) {
+    fun draw(
+        canvas: Canvas, height: Float, pose: Pose, t: Float, kickAge: Float = -1f, seed: Float = 0f,
+        mood: Mood = pose.mood, extras: Extras = Extras(), from: Pose? = null, sinceSwitch: Float = BLEND
+    ) {
         if (height <= 0f) return
-        val p = params(pose, t)
-        if (kickAge in 0f..0.8f) {
-            val u = kickAge / 0.8f
-            p.hop += sin(u * PI) * 190f; p.sq += if (u < 0.12f || u > 0.88f) -0.8f else 0.5f
+        var p = params(pose, t, extras)
+        if (from != null && from != pose && sinceSwitch < BLEND) {
+            p = blend(params(from, t, extras), p, smooth(sinceSwitch / BLEND))
         }
+        val (kh, kq) = hopOnce(kickAge / 1.1f, 190f)
+        p.hop += kh; p.sq += kq
         val sx = 1f - 0.07f * p.sq - p.breathe * 0.5f
         val sy = 1f + 0.09f * p.sq + p.breathe
         fun toHop(q: Pt) = Pt(434f + (q.x - 434f) * sx, GROUND + (q.y - GROUND) * sy)
@@ -842,17 +957,18 @@ object MochiBody {
             save(); translate(OX, OY + p.dy)
             if (!p.peek && (pose == Pose.CHEER || pose == Pose.PARTY)) puff(434f, GROUND, p.land)
             save(); translate(0f, -p.hop)
+            if (p.sway != 0f) { translate(434f, GROUND); rotate(deg(p.sway)); translate(-434f, -GROUND) }
             save(); translate(434f, GROUND); scale(sx, sy); translate(-434f, -GROUND)
 
             var pawL = Pt(330f, 900f); var pawR = Pt(538f, 900f)
             if (!p.peek) {
-                if (!p.tail.front) tail(p.tail, t)
+                if (!p.tail.front) tail(p.tail, t, p.tailFrom, p.tailMix)
                 torso()
                 if (p.dangle) dangle(t)
                 haunch(0, p.dangle); haunch(1, p.dangle)
-                if (p.armL.isNaN()) leg(348f)
-                if (p.armR.isNaN()) leg(520f)
-                if (p.tail.front) tail(p.tail, t)
+                if (p.armL.isNaN()) leg(348f, p.liftL)
+                if (p.armR.isNaN()) leg(520f, p.liftR)
+                if (p.tail.front) tail(p.tail, t, p.tailFrom, p.tailMix)
                 bib()
             }
 
@@ -887,13 +1003,15 @@ object MochiBody {
             }
             restore()
             if (p.prop == Prop.CLOUD) cloud(t)
-            front(pose, t, p, toHop(pawL), toHop(pawR))
+            front(pose, t, p, toHop(pawL), toHop(pawR), extras)
             restore()
             restore()
 
-            if (p.peek) {
-                foot(OX + 300f, CH - 36f, p.wig * 0.012f, 1.05f)
-                foot(OX + 568f, CH - 36f, -p.wig * 0.012f, 1.05f)
+            if (p.peek && p.pawUp > 0.01f) {
+                // The paws slide up onto the edge as he rises and back off it as he goes.
+                val drop = (1f - p.pawUp) * 140f
+                foot(OX + 300f, CH - 36f + drop, p.wig * 0.012f, 1.05f)
+                foot(OX + 568f, CH - 36f + drop, -p.wig * 0.012f, 1.05f)
             }
             if (pose == Pose.PARTY) confetti(t, seed)
             restore()

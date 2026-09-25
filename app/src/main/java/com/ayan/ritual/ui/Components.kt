@@ -1,5 +1,8 @@
 package com.ayan.ritual.ui
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
@@ -45,13 +48,16 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.render.Accent
@@ -64,7 +70,10 @@ import com.ayan.ritual.render.Mood
 import com.ayan.ritual.render.Pose
 import com.ayan.ritual.render.SlabModel
 import com.ayan.ritual.render.SlabRenderer
+import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import com.ayan.ritual.data.Goal
 import com.ayan.ritual.data.Habit
 import java.time.LocalDate
@@ -233,39 +242,118 @@ fun MochiTile(
  * hop included. Bump [kick] to make him hop in answer to something tapped;
  * the first composition never counts, so opening a screen does not start him.
  *
+ * Handing him a different [pose] blends into it rather than cutting. A
+ * [Pose.POP] plays once from the start and then calls [onDone]. [ground] is
+ * the pose whose ground line to stand on, when that is not the one he is
+ * in yet (walking in toward it).
+ *
  * The frame is a function of the clock alone, so this only keeps time. With
- * animations off he holds a single frame.
+ * animations off he holds a single frame, and a pop is skipped.
  */
 @Composable
-fun MochiPose(pose: Pose, height: Dp, modifier: Modifier = Modifier, kick: Int = 0) {
+fun MochiPose(
+    pose: Pose,
+    height: Dp,
+    modifier: Modifier = Modifier,
+    kick: Int = 0,
+    say: String? = null,
+    cheer: Boolean = false,
+    dir: Float = -1f,
+    walkLift: Float = 0f,
+    ground: Pose = pose,
+    onDone: (() -> Unit)? = null
+) {
     val animated = animationsAllowed()
+    val once = pose == Pose.POP
     val seed = remember { (Math.random() * 100).toFloat() }
-    val phase = remember { (Math.random() * 2).toFloat() }
-    var clock by remember { mutableFloatStateOf(0.9f) }
+    val phase = remember { if (once) 0f else (Math.random() * 2).toFloat() }
+    var clock by remember { mutableFloatStateOf(if (once) 0f else 0.9f) }
     var kickAt by remember { mutableFloatStateOf(-10f) }
     var seen by remember { mutableIntStateOf(kick) }
+    var shown by remember { mutableStateOf(pose) }
+    var from by remember { mutableStateOf<Pose?>(null) }
+    var switchedAt by remember { mutableFloatStateOf(-10f) }
 
     LaunchedEffect(kick) {
         if (kick != seen) { seen = kick; kickAt = clock }
     }
+    LaunchedEffect(pose) {
+        if (pose != shown) { from = shown; switchedAt = clock; shown = pose }
+    }
     LaunchedEffect(animated) {
-        if (!animated) return@LaunchedEffect
+        if (!animated) {
+            if (once) onDone?.invoke()
+            return@LaunchedEffect
+        }
+        val end = if (once) MochiBody.popSeconds(cheer) else Float.MAX_VALUE
         var first = 0L
-        while (true) {
+        while (clock < end) {
             withFrameNanos { now ->
                 if (first == 0L) first = now
                 clock = phase + (now - first) / 1_000_000_000f
             }
         }
+        onDone?.invoke()
     }
 
-    val sink = height * (1f - MochiBody.groundAt(pose))
+    val sink = height * (1f - MochiBody.groundAt(ground))
+    val extras = remember(say, cheer, dir, walkLift) { MochiBody.Extras(say, cheer, dir, walkLift) }
     Canvas(modifier.offset(y = sink).size(height * MochiBody.RATIO, height)) {
         val t = if (animated) clock else 0.9f
+        val now = shown
         drawIntoCanvas {
-            MochiBody.draw(it.nativeCanvas, size.height, pose, t, if (animated) t - kickAt else -1f, seed)
+            MochiBody.draw(
+                it.nativeCanvas, size.height, now, t,
+                kickAge = if (animated) t - kickAt else -1f, seed = seed,
+                mood = if (cheer) Mood.PLEASED else now.mood, extras = extras,
+                from = from, sinceSwitch = if (animated) t - switchedAt else MochiBody.BLEND
+            )
         }
     }
+}
+
+/**
+ * Draws the content at ([x], [y]) from where it would sit, without taking up
+ * any room: for Mochi appearing over something and leaving again, which must
+ * not push the page around while he is there.
+ */
+fun Modifier.floating(x: Dp, y: Dp) = layout { measurable, _ ->
+    val placeable = measurable.measure(Constraints())
+    layout(0, 0) { placeable.place(x.roundToPx(), y.roundToPx()) }
+}
+
+/**
+ * Mochi walking in from [from] away (negative: from the left) to where the
+ * layout puts him, then settling into [pose]. Once per visit to the screen:
+ * an arrival is a greeting, and a picture already on the wall is not.
+ */
+@Composable
+fun MochiWalkIn(
+    pose: Pose,
+    height: Dp,
+    from: Dp,
+    modifier: Modifier = Modifier,
+    walkLift: Float = 0f,
+    say: String? = null
+) {
+    val animated = animationsAllowed()
+    val walkX = remember { Animatable(if (animated) from.value else 0f) }
+    var arrived by remember { mutableStateOf(!animated) }
+    LaunchedEffect(Unit) {
+        if (arrived) return@LaunchedEffect
+        val secs = (abs(from.value) / 130f).coerceIn(1.4f, 2.6f)
+        launch { delay(((secs - 0.25f) * 1000).toLong()); arrived = true }
+        walkX.animateTo(0f, tween((secs * 1000).toInt(), easing = CubicBezierEasing(0.3f, 0.55f, 0.4f, 1f)))
+    }
+    MochiPose(
+        pose = if (arrived) pose else Pose.WALK,
+        height = height,
+        modifier = modifier.offset { IntOffset(walkX.value.dp.roundToPx(), 0) },
+        dir = if (from.value > 0f) -1f else 1f,
+        walkLift = walkLift,
+        ground = pose,
+        say = say
+    )
 }
 
 /**

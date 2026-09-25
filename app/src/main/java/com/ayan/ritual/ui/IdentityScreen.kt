@@ -109,7 +109,11 @@ internal fun NameStep(name: String, onName: (String) -> Unit, onNext: () -> Unit
             Modifier.weight(1f).fillMaxWidth().clipToBounds(),
             contentAlignment = Alignment.BottomEnd
         ) {
-            if (maxHeight > 64.dp) MochiPose(Pose.HELLO, minOf(180.dp, maxHeight), Modifier.padding(end = 6.dp))
+            // He says their name back to them as they type it.
+            if (maxHeight > 64.dp) MochiPose(
+                Pose.HELLO, minOf(180.dp, maxHeight), Modifier.padding(end = 6.dp),
+                say = name.trim().substringBefore(' ').take(12)
+            )
         }
 
         InkPill(label = "Continue", onClick = onNext, modifier = Modifier.fillMaxWidth())

@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -21,7 +22,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,12 +39,15 @@ import com.ayan.ritual.billing.Unlock
 import com.ayan.ritual.data.Habit
 import com.ayan.ritual.render.ACCENTS
 import com.ayan.ritual.render.Cat
+import com.ayan.ritual.render.MochiBody
 import com.ayan.ritual.render.Mood
 import com.ayan.ritual.render.Pose
 import com.ayan.ritual.render.SlabModel
 import com.ayan.ritual.render.accentAt
 import java.time.LocalDate
 import java.time.Year
+import kotlin.random.Random
+import kotlinx.coroutines.delay
 
 /**
  * The one gutter every block on this screen sits against, so the wordmark,
@@ -68,6 +77,25 @@ fun HomeScreen(
     // is marked, awake while any is still open.
     val allDone = habits.isNotEmpty() && habits.all { it.isDone(today) }
     val headerMood = if (allDone) Mood.PLEASED else Mood.RESTING
+
+    // Now and then Mochi turns up over one of the cards, somewhere along its
+    // top edge, has a look around and goes. Never the same card twice
+    // running, so over a few visits he is found in different places.
+    var peek by remember { mutableStateOf<Peek?>(null) }
+    val ids = habits.map { it.id }
+    LaunchedEffect(ids) {
+        if (ids.isEmpty()) return@LaunchedEffect
+        delay(2400)
+        var last = -1
+        var n = 0
+        while (true) {
+            var i = Random.nextInt(ids.size)
+            if (ids.size > 1 && i == last) i = (i + 1) % ids.size
+            last = i
+            peek = Peek(ids[i], 0.12f + Random.nextFloat() * 0.76f, ++n)
+            delay(14_000L + Random.nextLong(9_000L))
+        }
+    }
 
     LazyColumn(
         Modifier
@@ -138,15 +166,31 @@ fun HomeScreen(
             item { EmptyState(onCreate) }
         } else {
             items(habits, key = { it.id }) { habit ->
-                Box(
+                BoxWithConstraints(
                     Modifier
                         .padding(horizontal = GUTTER)
                         .padding(top = 16.dp)
                         .fillMaxWidth()
-                        .clip(RoundedCornerShape(24.dp))
-                        .clickable { onOpen(habit) }
                 ) {
-                    RitualCard(model = habit.toModel(today, year), height = 172.dp)
+                    Box(
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(24.dp))
+                            .clickable { onOpen(habit) }
+                    ) {
+                        RitualCard(model = habit.toModel(today, year), height = 172.dp)
+                    }
+                    val here = peek
+                    if (here != null && here.id == habit.id) key(here.n) {
+                        MochiPose(
+                            Pose.POP, PEEK_HEIGHT,
+                            Modifier.floating(
+                                x = (maxWidth - PEEK_HEIGHT * MochiBody.RATIO) * here.at,
+                                y = -(PEEK_HEIGHT - 14.dp)
+                            ),
+                            onDone = { if (peek?.n == here.n) peek = null }
+                        )
+                    }
                 }
             }
 
@@ -244,3 +288,8 @@ fun Habit.toModel(today: LocalDate, year: Int): SlabModel = SlabModel(
     mood = Cat.moodFor(isDone(today), streak(today), missedYesterday(today)),
     identity = identity
 )
+
+/** Where Mochi is peeking from: which card, how far along it, and which peek. */
+private data class Peek(val id: String, val at: Float, val n: Int)
+
+private val PEEK_HEIGHT = 150.dp

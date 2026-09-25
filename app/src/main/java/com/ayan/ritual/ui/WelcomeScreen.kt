@@ -96,13 +96,16 @@ fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {
                             .align(Alignment.TopStart)
                             .padding(26.dp)
                     )
-                    // Sitting on the bottom edge of the block and waving, with
-                    // no tile behind him: a pale panel under a pale cat was the
-                    // one place two near-whites met and he lost his edges to it.
-                    // Capped so his ears never reach the headline.
-                    MochiPose(
+                    // He walks in along the bottom edge of the block from its
+                    // right side and stops to wave: a hello, not a picture
+                    // already on the wall. No tile behind him: a pale panel
+                    // under a pale cat was the one place two near-whites met
+                    // and he lost his edges to it. Capped so his ears never
+                    // reach the headline.
+                    MochiWalkIn(
                         Pose.WAVE,
                         height = minOf(block * 0.88f, block - 118.dp),
+                        from = (maxWidth - 40.dp) * 0.7f,
                         modifier = Modifier.align(Alignment.BottomEnd)
                     )
                 }

@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import com.ayan.ritual.data.Goal
 import com.ayan.ritual.data.Habit
 import com.ayan.ritual.data.Onboarding
+import com.ayan.ritual.render.MochiBody
 import com.ayan.ritual.render.Mood
 import com.ayan.ritual.render.Pose
 import com.ayan.ritual.render.SlabModel
@@ -314,15 +315,18 @@ private fun WidgetStep(habit: Habit, onNext: () -> Unit) {
             style = Body.copy(color = InkSoft)
         )
         Spacer(Modifier.height(20.dp))
-        Box(Modifier.weight(1f).fillMaxWidth()) {
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
             PhoneHomeScreen(model)
-            // Sitting on top of their widget with his feet over its edge. The
-            // card's top is where PhoneHomeScreen puts it: the status row, 18dp,
-            // a row of 56dp icons and 16dp. Lifted by the whole frame, less the
-            // share of it below his seat, so the seat lands on that edge.
-            MochiPose(
+            // He walks along the top of their widget from its left edge and
+            // sits down with his feet over it. The card's top is where
+            // PhoneHomeScreen puts it: the status row, 18dp, a row of 56dp
+            // icons and 16dp. Lifted by the whole frame, less the share of it
+            // below his seat, so the seat lands on that edge.
+            MochiWalkIn(
                 Pose.PERCH, PERCH_HEIGHT,
-                Modifier.align(Alignment.TopEnd).padding(end = 58.dp).offset(y = WIDGET_TOP - PERCH_HEIGHT)
+                from = -(maxWidth - 66.dp - PERCH_HEIGHT * MochiBody.RATIO),
+                modifier = Modifier.align(Alignment.TopEnd).padding(end = 58.dp).offset(y = WIDGET_TOP - PERCH_HEIGHT),
+                walkLift = -300f
             )
         }
         Spacer(Modifier.height(12.dp))
