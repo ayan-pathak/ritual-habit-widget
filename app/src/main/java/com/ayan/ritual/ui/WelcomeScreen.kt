@@ -65,6 +65,8 @@ fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {
         // it, and the fields stay in front of the person typing into them.
         val screen = maxHeight
         val block = screen * 0.53f
+        // Where he starts walking in from: most of the block's width to the right.
+        val walkFrom = (maxWidth - 40.dp) * 0.7f
 
         Column(
             Modifier
@@ -105,7 +107,7 @@ fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {
                     MochiWalkIn(
                         Pose.WAVE,
                         height = minOf(block * 0.88f, block - 118.dp),
-                        from = (maxWidth - 40.dp) * 0.7f,
+                        from = walkFrom,
                         modifier = Modifier.align(Alignment.BottomEnd)
                     )
                 }
