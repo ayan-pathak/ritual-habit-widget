@@ -9,11 +9,13 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -22,7 +24,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -33,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,9 +48,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.ImeAction
@@ -51,6 +62,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ayan.ritual.data.Onboarding
+import com.ayan.ritual.render.Pose
 import com.ayan.ritual.render.accentAt
 import kotlinx.coroutines.delay
 
@@ -99,7 +112,17 @@ internal fun NameStep(name: String, onName: (String) -> Unit, onNext: () -> Unit
             placeholder = "Your first name"
         )
 
-        Spacer(Modifier.weight(1f))
+        // Sitting on the button, saying hello.
+        BoxWithConstraints(
+            Modifier.weight(1f).fillMaxWidth().clipToBounds(),
+            contentAlignment = Alignment.BottomEnd
+        ) {
+            // He says their name back to them as they type it.
+            if (maxHeight > 64.dp) MochiPose(
+                Pose.HELLO, minOf(180.dp, maxHeight), Modifier.padding(end = 6.dp),
+                say = name.trim().substringBefore(' ').take(12)
+            )
+        }
 
         InkPill(label = "Continue", onClick = onNext, modifier = Modifier.fillMaxWidth())
         QuietLink("Skip, just say “I”", onSkip)
@@ -118,10 +141,19 @@ internal fun NameStep(name: String, onName: (String) -> Unit, onNext: () -> Unit
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-internal fun IdentityStep(start: String, tail: String, onTail: (String) -> Unit, onNext: () -> Unit) {
+internal fun IdentityStep(
+    start: String,
+    tail: String,
+    onTail: (String) -> Unit,
+    onNext: () -> Unit,
+    caps: String = "One small sentence",
+    nextLabel: String = "That's me"
+) {
     val chosen = tail.isNotBlank()
     // Green whatever was picked: the ritual starts green, so the sentence does.
     val accent = accentAt(0)
+    // Mochi hops each time an example is tried on.
+    var hop by remember { mutableIntStateOf(0) }
 
     Column(Modifier.fillMaxSize()) {
         Column(
@@ -129,17 +161,32 @@ internal fun IdentityStep(start: String, tail: String, onTail: (String) -> Unit,
                 .weight(1f)
                 .verticalScroll(rememberScrollState())
         ) {
-            CapsLabel("One small sentence")
+            CapsLabel(caps)
             Spacer(Modifier.height(8.dp))
-            Text("Finish this\nsentence.", style = Display.copy(fontSize = 32.sp, lineHeight = 34.sp))
+            Text(
+                "What's something you'd like to be true about you?",
+                style = Display.copy(fontSize = 32.sp, lineHeight = 34.sp)
+            )
             Spacer(Modifier.height(12.dp))
             Text(
-                "Something small you'd like to be true about you. It doesn't have to be true yet. That's what the next thirty days are for.",
-                style = Body.copy(color = InkSoft)
+                "It doesn't have to be true yet. That's what the next thirty days are for.",
+                style = Body.copy(color = InkSoft),
+                // Room on the right for Mochi, who sits on the card below.
+                modifier = Modifier.padding(end = 96.dp)
             )
             Spacer(Modifier.height(22.dp))
 
-            SentenceCard(start = start, tail = tail, accentBlock = Color(accent.block), accentOn = Color(accent.onBlock))
+            Box {
+                SentenceCard(start = start, tail = tail, accentBlock = Color(accent.block), accentOn = Color(accent.onBlock))
+                // Sitting on the card's top edge: lifted by his whole frame,
+                // less the share of it that MochiPose already sinks below
+                // his seat.
+                MochiPose(
+                    Pose.SIT, 100.dp,
+                    Modifier.align(Alignment.TopEnd).padding(end = 10.dp).offset(y = (-100).dp),
+                    kick = hop
+                )
+            }
 
             Spacer(Modifier.height(20.dp))
             CapsLabel(if (chosen) "Try another" else "Tap one to try it on")
@@ -153,7 +200,7 @@ internal fun IdentityStep(start: String, tail: String, onTail: (String) -> Unit,
                         text = s,
                         index = i,
                         selected = tail.trim() == s,
-                        onClick = { onTail(s) }
+                        onClick = { onTail(s); hop++ }
                     )
                 }
             }
@@ -172,7 +219,7 @@ internal fun IdentityStep(start: String, tail: String, onTail: (String) -> Unit,
 
         Spacer(Modifier.height(12.dp))
         InkPill(
-            label = if (chosen) "That's me" else "Pick one to continue",
+            label = if (chosen) nextLabel else "Pick one to continue",
             onClick = { if (chosen) onNext() },
             modifier = Modifier.fillMaxWidth(),
             background = if (chosen) Ink else InkFaint,
@@ -180,6 +227,54 @@ internal fun IdentityStep(start: String, tail: String, onTail: (String) -> Unit,
         )
     }
 }
+
+/**
+ * The same question, asked again for every ritual after the first: each one
+ * builds its own sentence, so a new ritual starts where the first one did.
+ * With [editing] it changes the sentence of one that already exists.
+ */
+@Composable
+fun AskScreen(initialTail: String, editing: Boolean, onNext: (String) -> Unit, onBack: () -> Unit) {
+    var tail by remember { mutableStateOf(initialTail) }
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(Cream)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .imePadding()
+            .padding(horizontal = 20.dp)
+    ) {
+        Spacer(Modifier.height(14.dp))
+        RoundButton(onClick = onBack, size = 40.dp) {
+            Canvas(Modifier.size(16.dp)) {
+                drawLine(Ink, Offset(size.width * .62f, size.height * .18f),
+                    Offset(size.width * .3f, size.height * .5f), size.width * .14f, StrokeCap.Round)
+                drawLine(Ink, Offset(size.width * .3f, size.height * .5f),
+                    Offset(size.width * .62f, size.height * .82f), size.width * .14f, StrokeCap.Round)
+            }
+        }
+        Spacer(Modifier.height(22.dp))
+        Box(Modifier.weight(1f).fillMaxWidth()) {
+            IdentityStep(
+                start = sentenceStart(Onboarding.name),
+                tail = tail,
+                onTail = { tail = it },
+                onNext = { onNext(tail.trim()) },
+                caps = if (editing) "Change the sentence" else "A new ritual",
+                nextLabel = if (editing) "Use this sentence" else "That's me"
+            )
+        }
+        Spacer(Modifier.height(16.dp))
+    }
+}
+
+/**
+ * The ending of a sentence someone already wrote: what came after
+ * "someone who", for editing it without asking for the name again.
+ */
+internal fun tailOf(identity: String): String =
+    identity.trim().replace(Regex("^.*?\\b(is|am) someone who "), "").removeSuffix(".")
 
 /** The sentence on its own card, typing examples until it has a real ending. */
 @Composable
@@ -289,10 +384,10 @@ private fun typewriter(examples: List<String>, active: Boolean): String {
 
 /** A secondary way out: readable, and a full-size target, but never loud. */
 @Composable
-internal fun QuietLink(label: String, onClick: () -> Unit) {
+internal fun QuietLink(label: String, onClick: () -> Unit, color: Color = InkSoft) {
     Text(
         label,
-        style = Body.copy(fontSize = 14.sp, color = InkSoft),
+        style = Body.copy(fontSize = 14.sp, color = color),
         textAlign = TextAlign.Center,
         modifier = Modifier
             .fillMaxWidth()

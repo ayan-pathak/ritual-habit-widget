@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.ayan.ritual.cloud.Account
 import com.ayan.ritual.cloud.CloudSync
-import com.ayan.ritual.render.Mood
+import com.ayan.ritual.render.Pose
 
 /**
  * The account, which is only ever about one thing: carrying a practice from
@@ -112,10 +112,7 @@ fun AccountScreen(onBack: () -> Unit, onBackup: () -> Unit = {}) {
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
-                        MochiTile(
-                            if (backedUp) Mood.PLEASED else Mood.AWAKE,
-                            Color.Transparent, height = 40.dp, inset = 0.dp
-                        )
+                        MochiPose(if (backedUp) Pose.CLOUD else Pose.SIT, 84.dp)
                         Column {
                             Text(
                                 if (backedUp) "Backed up" else "On this phone only",

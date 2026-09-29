@@ -6,11 +6,14 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import android.widget.RemoteViews
 import com.ayan.ritual.MainActivity
 import com.ayan.ritual.R
 import com.ayan.ritual.data.Habit
 import com.ayan.ritual.data.HabitStore
+import com.ayan.ritual.data.Moments
 import com.ayan.ritual.render.SlabModel
 import com.ayan.ritual.render.SlabRenderer
 import com.ayan.ritual.render.Cat
@@ -29,7 +32,21 @@ import java.time.LocalDate
 class RitualWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, manager: AppWidgetManager, ids: IntArray) {
-        ids.forEach { render(context, manager, it) }
+        // The periodic update is the widget's only clock, so it is when he
+        // drops by: now and then a word about where the ritual stands, left
+        // up until the next one. Unmarked, a nudge; kept, the count.
+        val today = LocalDate.now()
+        val until = System.currentTimeMillis() + NUDGE_MILLIS
+        ids.forEach { id ->
+            val habit = HabitStore.habitForWidget(context, id)
+            val say = if (habit == null || Math.random() >= NUDGE_CHANCE) null
+                else if (habit.isDone(today)) listOf(
+                    Moments.keptLine(habit, today), "see you tomorrow!", "${habit.totalDone} lit!"
+                ).random()
+                else listOf("today’s square?", "psst… today?", "ready for today?").random()
+            Moments.setWidgetSay(context, id, say, until)
+            render(context, manager, id)
+        }
     }
 
     override fun onAppWidgetOptionsChanged(
@@ -52,8 +69,25 @@ class RitualWidgetProvider : AppWidgetProvider() {
                     AppWidgetManager.EXTRA_APPWIDGET_ID,
                     AppWidgetManager.INVALID_APPWIDGET_ID
                 )
-                HabitStore.habitForWidget(context, widgetId)?.let { habit ->
-                    HabitStore.toggle(context, habit.id, LocalDate.now())
+                val today = LocalDate.now()
+                val next = HabitStore.habitForWidget(context, widgetId)?.let { habit ->
+                    HabitStore.toggle(context, habit.id, today)
+                }
+                // Kept from the widget: he says the count beside his box for a
+                // few seconds. A tenth day past the thirty is worth a post,
+                // which the app asks about when it next opens.
+                if (next != null && next.isDone(today)) {
+                    val brag = Moments.bragDue(context, next, today)
+                    if (brag > 0) Moments.setPendingBrag(context, next.id, brag)
+                    val say = if (brag > 0) "$brag! post it?" else Moments.keptLine(next, today)
+                    Moments.setWidgetSay(context, widgetId, say, System.currentTimeMillis() + SAY_MILLIS)
+                    val pending = goAsync()
+                    Handler(Looper.getMainLooper()).postDelayed({
+                        render(context, AppWidgetManager.getInstance(context), widgetId)
+                        pending.finish()
+                    }, SAY_MILLIS + 100L)
+                } else {
+                    Moments.setWidgetSay(context, widgetId, null, 0L)
                 }
                 refreshAll(context)
             }
@@ -69,6 +103,12 @@ class RitualWidgetProvider : AppWidgetProvider() {
     companion object {
         const val ACTION_TOGGLE_TODAY = "com.ayan.ritual.ACTION_TOGGLE_TODAY"
         const val EXTRA_HABIT_ID = "com.ayan.ritual.HABIT_ID"
+
+        /** How long he says the count after a day is kept from the widget. */
+        private const val SAY_MILLIS = 6000L
+        /** How often a periodic update brings him by, and how long he stays. */
+        private const val NUDGE_CHANCE = 0.4
+        private const val NUDGE_MILLIS = 25L * 60L * 1000L
 
         /** Largest bitmap we hand to RemoteViews; comfortably inside the transaction limit. */
         private const val MAX_PIXELS = 1_400_000
@@ -144,7 +184,8 @@ class RitualWidgetProvider : AppWidgetProvider() {
                     density = renderDensity,
                     action = habit != null,
                     cornerDp = 24f,
-                    padDp = 15f
+                    padDp = 15f,
+                    say = if (habit != null) Moments.widgetSay(context, widgetId, System.currentTimeMillis()) else null
                 )
             )
             views.setImageViewBitmap(R.id.slab, bitmap)

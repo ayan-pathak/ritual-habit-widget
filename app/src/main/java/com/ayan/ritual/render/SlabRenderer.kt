@@ -42,7 +42,13 @@ object SlabRenderer {
         val quarterRuler: Boolean = false,
         val cornerDp: Float = 24f,
         val padDp: Float = 17f,
-        val fillBackground: Boolean = true
+        val fillBackground: Boolean = true,
+        /**
+         * Something Mochi says, in a bubble beside his box in the header: the
+         * count when a day is kept from the widget, or now and then a nudge.
+         * The widget cannot move him, so this is how he speaks up there.
+         */
+        val say: String? = null
     )
 
     const val ACTION_HEIGHT_DP = 34f
@@ -116,6 +122,7 @@ object SlabRenderer {
         val todayDoy = if (isCurrentYear) model.today.dayOfYear else -1
 
         // ── Header ──────────────────────────────────────────────────────────
+        var catBox: RectF? = null
         if (cfg.header) {
             var textRight = w - pad
 
@@ -132,6 +139,7 @@ object SlabRenderer {
                 // middle of it: the same rule the app's MochiTile follows.
                 Cat.draw(canvas, box.centerX() - catW / 2f, box.bottom - catH, catH, model.mood)
                 textRight = boxL - dp(10f)
+                catBox = box
             } else {
                 // No cat: the streak takes the corner instead.
                 val num = paint(dp(17f), onBlock, Fonts.extraBold(), -0.02f).apply {
@@ -223,6 +231,38 @@ object SlabRenderer {
                 drawAction(canvas, w, h, pad, model, lit, d)
             }
         }
+
+        val said = cfg.say
+        if (!said.isNullOrBlank() && catBox != null) drawSay(canvas, said, catBox, pad, d)
+    }
+
+    /**
+     * His speech bubble: cream with an ink outline, whatever the card's
+     * colour, beside his box with its tail pointing at him. Drawn last, over
+     * the name, which it covers only while he is talking.
+     */
+    private fun drawSay(canvas: Canvas, say: String, box: RectF, pad: Float, d: Float) {
+        fun dp(v: Float) = v * d
+        val text = paint(dp(12.5f), Palette.INK, Fonts.extraBold(), -0.01f)
+        val line = fit(text, say, box.left - pad - dp(40f))
+        val bw = text.measureText(line) + dp(22f)
+        val bh = dp(27f)
+        val right = box.left - dp(9f)
+        val top = box.centerY() - bh / 2f
+        val bubble = RectF(right - bw, top, right, top + bh)
+        val shape = android.graphics.Path().apply {
+            addRoundRect(bubble, bh / 2f, bh / 2f, android.graphics.Path.Direction.CW)
+            moveTo(right - dp(8f), top + bh * 0.3f)
+            lineTo(right + dp(7f), top + bh * 0.5f)
+            lineTo(right - dp(8f), top + bh * 0.72f)
+            close()
+        }
+        val p = Paint(Paint.ANTI_ALIAS_FLAG)
+        p.color = Palette.INK; p.style = Paint.Style.STROKE; p.strokeWidth = dp(2.2f); p.strokeJoin = Paint.Join.ROUND
+        canvas.drawPath(shape, p)
+        p.style = Paint.Style.FILL; p.color = Palette.PAPER
+        canvas.drawPath(shape, p)
+        canvas.drawText(line, bubble.left + dp(11f), bubble.centerY() + dp(4.4f), text)
     }
 
     /** The mark-today control. The widget lays a transparent hit target over it. */

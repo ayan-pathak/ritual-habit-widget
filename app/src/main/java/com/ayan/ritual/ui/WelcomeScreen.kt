@@ -22,10 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.ayan.ritual.render.Mood
+import com.ayan.ritual.render.Pose
 
 /**
  * The first thing a new install shows.
@@ -66,6 +65,8 @@ fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {
         // it, and the fields stay in front of the person typing into them.
         val screen = maxHeight
         val block = screen * 0.53f
+        // Where he starts walking in from: most of the block's width to the right.
+        val walkFrom = (maxWidth - 40.dp) * 0.7f
 
         Column(
             Modifier
@@ -97,16 +98,17 @@ fun WelcomeScreen(onSignedIn: () -> Unit, onSkip: () -> Unit) {
                             .align(Alignment.TopStart)
                             .padding(26.dp)
                     )
-                    // On the bottom edge of the block, the way he stands on
-                    // every other surface in the app, and with no tile behind
-                    // him: a pale panel under a pale cat was the one place two
-                    // near-whites met and he lost his edges to it.
-                    MochiTile(
-                        mood = Mood.PLEASED,
-                        tile = Color.Transparent,
-                        height = block * 0.54f,
-                        inset = 0.dp,
-                        modifier = Modifier.align(Alignment.BottomCenter)
+                    // He walks in along the bottom edge of the block from its
+                    // right side and stops to wave: a hello, not a picture
+                    // already on the wall. No tile behind him: a pale panel
+                    // under a pale cat was the one place two near-whites met
+                    // and he lost his edges to it. Capped so his ears never
+                    // reach the headline.
+                    MochiWalkIn(
+                        Pose.WAVE,
+                        height = minOf(block * 0.88f, block - 118.dp),
+                        from = walkFrom,
+                        modifier = Modifier.align(Alignment.BottomEnd)
                     )
                 }
             }
