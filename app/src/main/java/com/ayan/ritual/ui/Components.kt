@@ -261,6 +261,8 @@ fun MochiPose(
     dir: Float = -1f,
     walkLift: Float = 0f,
     ground: Pose = pose,
+    paws: Boolean = true,
+    mood: Mood? = null,
     onDone: (() -> Unit)? = null
 ) {
     val animated = animationsAllowed()
@@ -297,7 +299,7 @@ fun MochiPose(
     }
 
     val sink = height * (1f - MochiBody.groundAt(ground))
-    val extras = remember(say, cheer, dir, walkLift) { MochiBody.Extras(say, cheer, dir, walkLift) }
+    val extras = remember(say, cheer, dir, walkLift, paws) { MochiBody.Extras(say, cheer, dir, walkLift, paws) }
     Canvas(modifier.offset(y = sink).size(height * MochiBody.RATIO, height)) {
         val t = if (animated) clock else 0.9f
         val now = shown
@@ -305,7 +307,7 @@ fun MochiPose(
             MochiBody.draw(
                 it.nativeCanvas, size.height, now, t,
                 kickAge = if (animated) t - kickAt else -1f, seed = seed,
-                mood = if (cheer) Mood.PLEASED else now.mood, extras = extras,
+                mood = mood ?: if (cheer) Mood.PLEASED else now.mood, extras = extras,
                 from = from, sinceSwitch = if (animated) t - switchedAt else MochiBody.BLEND
             )
         }
@@ -361,7 +363,7 @@ fun MochiWalkIn(
  * still and swaps faces outright.
  */
 @Composable
-private fun animationsAllowed(): Boolean {
+internal fun animationsAllowed(): Boolean {
     val context = LocalContext.current
     return remember(context) {
         android.provider.Settings.Global.getFloat(

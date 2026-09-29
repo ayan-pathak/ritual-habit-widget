@@ -186,7 +186,7 @@ fun HomeScreen(
                             Pose.POP, PEEK_HEIGHT,
                             Modifier.floating(
                                 x = (maxWidth - PEEK_HEIGHT * MochiBody.RATIO) * here.at,
-                                y = -(PEEK_HEIGHT - 14.dp)
+                                y = -(PEEK_HEIGHT * MochiBody.ledgeAt())
                             ),
                             onDone = { if (peek?.n == here.n) peek = null }
                         )

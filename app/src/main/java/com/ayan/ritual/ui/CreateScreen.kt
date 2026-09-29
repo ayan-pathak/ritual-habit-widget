@@ -42,6 +42,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.ayan.ritual.cloud.CloudSync
 import com.ayan.ritual.data.Habit
 import com.ayan.ritual.data.HabitStore
 import com.ayan.ritual.render.ACCENTS
@@ -52,21 +53,34 @@ import com.ayan.ritual.render.accentAt
 import com.ayan.ritual.widget.RitualWidgetProvider
 import java.time.LocalDate
 
-private val SLOTS = listOf("Morning", "Midday", "Evening", "Anytime")
+internal val SLOTS = listOf("Morning", "Midday", "Evening", "Anytime")
 
+/**
+ * Names a ritual, or with [editing], changes one.
+ *
+ * With [onChangeSentence] the sentence it builds is shown at the top and can
+ * be rewritten; that hands back the name, slot and colour as they stand, so
+ * coming back from the question finds them as they were left.
+ */
 @Composable
 fun CreateScreen(
     identity: String = "",
     title: String = "New ritual",
     lead: String? = null,
     initialAccent: Int = 0,
+    initialName: String = "",
+    initialSlot: Int = 0,
+    editing: Habit? = null,
+    onChangeSentence: ((name: String, slot: Int, accent: Int) -> Unit)? = null,
+    onDeleted: () -> Unit = {},
     onDone: (Habit) -> Unit,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
-    var name by remember { mutableStateOf("") }
-    var slotIndex by remember { mutableIntStateOf(0) }
+    var name by remember { mutableStateOf(initialName) }
+    var slotIndex by remember { mutableIntStateOf(initialSlot) }
     var accentIndex by remember { mutableIntStateOf(initialAccent) }
+    var confirmingDelete by remember { mutableStateOf(false) }
     val accent = accentAt(accentIndex)
     val today = LocalDate.now()
 
@@ -100,6 +114,29 @@ fun CreateScreen(
                 style = Body.copy(color = InkSoft),
                 modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 10.dp)
             )
+        }
+
+        // ── Who it makes you ────────────────────────────────────────────────
+        if (onChangeSentence != null) {
+            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 22.dp)) {
+                CapsLabel("Who it makes you")
+                Spacer(Modifier.height(10.dp))
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(18.dp))
+                        .background(Paper)
+                        .clickable { onChangeSentence(name, slotIndex, accentIndex) }
+                        .padding(horizontal = 16.dp, vertical = 14.dp)
+                ) {
+                    Text(
+                        if (identity.isBlank()) "No sentence yet." else "${identity.trim().removeSuffix(".")}.",
+                        style = Display.copy(fontSize = 17.sp, lineHeight = 22.sp)
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    CapsLabel(if (identity.isBlank()) "Write one" else "Change it")
+                }
+            }
         }
 
         // ── Name ────────────────────────────────────────────────────────────
@@ -210,10 +247,21 @@ fun CreateScreen(
             // and saving it as "Untitled" behind someone's back helped nobody.
             val named = name.isNotBlank()
             InkPill(
-                label = if (named) "Start today" else "Name it to start",
+                label = when {
+                    !named -> if (editing != null) "Name it to save" else "Name it to start"
+                    editing != null -> "Save changes"
+                    else -> "Start today"
+                },
                 onClick = {
                     if (!named) return@InkPill
-                    val habit = HabitStore.create(context, name.trim(), SLOTS[slotIndex], accentIndex, identity)
+                    val habit = if (editing != null) {
+                        editing.copy(
+                            name = name.trim(), slot = SLOTS[slotIndex], accentIndex = accentIndex,
+                            identity = identity.trim()
+                        ).also { HabitStore.update(context, it) }
+                    } else {
+                        HabitStore.create(context, name.trim(), SLOTS[slotIndex], accentIndex, identity)
+                    }
                     RitualWidgetProvider.refreshAll(context)
                     onDone(habit)
                 },
@@ -221,6 +269,29 @@ fun CreateScreen(
                 background = if (named) Ink else InkFaint,
                 content = if (named) Paper else InkSoft
             )
+            if (editing != null) {
+                QuietLink("Delete this ritual", { confirmingDelete = !confirmingDelete }, color = Red)
+                if (confirmingDelete) {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "Delete “${editing.name}”? Every square it holds goes with it.",
+                        style = Body.copy(fontSize = 13.sp)
+                    )
+                    Spacer(Modifier.height(10.dp))
+                    InkPill(
+                        label = "Delete forever",
+                        onClick = {
+                            CloudSync.markDeleted(editing.id)
+                            HabitStore.delete(context, editing.id)
+                            RitualWidgetProvider.refreshAll(context)
+                            onDeleted()
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        background = Red,
+                        content = Paper
+                    )
+                }
+            }
             Spacer(Modifier.height(34.dp))
             Spacer(Modifier.navigationBarsPadding())
         }

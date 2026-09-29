@@ -45,12 +45,6 @@ import com.ayan.ritual.billing.Unlock
 import com.ayan.ritual.render.Pose
 import kotlinx.coroutines.delay
 
-private val INCLUDED = listOf(
-    "As many rituals as you keep, each with its own widget",
-    "Share any identity to Instagram",
-    "Backup, so a new phone picks up where this one left off"
-)
-
 /**
  * Why they are standing here.
  *
@@ -165,40 +159,29 @@ fun PaywallScreen(reason: PaywallReason = PaywallReason.ANOTHER, onClose: () -> 
             )
         }
 
-        if (reason == PaywallReason.WELCOME) {
-            Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp, bottom = 22.dp)) {
-                Feature(
+        // Every wall lists the same three things with the same icons. One
+        // opened by reaching for one of them puts that one first.
+        Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp, bottom = 22.dp)) {
+            val features = listOf(
+                PaywallReason.ANOTHER to Triple(
                     "Build more than one identity",
                     "As many rituals as you keep, each with its own widget on your home screen.",
                     ::drawGrid
-                )
-                Spacer(Modifier.height(18.dp))
-                Feature(
+                ),
+                PaywallReason.SHARE to Triple(
                     "Share it on Instagram",
                     "Your sentence and your real grid as a story, whenever it is worth showing.",
                     ::drawInstagram
-                )
-                Spacer(Modifier.height(18.dp))
-                Feature(
+                ),
+                PaywallReason.BACKUP to Triple(
                     "Back it up",
                     "Every square saved to your account, so a new phone picks up where this one left off.",
                     ::drawCloud
                 )
-            }
-        } else Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 26.dp)) {
-            INCLUDED.forEach { line ->
-                Row(Modifier.padding(bottom = 14.dp)) {
-                    Box(Modifier.size(15.dp)) {
-                        androidx.compose.foundation.Canvas(Modifier.fillMaxSize()) {
-                            drawLine(Ink, Offset(size.width * .18f, size.height * .53f),
-                                Offset(size.width * .4f, size.height * .74f), size.width * .15f, StrokeCap.Round)
-                            drawLine(Ink, Offset(size.width * .4f, size.height * .74f),
-                                Offset(size.width * .82f, size.height * .29f), size.width * .15f, StrokeCap.Round)
-                        }
-                    }
-                    Spacer(Modifier.size(10.dp))
-                    Text(line, style = Body.copy(color = Ink))
-                }
+            ).sortedBy { if (it.first == reason) 0 else 1 }
+            features.forEachIndexed { i, (_, f) ->
+                if (i > 0) Spacer(Modifier.height(18.dp))
+                Feature(f.first, f.second, f.third)
             }
         }
 

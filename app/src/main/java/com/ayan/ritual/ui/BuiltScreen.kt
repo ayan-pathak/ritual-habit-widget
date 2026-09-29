@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.CircleShape
@@ -46,7 +47,7 @@ import java.time.LocalDate
  * it is achieved was never a habit.
  */
 @Composable
-fun BuiltScreen(habit: Habit, onClaim: () -> Unit, onLater: () -> Unit) {
+fun BuiltScreen(habit: Habit, onCarryOn: () -> Unit, onClaim: () -> Unit) {
     val today = LocalDate.now()
     val accent = accentAt(habit.accentIndex)
     val missed = habit.goalMissed(today).coerceAtMost(Goal.ALLOWED_MISSES)
@@ -59,6 +60,7 @@ fun BuiltScreen(habit: Habit, onClaim: () -> Unit, onLater: () -> Unit) {
             .navigationBarsPadding()
     ) {
         val block = maxHeight * 0.58f
+        val blockWidth = maxWidth - 40.dp
 
         Column(
             Modifier
@@ -107,24 +109,33 @@ fun BuiltScreen(habit: Habit, onClaim: () -> Unit, onLater: () -> Unit) {
                 // confetti: they earned it, and the app is not asking for
                 // anything.
                 MochiPose(Pose.PARTY, block * 0.7f, Modifier.align(Alignment.BottomCenter))
+                // Then, once the party has landed, he asks the only question
+                // left: whether they are carrying on.
+                SpeechBubble(
+                    "carry on?",
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .offset(x = blockWidth * 0.58f, y = -(block * 0.7f * 0.74f)),
+                    delayMillis = 1300L
+                )
             }
 
             Spacer(Modifier.weight(1f))
 
             InkPill(
-                label = "Put it on the shelf",
-                onClick = onClaim,
+                label = "Carry on",
+                onClick = onCarryOn,
                 modifier = Modifier.fillMaxWidth()
             )
             Spacer(Modifier.height(10.dp))
             Text(
-                "Keep going. The count does not stop.",
+                "See it on the shelf",
                 style = Body.copy(fontSize = 13.sp, color = InkFaint),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(CircleShape)
-                    .clickable(onClick = onLater)
+                    .clickable(onClick = onClaim)
                     .padding(vertical = 9.dp)
             )
         }

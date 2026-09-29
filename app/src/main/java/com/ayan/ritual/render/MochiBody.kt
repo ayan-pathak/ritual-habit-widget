@@ -67,6 +67,8 @@ object MochiBody {
     private const val OX = 260f
     private const val OY = 310f
     private const val GROUND = 1290f
+    /** The edge a [Pose.POP] hides behind: he is clipped above it and his paws hook over it. */
+    private const val LEDGE = 1500f
 
     /** Width over height of the frame he is drawn in. */
     const val RATIO = CW / CH
@@ -80,7 +82,9 @@ object MochiBody {
         val say: String? = null,
         val cheer: Boolean = false,
         val dir: Float = -1f,
-        val walkLift: Float = 0f
+        val walkLift: Float = 0f,
+        /** False when the edge he rises from is one there is nothing to hold, like the screen's own. */
+        val paws: Boolean = true
     )
 
     /** How long a [Pose.POP] lasts, after which the caller removes him. */
@@ -94,6 +98,12 @@ object MochiBody {
      * caller can stand him on the edge of something. When peeking, his paws
      * grip the frame's own bottom edge.
      */
+    /**
+     * Where the edge a [Pose.POP] rises from sits, as a fraction of the
+     * frame's height: line this up with the top of whatever he hides behind.
+     */
+    fun ledgeAt(): Float = LEDGE / CH
+
     fun groundAt(pose: Pose): Float = when (pose) {
         Pose.PEEK, Pose.POP -> 1f
         Pose.PERCH -> (OY + GROUND - 300f) / CH
@@ -277,7 +287,7 @@ object MochiBody {
                     u < 0.78f -> 1f
                     else -> 1f - smooth((u - 0.78f) / 0.17f)
                 }
-                p.peek = true; p.dy = 1340f - 640f * up; p.wig = sin(t * 8f) * 6f
+                p.peek = true; p.dy = LEDGE - OY + 50f - 670f * up; p.wig = sin(t * 8f) * 6f
                 p.pawUp = smooth(u / 0.1f) * (1f - smooth((u - 0.86f) / 0.1f))
                 p.tilt = if (x.cheer) sin(t * 3f) * 0.05f
                          else if (u > 0.2f && u < 0.74f) sin((u - 0.2f) / 0.54f * TAU) * 0.15f else 0f
@@ -689,16 +699,23 @@ object MochiBody {
 
     // ── Props ──────────────────────────────────────────────────────────────
 
+    /**
+     * Held the way you hold up a key: the bow in the paw, the blade pointing
+     * up, the teeth on the outside.
+     */
     private fun Canvas.key() {
-        save(); translate(10f, -60f); rotate(deg(-0.3f)); scale(1.7f, 1.7f)
-        inked(round(-20f, -40f, 40f, 250f, 12f), INK)
+        save(); translate(0f, -30f); scale(1.8f, 1.8f)
         inked(Path().apply {
-            addRect(RectF(20f, 140f, 74f, 168f), Path.Direction.CW)
-            addRect(RectF(20f, 186f, 60f, 212f), Path.Direction.CW)
+            moveTo(-19f, -20f); lineTo(-19f, -300f); quadTo(-19f, -322f, 0f, -330f)
+            quadTo(19f, -322f, 19f, -300f); lineTo(19f, -20f); close()
+            addRect(RectF(19f, -292f, 69f, -266f), Path.Direction.CW)
+            addRect(RectF(19f, -248f, 55f, -224f), Path.Direction.CW)
         }, INK)
-        inked(circle(0f, -110f, 76f), INK)
-        fillPath(circle(0f, -110f, 30f), LIME)
-        fillPath(circle(-30f, -140f, 12f), 0xFF3A3A33.toInt())
+        inked(circle(0f, 20f, 72f), INK)
+        fillPath(circle(0f, 20f, 28f), LIME)
+        fillPath(Path().apply {
+            addCircle(-8f, -200f, 7f, Path.Direction.CW); addCircle(-8f, -150f, 7f, Path.Direction.CW)
+        }, 0xFF3A3A33.toInt())
         restore()
     }
 
@@ -901,10 +918,18 @@ object MochiBody {
                 sparkle(790f, 110f, 46f * k, k, LIME, 0f)
             }
             Pose.SLEEP -> zzz(t)
-            Pose.POP -> if (x.cheer) for (i in 0 until 5) {
-                val k = clamp((t / popSeconds(true) - 0.26f - i * 0.035f) / 0.45f, 0f, 1f); val side = i - 2
-                heart(434f + side * 80f + side * 170f * k, 140f - 420f * k + abs(side) * 60f * k,
-                    pop(k * 4f) * (1f - k.pow(4)) * (1.25f - abs(side) * 0.12f), 1f - k.pow(3), if (i % 2 == 1) PINK else RED)
+            Pose.POP -> {
+                // What he came up to say, while he is fully up.
+                if (!x.say.isNullOrBlank()) {
+                    val u = t / popSeconds(x.cheer)
+                    bubble(660f, -170f,
+                        if (u > 0.2f && u < 0.76f) pop((u - 0.2f) / 0.1f) * (1f - smooth((u - 0.68f) / 0.08f)) else 0f, x.say)
+                }
+                if (x.cheer) for (i in 0 until 5) {
+                    val k = clamp((t / popSeconds(true) - 0.26f - i * 0.035f) / 0.45f, 0f, 1f); val side = i - 2
+                    heart(434f + side * 80f + side * 170f * k, 140f - 420f * k + abs(side) * 60f * k,
+                        pop(k * 4f) * (1f - k.pow(4)) * (1.25f - abs(side) * 0.12f), 1f - k.pow(3), if (i % 2 == 1) PINK else RED)
+                }
             }
             else -> Unit
         }
@@ -954,6 +979,9 @@ object MochiBody {
 
         with(canvas) {
             save(); scale(scale, scale)
+            // Popping up, he is behind the edge: nothing of him shows below it.
+            val ledge = pose == Pose.POP
+            if (ledge) { save(); clipRect(0f, 0f, CW, LEDGE) }
             save(); translate(OX, OY + p.dy)
             if (!p.peek && (pose == Pose.CHEER || pose == Pose.PARTY)) puff(434f, GROUND, p.land)
             save(); translate(0f, -p.hop)
@@ -994,7 +1022,7 @@ object MochiBody {
                     if (p.prop == Prop.KEY || p.prop == Prop.PHONE) {
                         val plan = armPlan(546f, 968f, p.armR, p.wristR)
                         save(); translate(plan.paw.x, plan.paw.y)
-                        rotate(deg(plan.head + PI + if (p.prop == Prop.KEY) 0.45f else 0f))
+                        rotate(deg(if (p.prop == Prop.KEY) 0.22f + p.wristR * 0.5f else plan.head + PI))
                         if (p.prop == Prop.KEY) key() else phone()
                         restore()
                     }
@@ -1007,11 +1035,16 @@ object MochiBody {
             restore()
             restore()
 
-            if (p.peek && p.pawUp > 0.01f) {
-                // The paws slide up onto the edge as he rises and back off it as he goes.
+            if (ledge) restore()
+            if (p.peek && p.pawUp > 0.01f && extras.paws) {
+                // The paws slide up onto the edge as he rises and back off it
+                // as he goes. Over a ledge they hook it, toes down its far side.
+                val at = if (ledge) LEDGE + 34f else CH - 36f
                 val drop = (1f - p.pawUp) * 140f
-                foot(OX + 300f, CH - 36f + drop, p.wig * 0.012f, 1.05f)
-                foot(OX + 568f, CH - 36f + drop, -p.wig * 0.012f, 1.05f)
+                if (ledge) { save(); clipRect(0f, 0f, CW, LEDGE + 60f) }
+                foot(OX + 300f, at + drop, p.wig * 0.012f, 1.05f)
+                foot(OX + 568f, at + drop, -p.wig * 0.012f, 1.05f)
+                if (ledge) restore()
             }
             if (pose == Pose.PARTY) confetti(t, seed)
             restore()
