@@ -223,7 +223,7 @@ fun HomeScreen(
                     // Left-aligned like everything else on this screen: it is a
                     // note about the button above it, not a caption under it.
                     Text(
-                        "One ritual is free. Unlock the rest for ${Unlock.price ?: "$4.99"}, once.",
+                        "One ritual is free. Unlock the rest for ${Unlock.price ?: "$9.99"}, once.",
                         style = Body.copy(fontSize = 12.sp, color = InkFaint),
                         modifier = Modifier
                             .fillMaxWidth()

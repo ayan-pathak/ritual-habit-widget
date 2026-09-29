@@ -99,7 +99,7 @@ private const val UNLOCK_HOLD_MS = 900L
 fun PaywallScreen(reason: PaywallReason = PaywallReason.ANOTHER, onClose: () -> Unit) {
     val context = LocalContext.current
     val unlocked by Unlock.unlockedState
-    val price = Unlock.price ?: "$4.99"
+    val price = Unlock.price ?: "$9.99"
 
     // The purchase lands and Mochi answers it with a hop before the screen
     // goes: closing on the same frame the money clears is the one moment
