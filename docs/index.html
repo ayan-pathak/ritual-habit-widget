@@ -3,885 +3,451 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Ritual: the habit tracker you don't have to open</title>
-<meta name="description" content="Your whole year sits on your home screen as 365 squares. Tap once a day. Miss a day and nothing resets. Free for your first habit, $4.99 once for unlimited. No subscription.">
-<meta name="theme-color" content="#E7E3D4" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#16150F" media="(prefers-color-scheme: dark)">
+<title>Ritual</title>
+<meta name="description" content="Write who you want to be and prove it one square a day. Your year sits on your home screen, Mochi cheers every day you keep, and in thirty days the sentence is true. $9.99 once, forever. No subscription. No tracking.">
+<meta name="theme-color" content="#16150F">
 <link rel="canonical" href="https://ayan-pathak.github.io/ritual-habit-widget/">
-
 <meta property="og:type" content="website">
-<meta property="og:title" content="Ritual: the habit tracker you don't have to open">
-<meta property="og:description" content="A year of squares on your home screen. One tap fills today. Miss a day and nothing resets.">
+<meta property="og:title" content="Ritual">
+<meta property="og:description" content="Write who you want to be. Prove it one square a day.">
 <meta property="og:url" content="https://ayan-pathak.github.io/ritual-habit-widget/">
 <meta name="twitter:card" content="summary_large_image">
-
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;800&display=swap">
-<link rel="stylesheet" href="assets/site.css">
-<script>
-// Set before the first paint so nothing appears and then hides itself. A
-// viewer who asked for reduced motion never gets the class, so for them the
-// page is simply at rest.
-if (!matchMedia("(prefers-reduced-motion: reduce)").matches)
-  document.documentElement.classList.add("js");
-</script>
+<link rel="stylesheet" href="assets/home.css">
 </head>
 <body id="top">
 
-<!-- ── Bar ──────────────────────────────────────────────────────────────
-     Quiet and sticky. Its only job is to keep the download one click away
-     from wherever the reader stopped scrolling. -->
-<header class="bar">
-  <div class="wrap bar-inner">
-    <a class="brand" href="#top">
-      <span class="mark" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
-      Ritual
+<header class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Ritual, back to top">
+      <span class="tile"><canvas id="brandCat" style="height:28px"></canvas></span>Ritual
     </a>
-    <nav class="bar-links">
-      <a href="#how">How it works</a>
+    <nav aria-label="Sections">
+      <a href="#watch">Watch</a>
+      <a href="#sentence">Your sentence</a>
       <a href="#year">Your year</a>
-      <a href="#pricing">Pricing</a>
-      <a href="#faq">FAQ</a>
+      <a href="#shelf">Your shelf</a>
+      <a href="#mochi">Mochi</a>
     </nav>
-    <a class="btn tight" href="#get">Get the app</a>
+    <a class="btn small" href="#get">Get Ritual</a>
   </div>
 </header>
 
 <main>
 
-<!-- ── Hero: the promise, the proof, the two buttons ──────────────────── -->
+<!-- ── Hero ─────────────────────────────────────────────────────────── -->
 <section class="hero">
-  <div class="wrap hero-grid">
-    <div class="hero-copy" data-reveal>
-      <p class="caps">Habit tracker for iPhone and Android</p>
-      <h1>The habit tracker you don't have to open.</h1>
-      <p class="lede">
-        Your whole year sits on your home screen as 365 squares. Tap once and
-        today fills in. Miss a day and nothing resets, so one bad week never
-        wipes out the four good months behind it.
-      </p>
-    </div>
-
-    <div class="hero-art" data-reveal>
-      <div class="phone" aria-label="A phone home screen with the Ritual widget on it">
-        <div class="bar-row">
-          <span>9:41</span>
-          <span class="bars" aria-hidden="true"><i style="height:4px"></i><i style="height:6px"></i><i style="height:8px"></i><i style="height:11px"></i></span>
-        </div>
-        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-        <canvas id="wcard" class="widget-shot" aria-label="The Ritual widget: a year of squares, a streak, and a Mark button"></canvas>
-        <div class="icons" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
-      </div>
-      <p class="caption">Your home screen tomorrow morning. The button marks the day without opening the app.</p>
-    </div>
-
-    <div class="hero-get" data-reveal>
+  <div class="wrap split">
+    <div class="rise">
+      <p class="caps">Ritual for Android and iPhone</p>
+      <h1>Write who you want to be. Prove it one square a day.</h1>
+      <p class="lede">Pick a sentence about yourself. Ritual puts a year of squares on your home screen and fills one every day you keep it. Thirty days in, the sentence is true.</p>
       <div class="stores">
-        <a class="store" data-store="appstore" href="#get">
-          <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
-            <path fill="currentColor" d="M16.4 1.4c0 1.1-.4 2.2-1.1 3-.9 1-2.3 1.7-3.4 1.6-.2-1.1.4-2.3 1.1-3 .8-.9 2.2-1.5 3.4-1.6zM20.9 17.1c-.6 1.3-.8 1.8-1.5 3-1 1.6-2.4 3.5-4.1 3.5-1.6 0-2-1-4-1s-2.5 1-4.1 1c-1.7 0-3-1.8-4-3.4C.4 15.9.1 10.8 1.8 8c1.2-1.9 3.1-3.1 4.9-3.1 1.9 0 3 1 4.5 1 1.5 0 2.4-1 4.5-1 1.6 0 3.3.9 4.5 2.4-4 2.2-3.3 7.9.7 9.8z"/>
-          </svg>
-          <span><i>Download on the</i><b>App Store</b></span>
-        </a>
         <a class="store" data-store="play" href="#get">
-          <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
-            <path fill="#00D2FF" d="M3.9 2.1c-.3.3-.5.8-.5 1.4v17c0 .6.2 1.1.5 1.4L13 12z"/>
-            <path fill="#00E27A" d="M3.9 2.1 16.1 9 13 12z"/>
-            <path fill="#FFCE00" d="M16.1 9l3.6 2c.9.5.9 1.5 0 2l-3.6 2-3.1-3z"/>
-            <path fill="#FF3A44" d="M3.9 21.9 13 12l3.1 3z"/>
-          </svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph"><path fill="#00D2FF" d="M3.9 2.1c-.3.3-.5.8-.5 1.4v17c0 .6.2 1.1.5 1.4L13 12z"/><path fill="#00E27A" d="M3.9 2.1 16.1 9 13 12z"/><path fill="#FFCE00" d="M16.1 9l3.6 2c.9.5.9 1.5 0 2l-3.6 2-3.1-3z"/><path fill="#FF3A44" d="M3.9 21.9 13 12l3.1 3z"/></svg>
           <span><i>Get it on</i><b>Google Play</b></span>
         </a>
+        <a class="store" data-store="appstore" href="#get">
+          <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph"><path fill="currentColor" d="M16.4 1.4c0 1.1-.4 2.2-1.1 3-.9 1-2.3 1.7-3.4 1.6-.2-1.1.4-2.3 1.1-3 .8-.9 2.2-1.5 3.4-1.6zM20.9 17.1c-.6 1.3-.8 1.8-1.5 3-1 1.6-2.4 3.5-4.1 3.5-1.6 0-2-1-4-1s-2.5 1-4.1 1c-1.7 0-3-1.8-4-3.4C.4 15.9.1 10.8 1.8 8c1.2-1.9 3.1-3.1 4.9-3.1 1.9 0 3 1 4.5 1 1.5 0 2.4-1 4.5-1 1.6 0 3.3.9 4.5 2.4-4 2.2-3.3 7.9.7 9.8z"/></svg>
+          <span><i>Download on the</i><b>App Store</b></span>
+        </a>
       </div>
-
-      <p class="small faint hero-fine">
-        Free for your first habit, with no trial clock. $4.99 once if you want
-        more than one. No subscription, no ads, no notifications.
-      </p>
+    </div>
+    <div class="block hero-block rise" style="animation-delay:.12s" aria-label="I am someone who reads before bed. Mochi walks in and waves.">
+      <div class="said" aria-hidden="true">I am someone who <span class="typed" id="typed">reads before bed</span><span class="caret"></span></div>
+      <div class="walker" id="heroWalker"></div>
     </div>
   </div>
 </section>
 
-<!-- ── What you are buying, in four words each ────────────────────────── -->
-<div class="strip">
-  <div class="wrap strip-inner">
-    <span>Pay once, not monthly</span>
-    <span>No notifications, ever</span>
-    <span>No ads, no trackers</span>
-    <span>Works with no signal</span>
+<!-- ── Watch ────────────────────────────────────────────────────────── -->
+<section id="watch" class="watch">
+  <div class="wrap">
+    <p class="caps">Watch</p>
+    <h2>One tap a day. Mochi takes it from there.</h2>
+    <p class="lede">Tap the widget and today fills in. Mochi pops up to tell you how far you've come.</p>
+    <div class="phone">
+      <div class="notch"></div>
+      <div class="screen">
+        <div class="demo" id="demo" aria-label="A Ritual widget on a home screen. A tap marks today and Mochi pops up with the streak.">
+          <div class="icons"><i></i><i></i><i></i><i></i></div>
+          <div class="slot" id="demoSlot">
+            <canvas class="card" id="demoCard" style="width:100%;border-radius:24px"></canvas>
+            <span class="tap" id="demoTap"></span>
+          </div>
+          <div class="icons"><i></i><i></i><i></i><i></i></div>
+          <div class="icons dock"><i></i><i></i><i></i><i></i></div>
+        </div>
+        <span class="time">9:41</span>
+        <video id="film" src="assets/ritual.mp4" muted autoplay loop playsinline preload="metadata" hidden></video>
+      </div>
+    </div>
   </div>
-</div>
+</section>
 
-<div class="wrap">
-
-  <!-- ── The three reasons someone is still using it in June ─────────── -->
-  <section id="how">
-    <div class="head" data-reveal>
-      <p class="caps">Why this one lasts</p>
-      <h2>Most habit apps get deleted in week three.</h2>
-      <p class="lede">
-        Not because people stop caring. Because opening an app to record that
-        you did a thing is itself a habit, and one broken streak makes the
-        whole thing feel pointless. Ritual removes both problems.
-      </p>
+<!-- ── The sentence ─────────────────────────────────────────────────── -->
+<section id="sentence">
+  <div class="wrap split">
+    <div>
+      <p class="caps">It starts here</p>
+      <h2>It starts with a sentence about you.</h2>
+      <p class="lede">What's something you'd like to be true about you? Pick one or write your own. Every ritual you start is built around it.</p>
     </div>
-
-    <div class="cards">
-      <article data-reveal>
-        <div class="shot dark">
-          <canvas id="c-home" aria-label="The widget on a home screen"></canvas>
-        </div>
-        <p class="caps">One</p>
-        <h3>You never have to remember it</h3>
-        <p class="soft">
-          The widget sits on your home screen between your camera and your
-          messages. You see your year every time you unlock your phone, and
-          the button marks today from right there. There is nothing to open
-          and nothing to remember.
-        </p>
-      </article>
-      <article data-reveal>
-        <div class="shot">
-          <canvas id="c-gap" aria-label="A run of filled squares with one left empty"></canvas>
-        </div>
-        <p class="caps">Two</p>
-        <h3>A missed day costs you one square</h3>
-        <p class="soft">
-          No chain to break, no reset to zero, no screen telling you that you
-          failed. The days you did keep stay exactly where they are, which is
-          the difference between a slip and a reason to quit.
-        </p>
-      </article>
-      <article data-reveal>
-        <div class="shot">
-          <canvas id="c-year" aria-label="A full year of filled squares"></canvas>
-        </div>
-        <p class="caps">Three</p>
-        <h3>You can finally see the work</h3>
-        <p class="soft">
-          A number in a list is forgettable. Two hundred filled squares is
-          something you look at in December and think, I actually did that.
-          It is the same reason people keep a wall calendar.
-        </p>
-      </article>
-    </div>
-  </section>
-
-  <!-- ── The card, live. Letting someone tap it is the demo ──────────── -->
-  <section id="try">
-    <div class="split">
-      <div class="stack" data-reveal>
-        <p class="caps">One tap a day</p>
-        <h2>This is the real card. Tap it.</h2>
-        <p class="soft">
-          Nothing on this page is a mockup. The card beside this text is drawn
-          by the same code that draws it on your phone, so what you see here
-          is exactly what you get.
-        </p>
-        <p class="soft">
-          Marking the day flips the whole card to ink. That flip is the point:
-          across a home screen you can tell at a glance which habits you have
-          kept today and which are still waiting.
-        </p>
-        <button class="btn" id="mark" type="button">Tap today</button>
-        <p class="small faint" id="mark-line">Go on, it is the real thing.</p>
+    <div class="sentence-wrap">
+      <div class="sentence-card" id="sentenceCard">
+        <div class="perch" data-pose="sit" data-h="124"></div>
+        <span>I am someone who </span><span class="end" id="sentenceEnd">reads before bed</span>.
       </div>
+      <div class="chips" id="chips" role="group" aria-label="Try an ending"></div>
+    </div>
+  </div>
+</section>
 
-      <div class="stage" data-reveal>
-        <div class="card-frame">
-          <canvas id="card" class="card-live" role="button" tabindex="0"
-                  aria-label="A ritual card. Activate to mark today."></canvas>
-        </div>
-        <div class="stage-cat">
-          <canvas id="cheer-cat" aria-hidden="true"></canvas>
+<!-- ── The widget ───────────────────────────────────────────────────── -->
+<section id="year">
+  <div class="wrap split flip">
+    <div>
+      <p class="caps">Every day</p>
+      <h2>Your whole year, right on your home screen.</h2>
+      <p class="lede">365 squares. Tap the pill and today fills in. The card turns ink, so one glance tells you what's done and what's still open.</p>
+    </div>
+    <div>
+      <div class="wall">
+        <div class="card-host" id="wallHost">
+          <canvas class="card" id="wallCard" role="button" tabindex="0" aria-label="Mark today"></canvas>
         </div>
       </div>
+      <p class="hint">Tap the card to mark today.</p>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ── The year, which is the actual product ───────────────────────── -->
-  <section id="year">
-    <div class="head" data-reveal>
-      <p class="caps">What you end up with</p>
-      <h2>You do not need a perfect year. You need a visible one.</h2>
-      <p class="lede">
-        Drag the slider and watch what different levels of showing up look
-        like. Even a year with plenty of gaps in it reads as an achievement,
-        and the longest run is the number you will want to tell people about.
-      </p>
-    </div>
-
-    <div class="year-panel" data-reveal>
-      <div class="tally">
-        <p class="figure"><span id="fig-days">169</span><span class="caps">days kept</span></p>
-        <p class="figure"><span id="fig-streak">10</span><span class="caps">longest run</span></p>
-        <p class="figure"><span id="fig-pct">66<span class="pct">%</span></span><span class="caps">of the year so far</span></p>
-      </div>
-      <canvas id="year-card" class="card-live" aria-label="A year of squares"></canvas>
-      <div class="scrub">
-        <label class="caps" for="scrub">Drag through a year</label>
-        <input id="scrub" type="range" min="18" max="100" value="66" aria-label="How much of the year was kept">
+<!-- ── Day thirty ───────────────────────────────────────────────────── -->
+<section id="thirty">
+  <div class="wrap split">
+    <div>
+      <p class="caps">Day thirty</p>
+      <h2>Thirty days in, you get to say it.</h2>
+      <p class="lede">Keep your ritual for thirty days and Mochi throws you a party. Then you carry on, and the count keeps climbing.</p>
+      <div class="facts">
+        <div><b>30</b><span>days to make your sentence true</span></div>
+        <div><b>6</b><span>spare days for when life gets in the way</span></div>
+        <div><b>1</b><span>tap a day, straight from your home screen</span></div>
       </div>
     </div>
-  </section>
-
-  <!-- ── Sharing, sold as proof rather than as a feature ─────────────── -->
-  <section id="share">
-    <div class="split">
-      <div class="stack" data-reveal>
-        <p class="caps">Tell the people who care</p>
-        <h2>Proof you can put in front of someone.</h2>
-        <p class="soft">
-          One tap turns your year into a story card and sends it straight to
-          Instagram. The real grid, the real number, nothing invented. The
-          friends who kept asking how it is going finally get to see it.
-        </p>
-        <p class="soft">
-          Saying it out loud is the oldest trick there is for actually keeping
-          a habit. This is the part that makes it worth posting.
-        </p>
-        <p class="small faint">
-          Your grid, your number, and a small Ritual wordmark underneath. If
-          Instagram is not on the phone, the same card goes to whatever is.
-        </p>
-      </div>
-
-      <div class="story-holder" data-reveal>
-       <div class="story-phone">
-        <div class="story" aria-label="The story card as it appears on Instagram">
-          <div class="chrome top">
-            <span class="segs" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i></span>
-            <span class="who">
-              <span class="av" aria-hidden="true"></span>
-              <span class="name">your story</span>
-              <span class="when">now</span>
-            </span>
-          </div>
-          <canvas id="story" aria-label="A Ritual story card: the habit name, the streak, the year grid"></canvas>
-          <div class="chrome bottom">
-            <span class="reply">Send message</span>
-          </div>
-        </div>
-       </div>
-      </div>
+    <div class="block thirty">
+      <div class="said"><b>You can say it now.</b><span>I am someone who reads before bed.</span></div>
+      <div class="stand" data-pose="party" data-h="0.52"></div>
+      <div class="bubble" id="carryOn" style="left:61%;bottom:40%">carry on?</div>
     </div>
-  </section>
+  </div>
+</section>
 
-  <!-- ── Mochi, kept brief and kept honest ───────────────────────────── -->
-  <section id="mochi">
-    <div class="split reverse">
-      <div class="mochi-slab" data-reveal>
-        <canvas id="big-cat" role="button" tabindex="0" aria-label="Mochi. Activate to say hello."></canvas>
-      </div>
-      <div class="stack" data-reveal>
-        <p class="caps">Small thing, works anyway</p>
-        <h2>Someone notices when you show up.</h2>
-        <p class="soft">
-          Mochi lives on the card. He is calm while today is unmarked, and the
-          moment you tap he is pleased about it. He never guilts you for a
-          missed day, because the empty square has already said everything
-          there is to say.
-        </p>
-        <p class="small faint">Go ahead and click him.</p>
-      </div>
+<!-- ── The shelf ────────────────────────────────────────────────────── -->
+<section id="shelf" class="shelf">
+  <div class="wrap split">
+    <div>
+      <p class="caps">Your shelf</p>
+      <h2>Every sentence you make true goes on your shelf.</h2>
+      <p class="lede">Each one stays there with the real grid that earned it. It's the page you'll want to scroll on a hard day.</p>
     </div>
-  </section>
+    <div class="entries" id="entries"></div>
+  </div>
+</section>
 
-  <!-- ── Everything at once, in colour ───────────────────────────────
-       Placed here on purpose: seeing six of them is the argument for the
-       $4.99, and the section immediately after is where it is asked for. -->
-  <section id="many">
-    <div class="head" data-reveal>
-      <p class="caps">More than one</p>
-      <h2>Keep several going at once, each in its own colour.</h2>
-      <p class="lede">
-        Give every habit a colour and a time of day and your home screen
-        stops being a list of chores. One glance tells you what you have
-        already done today and what is still sitting there waiting.
-      </p>
+<!-- ── Share ────────────────────────────────────────────────────────── -->
+<section id="share">
+  <div class="wrap split flip">
+    <div>
+      <p class="caps">Share</p>
+      <h2>Post the proof.</h2>
+      <p class="lede">Your sentence and your real grid, made for Instagram Stories. Every ten days you keep, Mochi reminds you that you've earned a post.</p>
     </div>
-
-    <div class="collage" id="collage" data-reveal>
-      <div class="tile"><canvas id="m1" aria-label="Read before sleep, marked today"></canvas></div>
-      <div class="tile"><canvas id="m2" aria-label="Morning run"></canvas></div>
-      <div class="tile"><canvas id="m3" aria-label="Practice guitar"></canvas></div>
-      <div class="tile"><canvas id="m4" aria-label="No phone in bed"></canvas></div>
-      <div class="tile"><canvas id="m5" aria-label="Walk after dinner, marked today"></canvas></div>
-      <div class="tile"><canvas id="m6" aria-label="Journal three lines"></canvas></div>
+    <div class="share-stage" id="shareStage">
+      <canvas class="story" id="story"></canvas>
+      <div id="selfie" data-pose="selfie" data-h="240" style="display:flex;margin-left:-26px"></div>
+      <div class="bubble" id="deserve" style="right:4%;top:6%">you deserve it!</div>
     </div>
+  </div>
+</section>
 
-    <p class="small faint collage-note">
-      Four colours, because six swatches in a row is a decision and four is a
-      choice. A card flips to ink the moment you mark it, which is how you
-      tell the two apart from across the room.
-    </p>
-  </section>
+<!-- ── Mochi ────────────────────────────────────────────────────────── -->
+<section id="mochi">
+  <div class="wrap">
+    <p class="caps">Mochi</p>
+    <h2>Mochi shows up every day you do.</h2>
+    <p class="lede">He waves when you arrive, learns your name, cheers every day you keep and throws a party on day thirty.</p>
+    <div class="poses" id="poses"></div>
+  </div>
+</section>
 
-  <!-- ── Price, stated so plainly it cannot be misread ───────────────── -->
-  <section id="pricing">
-    <div class="head" data-reveal>
-      <p class="caps">Pricing</p>
-      <h2>Pay once, or never. There is no monthly anything.</h2>
-      <p class="lede">
-        Your first habit is free and stays free, with no trial clock and no
-        card. When you want a second one, a single payment unlocks unlimited
-        rituals on every device you sign in on, for good.
-      </p>
-    </div>
+<!-- ── Price ────────────────────────────────────────────────────────── -->
+<section class="price" aria-label="Price">
+  <div class="wrap">
+    <h2>$9.99.</h2>
+    <p>Once. Forever. No subscription. No tracking.</p>
+    <small>Your first ritual is free.</small>
+  </div>
+</section>
 
-    <div class="price-grid" data-reveal>
-      <article class="plan">
-        <p class="caps">Start here</p>
-        <p class="amount">Free</p>
-        <p class="soft">One ritual, the full widget, the whole year, sharing, and every future update to all of it.</p>
-        <ul class="ticks">
-          <li>One habit, no time limit</li>
-          <li>Home screen widget</li>
-          <li>Story sharing</li>
-          <li>No card needed</li>
-        </ul>
-      </article>
-      <article class="plan lift">
-        <p class="caps">If you want more</p>
-        <p class="amount">$4.99 <span>once</span></p>
-        <p class="soft">Everything above, for as many habits as you care to keep. One payment, restored free on every phone you own.</p>
-        <ul class="ticks">
-          <li>Unlimited habits</li>
-          <li>One payment, kept forever</li>
-          <li>No subscription, no renewal</li>
-          <li>Restores on a new phone</li>
-        </ul>
-      </article>
-    </div>
-
-    <div class="stores center">
-      <a class="store" data-store="appstore" href="#get">
-        <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
-          <path fill="currentColor" d="M16.4 1.4c0 1.1-.4 2.2-1.1 3-.9 1-2.3 1.7-3.4 1.6-.2-1.1.4-2.3 1.1-3 .8-.9 2.2-1.5 3.4-1.6zM20.9 17.1c-.6 1.3-.8 1.8-1.5 3-1 1.6-2.4 3.5-4.1 3.5-1.6 0-2-1-4-1s-2.5 1-4.1 1c-1.7 0-3-1.8-4-3.4C.4 15.9.1 10.8 1.8 8c1.2-1.9 3.1-3.1 4.9-3.1 1.9 0 3 1 4.5 1 1.5 0 2.4-1 4.5-1 1.6 0 3.3.9 4.5 2.4-4 2.2-3.3 7.9.7 9.8z"/>
-        </svg>
-        <span><i>Download on the</i><b>App Store</b></span>
-      </a>
+<!-- ── Last call ────────────────────────────────────────────────────── -->
+<section id="get" class="last">
+  <div class="wrap">
+    <h2>Start with one sentence.</h2>
+    <p class="lede">Download Ritual and tell Mochi who you'd like to be.</p>
+    <div class="stores">
       <a class="store" data-store="play" href="#get">
-        <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
-          <path fill="#00D2FF" d="M3.9 2.1c-.3.3-.5.8-.5 1.4v17c0 .6.2 1.1.5 1.4L13 12z"/>
-          <path fill="#00E27A" d="M3.9 2.1 16.1 9 13 12z"/>
-          <path fill="#FFCE00" d="M16.1 9l3.6 2c.9.5.9 1.5 0 2l-3.6 2-3.1-3z"/>
-          <path fill="#FF3A44" d="M3.9 21.9 13 12l3.1 3z"/>
-        </svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph"><path fill="#00D2FF" d="M3.9 2.1c-.3.3-.5.8-.5 1.4v17c0 .6.2 1.1.5 1.4L13 12z"/><path fill="#00E27A" d="M3.9 2.1 16.1 9 13 12z"/><path fill="#FFCE00" d="M16.1 9l3.6 2c.9.5.9 1.5 0 2l-3.6 2-3.1-3z"/><path fill="#FF3A44" d="M3.9 21.9 13 12l3.1 3z"/></svg>
         <span><i>Get it on</i><b>Google Play</b></span>
       </a>
+      <a class="store" data-store="appstore" href="#get">
+        <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph"><path fill="currentColor" d="M16.4 1.4c0 1.1-.4 2.2-1.1 3-.9 1-2.3 1.7-3.4 1.6-.2-1.1.4-2.3 1.1-3 .8-.9 2.2-1.5 3.4-1.6zM20.9 17.1c-.6 1.3-.8 1.8-1.5 3-1 1.6-2.4 3.5-4.1 3.5-1.6 0-2-1-4-1s-2.5 1-4.1 1c-1.7 0-3-1.8-4-3.4C.4 15.9.1 10.8 1.8 8c1.2-1.9 3.1-3.1 4.9-3.1 1.9 0 3 1 4.5 1 1.5 0 2.4-1 4.5-1 1.6 0 3.3.9 4.5 2.4-4 2.2-3.3 7.9.7 9.8z"/></svg>
+        <span><i>Download on the</i><b>App Store</b></span>
+      </a>
     </div>
-  </section>
-
-  <!-- ── The questions that stop a download ──────────────────────────── -->
-  <section id="faq">
-    <div class="head" data-reveal>
-      <p class="caps">Before you download</p>
-      <h2>The questions people ask first.</h2>
-    </div>
-
-    <dl class="faq">
-      <div>
-        <dt>What happens if I miss a day?</dt>
-        <dd>Nothing resets. That day stays empty and every other square stays
-          exactly where it was. You pick up tomorrow with everything you have
-          already built still intact.</dd>
-      </div>
-      <div>
-        <dt>Will it nag me?</dt>
-        <dd>No. Ritual sends no notifications at all. The widget on your home
-          screen is the only reminder, and it is one you chose to put there.</dd>
-      </div>
-      <div>
-        <dt>Is $4.99 a subscription?</dt>
-        <dd>No. It is one payment that never renews, and it unlocks unlimited
-          habits on every device you sign in on. Your first habit is free
-          whether or not you ever pay.</dd>
-      </div>
-      <div>
-        <dt>Do I need an account?</dt>
-        <dd>Yes, one sign in on the first launch with Google, Apple or an
-          email address. It exists so your year survives a new phone. Nothing
-          else in the app asks you for anything.</dd>
-      </div>
-      <div>
-        <dt>Where is my data stored?</dt>
-        <dd>Every square lives on your phone, and your rituals are mirrored to
-          your account so a new phone picks them up. That is a name, a colour,
-          a time of day and a list of dates, and nothing else.
-          <a href="privacy/">The full list is here.</a></dd>
-      </div>
-      <div>
-        <dt>Can I track more than one habit?</dt>
-        <dd>Yes, as many as you want once you have unlocked it. Each one gets
-          its own colour, its own time of day and its own widget.</dd>
-      </div>
-      <div>
-        <dt>Why should I trust it with my data?</dt>
-        <dd>You do not have to take anyone's word for it. The whole app is
-          open source, so anyone can
-          <a href="https://github.com/ayan-pathak/ritual-habit-widget">read
-          exactly what it does</a>.</dd>
-      </div>
-    </dl>
-  </section>
-
-</div>
-
-<!-- ── The ask ──────────────────────────────────────────────────────────
-     Last screen, one decision, both buttons and a number that is true
-     today rather than a slogan. -->
-<section class="cta" id="get">
-  <div class="wrap cta-inner">
-    <div class="cta-copy">
-      <h2><span id="left">365</span> squares left this year.</h2>
-      <p class="lede">
-        Every one of them is still empty. Pick one thing you want to be doing
-        in December, put it on your home screen tonight, and tap it once.
-      </p>
-
-      <div class="stores">
-        <a class="store light" data-store="appstore" href="#get">
-          <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
-            <path fill="currentColor" d="M16.4 1.4c0 1.1-.4 2.2-1.1 3-.9 1-2.3 1.7-3.4 1.6-.2-1.1.4-2.3 1.1-3 .8-.9 2.2-1.5 3.4-1.6zM20.9 17.1c-.6 1.3-.8 1.8-1.5 3-1 1.6-2.4 3.5-4.1 3.5-1.6 0-2-1-4-1s-2.5 1-4.1 1c-1.7 0-3-1.8-4-3.4C.4 15.9.1 10.8 1.8 8c1.2-1.9 3.1-3.1 4.9-3.1 1.9 0 3 1 4.5 1 1.5 0 2.4-1 4.5-1 1.6 0 3.3.9 4.5 2.4-4 2.2-3.3 7.9.7 9.8z"/>
-          </svg>
-          <span><i>Download on the</i><b>App Store</b></span>
-        </a>
-        <a class="store light" data-store="play" href="#get">
-          <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph">
-            <path fill="#00D2FF" d="M3.9 2.1c-.3.3-.5.8-.5 1.4v17c0 .6.2 1.1.5 1.4L13 12z"/>
-            <path fill="#00E27A" d="M3.9 2.1 16.1 9 13 12z"/>
-            <path fill="#FFCE00" d="M16.1 9l3.6 2c.9.5.9 1.5 0 2l-3.6 2-3.1-3z"/>
-            <path fill="#FF3A44" d="M3.9 21.9 13 12l3.1 3z"/>
-          </svg>
-          <span><i>Get it on</i><b>Google Play</b></span>
-        </a>
-      </div>
-
-      <p class="small cta-fine" id="cta-fine">
-        Free for your first habit. $4.99 once for unlimited.
-      </p>
-      <p class="small cta-fine">
-        <a id="apk" href="https://github.com/ayan-pathak/ritual-habit-widget/releases/latest">
-          Or install the Android build directly</a>, while the listings go up.
-      </p>
-    </div>
-
-    <div class="cta-cat">
-      <canvas id="end-cat" aria-hidden="true"></canvas>
-    </div>
+    <div class="stand" data-pose="wave" data-h="210"></div>
   </div>
 </section>
 
 </main>
 
-<footer>
-  <div class="wrap foot">
-    <p class="caps">Ritual · one square a day</p>
-    <nav>
-      <a href="#get">Download</a>
-      <a href="#pricing">Pricing</a>
-      <a href="privacy/">Privacy</a>
-      <a href="delete-account/">Delete your account</a>
-      <a href="https://github.com/ayan-pathak/ritual-habit-widget">Read the source</a>
-    </nav>
+<footer class="foot">
+  <div class="wrap">
+    <span>Ritual</span>
+    <span class="grow"></span>
+    <a href="privacy/">Privacy</a>
+    <a href="delete-account/">Delete your account</a>
   </div>
 </footer>
 
 <script src="assets/mochi.js"></script>
 <script src="assets/ritual.js"></script>
+<script src="assets/mochibody.js"></script>
 <script>
-// Wrapped so nothing here lands on window: ritual.js is a classic script,
-// so its top-level names are globals and a bare const out here collides.
-(() => {
+(function () {
 "use strict";
+const R = window.Ritual;
+const $ = s => document.querySelector(s);
+const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+const SUGGEST = ["reads before bed", "moves every day", "drinks enough water", "writes a little daily", "sleeps on time", "is off junk food"];
 
-const $ = id => document.getElementById(id);
-const REDUCED = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/* ── The two store links ───────────────────────────────────────────────
-   Fill these in when the listings exist and every button on the page
-   starts working at once. Until then a button says so on the way past
-   rather than silently doing nothing, because a dead download button is
-   the one thing a page like this cannot afford. */
-const STORE = {
-  appstore: "",   // ← paste the App Store URL here
-  play: "",       // ← paste the Google Play URL here
-};
-const NAMES = { appstore: "the App Store", play: "Google Play" };
-
-document.querySelectorAll("[data-store]").forEach(a => {
-  const which = a.dataset.store;
-  const href = STORE[which];
-  if (href) { a.href = href; return; }
-  a.dataset.soon = "true";
-  a.addEventListener("click", e => {
-    e.preventDefault();
-    const fine = $("cta-fine");
-    if (fine) {
-      fine.textContent = "Not on " + NAMES[which] + " yet. The Android build " +
-        "is on GitHub in the meantime, and the listing is coming.";
-    }
-    location.hash = "#get";
-  });
-});
-
-/* ── Coming into view ──────────────────────────────────────────────────
-   One observer per thing, disconnected the moment it fires: everything
-   here happens once and nothing needs watching afterwards. A viewer who
-   asked for reduced motion gets the finished state immediately. */
-function onView(node, fn, threshold) {
-  if (REDUCED || !("IntersectionObserver" in window)) { fn(); return; }
-  const io = new IntersectionObserver(entries => {
-    for (const e of entries) {
-      if (e.isIntersecting) { io.disconnect(); fn(); return; }
-    }
-  }, { threshold: threshold == null ? 0.25 : threshold, rootMargin: "0px 0px 90px 0px" });
-  io.observe(node);
+/* Mochi with his whole body, standing on the bottom edge of what holds him:
+   the canvas's ground line is pulled flush with that edge. */
+function body(host, pose, h, extra) {
+  const c = document.createElement("canvas");
+  c.className = "mbody";
+  c.style.height = h + "px";
+  c.style.marginBottom = -(h * (1 - MochiBody.groundAt(pose))) + "px";
+  host.appendChild(c);
+  return MochiBody.mount(c, { pose, extra });
 }
 
-document.querySelectorAll("[data-reveal]").forEach(el => {
-  onView(el, () => el.classList.add("in"), 0.12);
-});
-
-/* ── Cards that fill themselves in ─────────────────────────────────────
-   The grid is the product, so every card on this page draws itself
-   arriving rather than arriving drawn: the days land in order and the
-   tally counts up with them. */
-const shown = {};
-
-const empty = model => Object.assign({}, model, {
-  doneDaysOfYear: new Set(), totalDone: 0, streak: 0,
-});
-
-function animateCard(id, model, cfg, ms) {
-  const canvas = $(id);
-  if (REDUCED) { shown[id] = true; Ritual.paintCard(canvas, model, cfg); return; }
-  const days = Array.from(model.doneDaysOfYear).sort((a, b) => a - b);
-  const t0 = performance.now();
-  const frame = now => {
-    const k = Math.min((now - t0) / ms, 1);
-    const e = 1 - Math.pow(1 - k, 3);
-    const cut = Math.round(e * days.length);
-    Ritual.paintCard(canvas, Object.assign({}, model, {
-      doneDaysOfYear: new Set(days.slice(0, cut)),
-      totalDone: cut,
-      streak: Math.round(model.streak * e),
-    }), cfg);
-    if (k < 1) requestAnimationFrame(frame); else shown[id] = true;
-  };
-  requestAnimationFrame(frame);
-}
-
-/* ── One missed square, drawn large ────────────────────────────────────
-   Not a card render. The whole point of this picture is a single empty
-   cell, and at card scale a single cell is two pixels across. */
-const GAP_RATIO = 2.35, GAP_COLS = 9, GAP_ROWS = 3, GAP_MISS = 9 + 4;   // middle row, middle-ish
-
-function gapArt(k) {
-  const canvas = $("c-gap");
-  const w = canvas.clientWidth;
-  if (!w) return;
-  const dpr = window.devicePixelRatio || 1;
-  const h = Math.round(w / GAP_RATIO);
-  canvas.width = Math.round(w * dpr);
-  canvas.height = Math.round(h * dpr);
-  canvas.style.height = h + "px";
-  const ctx = canvas.getContext("2d");
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.clearRect(0, 0, w, h);
-
-  ctx.fillStyle = Ritual.LIME;
-  ctx.beginPath(); ctx.roundRect(0, 0, w, h, w * 0.055); ctx.fill();
-
-  const pad = w * 0.085;
-  const step = (w - pad * 2) / (GAP_COLS - 0.26);
-  const cell = step * 0.74;
-  const top = (h - (GAP_ROWS - 1) * step - cell) / 2;
-  const lit = Math.round(k * GAP_COLS * GAP_ROWS);
-  for (let r = 0; r < GAP_ROWS; r++) {
-    for (let c = 0; c < GAP_COLS; c++) {
-      const i = r * GAP_COLS + c;
-      ctx.fillStyle = (i < lit && i !== GAP_MISS) ? Ritual.INK : "rgba(18,18,15,.16)";
-      ctx.beginPath();
-      ctx.roundRect(pad + c * step, top + r * step, cell, cell, cell * 0.24);
-      ctx.fill();
+/* The ones further down the page only draw while they are on screen. */
+const lazy = new IntersectionObserver(entries => {
+  for (const e of entries) {
+    const host = e.target;
+    if (e.isIntersecting && !host._st) {
+      let h = +host.dataset.h;
+      if (h < 1) h = Math.round(host.parentElement.clientHeight * h);
+      host._st = body(host, host.dataset.pose, h, host.dataset.say ? { say: host.dataset.say } : null);
+    } else if (!e.isIntersecting && host._st) {
+      host.querySelectorAll("canvas.mbody").forEach(c => c.remove());
+      host._st = null;
     }
   }
+}, { rootMargin: "160px 0px" });
+
+/* Pops him up from behind the top edge of `anchor`, paws over it. */
+function popFrom(anchor, o) {
+  const host = anchor.parentElement;
+  const H = o.h || 140, W = H * MochiBody.ratio;
+  const c = document.createElement("canvas");
+  c.className = "mbody";
+  c.style.cssText = `position:absolute;left:${anchor.offsetLeft + (anchor.offsetWidth - W) * (o.at == null ? .2 : o.at)}px;` +
+    `top:${anchor.offsetTop - H * MochiBody.ledgeAt()}px;height:${H}px;pointer-events:none;z-index:3`;
+  host.appendChild(c);
+  MochiBody.mount(c, { pose: "pop", mood: o.cheer ? "pleased" : "resting",
+    extra: { cheer: !!o.cheer, say: o.say }, onDone: () => c.remove() });
 }
 
-function animateGap(ms) {
-  if (REDUCED) { shown["c-gap"] = true; gapArt(1); return; }
-  const t0 = performance.now();
-  const frame = now => {
-    const k = Math.min((now - t0) / ms, 1);
-    gapArt(1 - Math.pow(1 - k, 3));
-    if (k < 1) requestAnimationFrame(frame); else shown["c-gap"] = true;
-  };
-  requestAnimationFrame(frame);
+/* A shelf entry's grid: only the days that earned it, ending today, with
+   the few misses a real run has. */
+function lastDays(m, days, back) {
+  const t = new Date(), start = new Date(t.getFullYear(), 0, 0);
+  const today = Math.floor((t - start) / 864e5), done = new Set();
+  let kept = 0;
+  for (let d = today - (back || 0); d > 0 && kept < days; d--) { if ((d * 7) % 11 !== 3 || d === today) { done.add(d); kept++; } }
+  return Object.assign(m, { doneDaysOfYear: done, totalDone: done.size });
 }
 
-/* ── The cats ──────────────────────────────────────────────────────────
-   Three live rigs, each breathing on its own clock so they are never in
-   lockstep, which is the difference between a page with an animal on it
-   and a page with a looping GIF on it. */
-const cheerCat = Ritual.mochi($("cheer-cat"), { mood: "resting" });
-const bigCat   = Ritual.mochi($("big-cat"),   { mood: "resting" });
-const endCat   = Ritual.mochi($("end-cat"),   { mood: "pleased" });
-
-/** Click and keyboard, because a canvas that acts like a button must be one. */
-function tapable(node, fn) {
-  node.addEventListener("click", fn);
-  node.addEventListener("keydown", e => {
-    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fn(); }
-  });
-}
-
-let bigMood = 0;
-tapable($("big-cat"), () => {
-  bigMood++;
-  bigCat.play(bigMood % 2 ? "mark" : "settle", bigMood % 2 ? "pleased" : "resting");
-});
-
-onView($("big-cat"), () => setTimeout(() => bigCat.play("mark", "pleased"), 420));
-onView($("end-cat"), () => setTimeout(() => endCat.play("mark", "pleased"), 420));
-
-/* ── The card you can tap ──────────────────────────────────────────────── */
-const WIDGET = { action: true, ratio: 361 / 156 };
-const YEAR_SHOT = { ratio: 353 / 150 };
-
-let marked = false;
-const cardModel = () => Ritual.demoModel({ marked, run: 9 });
-const widgetModel = () => Ritual.demoModel({ marked: false });
-
-function paintCard() {
-  const model = cardModel();
-  Ritual.paintCard($("card"), shown.card ? model : empty(model));
-  $("mark-line").textContent = marked
-    ? "Day marked, and nothing was at stake."
-    : "Go on, it is the real thing.";
-  $("mark").textContent = marked ? "Tapped today" : "Tap today";
-}
-
-function toggleMark() {
-  marked = !marked;
-  shown.card = true;
-  paintCard();
-  marked ? cheerCat.play("mark", "pleased") : cheerCat.set("resting");
-}
-$("mark").addEventListener("click", toggleMark);
-tapable($("card"), toggleMark);
-
-/* ── Drag through a year ───────────────────────────────────────────────
-   The grid and the figures come off one model, so the numbers above the
-   card are the numbers on it rather than a caption written beside it. */
-function yearModel(pct) {
-  const now = new Date();
-  const year = now.getFullYear();
-  const jan = Date.UTC(year, 0, 1);
-  const today = Math.floor(Date.UTC(year, now.getMonth(), now.getDate()) / 86400000);
-  const doy = Math.floor((Date.UTC(year, now.getMonth(), now.getDate()) - jan) / 86400000) + 1;
-  const len = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
-
-  // Misses land where a hash puts them rather than on a fixed interval. A
-  // stripe every third day is not what a kept year looks like: real ones run
-  // for a fortnight, drop a day and carry on, and the longest run is the
-  // number anybody actually cares about.
-  const hash = d => {
-    const x = Math.sin(d * 127.1 + 311.7) * 43758.5453;
-    return x - Math.floor(x);
-  };
-  const live = Math.max(3, Math.round(pct / 11));   // the run in progress
-  const done = new Set();
-  for (let d = 1; d <= doy; d++) {
-    if (d > doy - live || pct >= 100 || hash(d) < pct / 100) done.add(d);
-  }
-
-  let best = 0, run = 0;
-  for (let d = 1; d <= doy; d++) {
-    if (done.has(d)) { run++; if (run > best) best = run; } else run = 0;
-  }
-  let streak = 0;
-  for (let d = doy; d >= 1 && done.has(d); d--) streak++;
-
-  return {
-    model: {
-      title: "Read before sleep", slot: "Evening", accent: Ritual.accentAt(0),
-      year, today, doneDaysOfYear: done, streak,
-      totalDone: done.size, remaining: len - doy,
-      doneToday: true, mood: "pleased",
-    },
-    days: done.size, best, doy,
-  };
-}
-
-/* ── Six rituals, six different years ──────────────────────────────────
-   demoModel draws the same pattern every time, which is right for one card
-   and wrong for six side by side: identical grids in different colours read
-   as a swatch chart. Each of these gets its own seed, its own start date and
-   its own density, so the collage looks like six people's actual years. */
-const RITUALS = [
-  { id: "m1", title: "Read before sleep",  slot: "Evening", accent: 0, seed: 3,  span: .96, pct: .84, run: 9,  marked: true },
-  { id: "m2", title: "Morning run",        slot: "Morning", accent: 1, seed: 11, span: .62, pct: .71, run: 3 },
-  { id: "m3", title: "Practice guitar",    slot: "Evening", accent: 2, seed: 19, span: .81, pct: .9,  run: 14 },
-  { id: "m4", title: "No phone in bed",    slot: "Night",   accent: 3, seed: 27, span: .44, pct: .66, run: 5 },
-  { id: "m5", title: "Walk after dinner",  slot: "Evening", accent: 1, seed: 35, span: .73, pct: .78, run: 21, marked: true },
-  { id: "m6", title: "Journal three lines", slot: "Morning", accent: 2, seed: 43, span: .55, pct: .62, run: 2 },
-];
-
-function ritualModel(o) {
-  const now = new Date();
-  const year = now.getFullYear();
-  const jan = Date.UTC(year, 0, 1);
-  const today = Math.floor(Date.UTC(year, now.getMonth(), now.getDate()) / 86400000);
-  const doy = Math.floor((Date.UTC(year, now.getMonth(), now.getDate()) - jan) / 86400000) + 1;
-  const len = (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0 ? 366 : 365;
-
-  const hash = d => {
-    const x = Math.sin(d * 127.1 + o.seed * 97.3) * 43758.5453;
-    return x - Math.floor(x);
-  };
-  const from = Math.max(1, Math.round(doy * (1 - o.span)));
-  const done = new Set();
-  for (let d = from; d <= doy; d++) if (hash(d) < o.pct) done.add(d);
-  for (let d = doy - o.run + 1; d <= doy; d++) if (d >= 1) done.add(d);
-  if (!o.marked) done.delete(doy);
-
-  let streak = 0;
-  for (let d = o.marked ? doy : doy - 1; d >= 1 && done.has(d); d--) streak++;
-
-  return {
-    title: o.title, slot: o.slot, accent: Ritual.accentAt(o.accent),
-    year, today, doneDaysOfYear: done, streak,
-    totalDone: done.size, remaining: len - doy,
-    doneToday: !!o.marked, mood: o.marked ? "pleased" : "resting",
-  };
-}
-
-const YEAR_TARGET = 66;
-
-function paintYear() {
-  const y = yearModel(+$("scrub").value);
-  Ritual.paintCard($("year-card"), y.model, YEAR_SHOT);
-  $("fig-days").textContent = String(y.days);
-  $("fig-streak").textContent = String(y.best);
-  $("fig-pct").innerHTML = Math.round(y.days / y.doy * 100) + '<span class="pct">%</span>';
-}
-$("scrub").addEventListener("input", () => { shown.year = true; paintYear(); });
-
-/** The panel arrives at its floor and climbs, which says drag me. */
-function animateYear(ms) {
-  const el = $("scrub"), from = +el.min, to = YEAR_TARGET;
-  if (REDUCED) { el.value = String(to); shown.year = true; paintYear(); return; }
-  const t0 = performance.now();
-  const frame = now => {
-    const k = Math.min((now - t0) / ms, 1);
-    const e = 1 - Math.pow(1 - k, 3);
-    if (!shown.year) {
-      el.value = String(Math.round(from + (to - from) * e));
-      paintYear();
-    }
-    if (k < 1) requestAnimationFrame(frame); else shown.year = true;
-  };
-  requestAnimationFrame(frame);
-}
-
-/* ── The story, in its Instagram frame ─────────────────────────────────
-   Sized off the frame rather than off the canvas: a canvas with no CSS
-   width reports whatever its last width attribute was, which is how the
-   card ended up narrower than the phone around it. */
-function paintStory() {
-  const frame = document.querySelector(".story");
-  const w = frame.clientWidth;
-  if (!w) return;
-  Ritual.Story.paint($("story"), w * (Ritual.Story.H / Ritual.Story.W),
-                     Ritual.demoModel({ marked: true }));
-}
-
-// The same number the app's home screen opens with, worked out the same way.
-// The markup ships with 365 in it so a crawler and a link preview never see a
-// placeholder.
-const now = new Date();
-const thisYear = now.getFullYear();
-const dayOfYear = Math.floor(
-  (Date.UTC(thisYear, now.getMonth(), now.getDate()) - Date.UTC(thisYear, 0, 1)) / 86400000) + 1;
-const yearLength =
-  (thisYear % 4 === 0 && thisYear % 100 !== 0) || thisYear % 400 === 0 ? 366 : 365;
-const LEFT = yearLength - dayOfYear;
-$("left").textContent = String(LEFT);
-
-/* ── Small dynamics ────────────────────────────────────────────────────
-   The bar earns its rule once the page has actually moved, and the number
-   in the close counts itself up, because a number that arrives is read and
-   a number that is simply there is skipped. */
-const bar = document.querySelector(".bar");
-const onScroll = () => bar.classList.toggle("stuck", scrollY > 8);
-addEventListener("scroll", onScroll, { passive: true });
-onScroll();
-
-function countTo(el, to, ms) {
-  if (REDUCED) { el.textContent = String(to); return; }
-  const t0 = performance.now();
-  const frame = now => {
-    const k = Math.min((now - t0) / ms, 1);
-    el.textContent = String(Math.round(to * (1 - Math.pow(1 - k, 3))));
-    if (k < 1) requestAnimationFrame(frame);
-  };
-  requestAnimationFrame(frame);
-}
-onView($("left"), () => countTo($("left"), LEFT, 1200), 0.6);
-
-/* ── First paint, then the animations ──────────────────────────────────
-   Everything is painted empty first so the page never moves under the
-   reader when a canvas finds its height. */
-function paintAll() {
-  const wm = widgetModel();
-  Ritual.paintCard($("wcard"),  shown.wcard ? wm : empty(wm), WIDGET);
-  Ritual.paintCard($("c-home"), shown["c-home"] ? wm : empty(wm), WIDGET);
-  const ym = yearModel(88).model;
-  Ritual.paintCard($("c-year"), shown["c-year"] ? ym : empty(ym), YEAR_SHOT);
-  gapArt(shown["c-gap"] ? 1 : 0);
-  for (const r of RITUALS) {
-    const m = ritualModel(r);
-    Ritual.paintCard($(r.id), shown[r.id] ? m : empty(m));
-  }
-  paintCard();
-  paintYear();
-  paintStory();
-}
+const keptLine = m => m.streak > 1 ? `${m.streak} in a row!` : m.totalDone > 1 ? `${m.totalDone} days now!` : "day one!";
 
 function start() {
-  $("scrub").value = $("scrub").min;
+  /* ── Brand ── */
+  R.mochi($("#brandCat"), { mood: "pleased" });
+
+  /* ── Hero: he walks in along the block and waves; the sentence types ── */
+  const walker = $("#heroWalker"), block = walker.parentElement;
+  const heroH = Math.round(block.clientHeight * .62);
+  const st = body(walker, "wave", heroH);
+  if (!still) {
+    st.pose = "walk"; st.dir = -1;
+    const from = block.clientWidth * .7;
+    walker.style.transition = "none";
+    walker.style.transform = `translateX(-50%) translateX(${from}px)`;
+    walker.getBoundingClientRect();
+    walker.style.transition = "transform 2.2s cubic-bezier(.3,.55,.4,1)";
+    walker.style.transform = "translateX(-50%)";
+    setTimeout(() => st.setPose("wave"), 1950);
+    typeLoop();
+  }
+
+  /* ── Watch: the film when there is one, the live widget until then ── */
+  const film = $("#film");
+  film.addEventListener("loadeddata", () => { film.hidden = false; $("#demo").hidden = true; });
+  demo();
+
+  /* ── The sentence ── */
+  const chips = $("#chips"), end = $("#sentenceEnd"), card = $("#sentenceCard");
+  SUGGEST.forEach((t, i) => {
+    const a = R.accentAt(i), b = document.createElement("button");
+    b.className = "chip"; b.textContent = t;
+    b.style.background = a.block; b.style.color = a.onBlock;
+    b.setAttribute("aria-pressed", i === 0 ? "true" : "false");
+    b.addEventListener("click", () => {
+      chips.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", "false"));
+      b.setAttribute("aria-pressed", "true");
+      end.textContent = t;
+      card.classList.remove("pop"); void card.offsetWidth; card.classList.add("pop");
+      const perch = card.querySelector(".perch");
+      if (perch._st) perch._st.kick();
+    });
+    chips.appendChild(b);
+  });
+
+  /* ── The widget: tap to keep today ── */
+  wall();
+
+  /* ── The shelf ── */
+  const shelf = [
+    ["I am someone who reads before bed.", 48, 0, 150],
+    ["I am someone who moves every day.", 36, 1, 80],
+    ["I am someone who drinks enough water.", 31, 2, 0]
+  ];
+  const entries = $("#entries");
+  shelf.forEach(([said, days, accent, back]) => {
+    const e = document.createElement("div");
+    e.className = "entry";
+    e.innerHTML = `<p>${said}</p><b>${days} days</b><canvas></canvas>`;
+    entries.appendChild(e);
+    const c = e.querySelector("canvas");
+    c._paint = () => R.paintCard(c, lastDays(R.demoModel({ accent, marked: !back }), days, back),
+      { header: false, footer: false, cat: false, corner: 16, padDp: 11, ratio: 353 / 80 });
+  });
+
+  /* ── Share ── */
+  const story = $("#story");
+  story._paint = () => {
+    const stage = $("#shareStage").clientWidth;
+    const h = Math.min(500, Math.round(stage * .6 / (1080 / 1920)));
+    R.Story.paint(story, h, Object.assign(R.demoModel({ accent: 1, run: 13, marked: true, title: "Move every day" }),
+      { identity: "I am someone who moves every day" }));
+  };
+
+  /* ── Mochi, every moment ── */
+  const POSES = [
+    ["wave", "Says hello when you arrive"], ["hello", "Learns your name"],
+    ["peek", "Checks in on you"], ["cheer", "Cheers every day you keep"],
+    ["party", "Celebrates day thirty"], ["selfie", "Reminds you to post"],
+    ["cloud", "Keeps every square safe"], ["sleep", "Naps until you start"]
+  ];
+  const poses = $("#poses");
+  POSES.forEach(([pose, label], i) => {
+    const a = R.accentAt(i);
+    const f = document.createElement("figure");
+    f.className = "pose"; f.style.background = a.block; f.style.color = a.onBlock; f.style.margin = 0;
+    f.innerHTML = `<figcaption>${label}</figcaption><div class="stand" data-pose="${pose}" data-h="0.78" ${pose === "hello" ? 'data-say="Sam"' : ""}></div>`;
+    poses.appendChild(f);
+  });
+
+  document.querySelectorAll("[data-pose]").forEach(h => lazy.observe(h));
+
+  /* Bubbles pop in when they come into view. */
+  const pop = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add("in"); pop.unobserve(e.target); }
+  }), { threshold: .6 });
+  [$("#carryOn"), $("#deserve")].forEach(b => pop.observe(b));
+
   paintAll();
-
-  // The hero is already on screen, so it plays at once.
-  animateCard("wcard", widgetModel(), WIDGET, 1500);
-
-  onView($("c-home"), () => animateCard("c-home", widgetModel(), WIDGET, 1200));
-  onView($("c-gap"),  () => animateGap(900));
-  onView($("c-year"), () => animateCard("c-year", yearModel(88).model, YEAR_SHOT, 1400));
-  onView($("card"),   () => animateCard("card", cardModel(), null, 1300), 0.35);
-  onView($("year-card"), () => animateYear(1600), 0.3);
-
-  // The collage lands one card at a time, left to right, so it reads as six
-  // separate habits rather than one picture fading up.
-  onView($("collage"), () => RITUALS.forEach((r, i) => {
-    setTimeout(() => animateCard(r.id, ritualModel(r), null, 1000), i * 130);
-  }), 0.12);
+  let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(paintAll, 120); });
 }
 
-// Nothing draws until Archivo is real, or every card measures the wrong text.
-const ready = document.fonts
-  ? document.fonts.load("800 17px Archivo").then(() => document.fonts.ready)
-  : Promise.resolve();
-ready.then(start, start);
+function paintAll() {
+  document.querySelectorAll("canvas").forEach(c => c._paint && c._paint());
+}
 
-let resizing;
-addEventListener("resize", () => {
-  clearTimeout(resizing);
-  resizing = setTimeout(paintAll, 120);
-});
+/* The hero sentence tries on each ending in turn. */
+function typeLoop() {
+  const el = $("#typed");
+  let i = 0, n = SUGGEST[0].length, dir = -1, wait = 60;
+  (function step() {
+    const word = SUGGEST[i % SUGGEST.length];
+    if (wait > 0) wait--;
+    else if (dir < 0) { n -= 1; if (n <= 0) { dir = 1; i++; wait = 6; } }
+    else { n += 1; if (n >= SUGGEST[i % SUGGEST.length].length) { dir = -1; wait = 60; } }
+    el.textContent = SUGGEST[i % SUGGEST.length].slice(0, Math.max(0, n));
+    setTimeout(step, dir < 0 && !wait ? 28 : 55);
+  })();
+}
+
+/* The home screen in the phone: every few seconds a tap keeps the day and
+   Mochi pops up over the widget to say the count, then a new day starts. */
+function demo() {
+  const canvas = $("#demoCard"), tap = $("#demoTap"), film = $("#film");
+  let run = 2, marked = false;
+  const model = () => R.demoModel({ marked, run, title: "Read 10 pages", slot: "Evening" });
+  canvas._paint = () => R.paintCard(canvas, model(), { action: true, corner: 26 });
+  if (still) return;
+  const cycle = () => {
+    if (!film.hidden) return;
+    tap.style.left = "84%"; tap.style.top = "80%";
+    tap.classList.remove("go"); void tap.offsetWidth; tap.classList.add("go");
+    setTimeout(() => {
+      marked = true; canvas._paint();
+      popFrom(canvas, { cheer: true, h: 150, at: .12, say: keptLine(model()) });
+    }, 260);
+    setTimeout(() => { marked = false; run++; canvas._paint(); }, 4300);
+  };
+  setTimeout(cycle, 1400);
+  setInterval(cycle, 5600);
+}
+
+/* The widget you can tap. Kept, he pops up with the count; left open, he
+   drops by now and then to ask about today. */
+function wall() {
+  const canvas = $("#wallCard");
+  let marked = false, seen = false;
+  const model = () => R.demoModel({ marked, run: 9, title: "Read before bed", slot: "Evening" });
+  canvas._paint = () => R.paintCard(canvas, model(), { action: true, corner: 26 });
+  const toggle = () => {
+    marked = !marked; canvas._paint();
+    if (marked) popFrom(canvas, { cheer: true, h: 170, at: .1, say: keptLine(model()) });
+  };
+  canvas.addEventListener("click", toggle);
+  canvas.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+  new IntersectionObserver(es => { seen = es[0].isIntersecting; }, { threshold: .5 }).observe(canvas);
+  if (still) return;
+  setInterval(() => {
+    if (seen && !marked && document.visibilityState === "visible")
+      popFrom(canvas, { h: 160, at: .15 + Math.random() * .4, say: Math.random() < .5 ? "psst… today?" : "today's square?" });
+  }, 11000);
+}
+
+const ready = document.fonts ? Promise.all(["500", "600", "800"].map(w => document.fonts.load(w + " 16px Archivo"))) : Promise.resolve();
+ready.catch(() => {}).then(start);
 })();
 </script>
 </body>

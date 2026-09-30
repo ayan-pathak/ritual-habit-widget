@@ -16,8 +16,8 @@
 const INK = "#12120F", PAPER = "#F4F2EA", CREAM = "#E7E3D4", LIME = "#C9F73F";
 // The app's own chrome, which flips. Anything printed on a fixed colour — a
 // Lime card, a swatch — keeps the ink that was chosen against it.
-const C = { ink: "var(--ink)", onInk: "var(--onink)", soft: "var(--inksoft)",
-            faint: "var(--inkfaint)", paper: "var(--paper)" };
+const C = { ink: "#EDE9DA", onInk: "#16150F", soft: "rgba(237,233,218,.56)",
+            faint: "rgba(237,233,218,.20)", paper: "#232117" };
 const ON_LIME = "#12120F", ON_LIME_SOFT = "rgba(18,18,15,.70)";
 const ACCENTS = [
   { name: "Lime",   block: "#C9F73F", onBlock: INK },
@@ -159,6 +159,31 @@ const Cat = (() => {
   }
   return { VW, VH, widthFor, draw, frame };
 })();
+
+/** Greedy wrap at a given size, ellipsising the last line if it overruns. */
+function wrapText(ctx, text, maxWidth, size, maxLines) {
+  const prev = ctx.font;
+  ctx.font = `800 ${size}px Archivo, system-ui, sans-serif`;
+  const words = String(text).trim().split(/\s+/);
+  const out = [];
+  let line = "";
+  for (let i = 0; i < words.length; i++) {
+    const test = line ? line + " " + words[i] : words[i];
+    if (ctx.measureText(test).width <= maxWidth || !line) { line = test; continue; }
+    out.push(line);
+    line = words[i];
+    if (out.length === maxLines - 1) {
+      // Everything left belongs on the final line, which may be trimmed.
+      line = words.slice(i).join(" ");
+      break;
+    }
+  }
+  out.push(line);
+  const last = out.length - 1;
+  if (ctx.measureText(out[last]).width > maxWidth) out[last] = fitText(ctx, out[last], maxWidth);
+  ctx.font = prev;
+  return out.filter(Boolean);
+}
 
 /** Truncates to a width, adding an ellipsis only when it actually overflows. */
 function fitText(ctx, text, maxWidth) {
@@ -367,18 +392,34 @@ const Story = (() => {
     font(s(30), alpha(onBlock, 160), 600, .10);
     ctx.fillText(model.slot.toUpperCase(), bx + pad, by + pad + s(26));
 
-    font(s(76), onBlock, 800, -.03);
-    ctx.fillText(fitText(ctx, model.title, bw - pad * 2), bx + pad, by + pad + s(110));
+    // The sentence is the headline, and the only words on the card. A story
+    // says who someone is becoming; the task that gets them there is theirs.
+    // It shrinks rather than truncates, so the claim is never cut short.
+    let said = (model.identity || model.title || "").trim();
+    if (model.identity && !/[.!?]$/.test(said)) said += ".";
+    let size = 60, lines;
+    for (;;) {
+      lines = wrapText(ctx, said, bw - pad * 2, s(size), 99);
+      if (lines.length <= 3 || size <= 42) break;
+      size -= 6;
+    }
+    lines = wrapText(ctx, said, bw - pad * 2, s(size), 3);
+    font(s(size), onBlock, 800, -.02);
+    const step = s(size) * 1.12;
+    lines.forEach((ln, i) => ctx.fillText(ln, bx + pad, by + s(118) + s(size) * .93 + i * step));
 
-    // The number that matters.
-    font(s(300), onBlock, 800, -.05);
-    ctx.fillText(String(model.streak), bx + pad - s(8), by + s(430));
-    font(s(38), alpha(onBlock, 190), 800, .02);
-    ctx.fillText(model.streak === 1 ? "DAY IN A ROW" : "DAYS IN A ROW", bx + pad, by + s(492));
+    // Before a single day is kept, a streak of zero says nothing worth
+    // posting. What is true on day one is the bet itself, so say that.
+    const starting = model.streak === 0 && model.totalDone === 0;
+    font(s(220), onBlock, 800, -.05);
+    ctx.fillText(String(starting ? 30 : model.streak), bx + pad - s(6), by + s(540));
+    font(s(36), alpha(onBlock, 190), 800, .02);
+    ctx.fillText(starting ? "DAYS, STARTING TODAY" : model.streak === 1 ? "DAY IN A ROW" : "DAYS IN A ROW",
+                 bx + pad, by + s(590));
 
     // Mochi: ink, and standing on the bottom edge of his box.
     const catH = s(176), catW = Cat.widthFor(catH);
-    const cbL = bx + bw - pad - catW - s(38), cbT = by + s(250);
+    const cbL = bx + bw - pad - catW - s(38), cbT = by + s(350);
     const cbW = catW + s(40), cbH = catH + s(38);
     ctx.fillStyle = INK;
     ctx.beginPath(); ctx.roundRect(cbL, cbT, cbW, cbH, s(34)); ctx.fill();
@@ -389,7 +430,7 @@ const Story = (() => {
     const cols = colsFor(model.year), gapRatio = .30;
     const gridW = bw - pad * 2;
     const cell = gridW / (cols + gapRatio * (cols - 1)), gap = cell * gapRatio;
-    const gridTop = by + s(620), startOff = startOffset(model.year), len = yearLen(model.year);
+    const gridTop = by + s(650), startOff = startOffset(model.year), len = yearLen(model.year);
     const t = fromEpochDay(model.today);
     const todayDoy = t.y === model.year ? dayOfYear(t) : -1;
     const r = cell * .30;
@@ -539,12 +580,16 @@ function mochi(canvas, opts) {
 
   const state = {
     rig,
+    canvas,
     height: 0,
     paint() {
       const dpr = window.devicePixelRatio || 1;
       const h = canvas.clientHeight;
       if (!h) return;
-      const w = Cat.widthFor(h);
+      // Headroom is canvas above his ears, so a hop has somewhere to go
+      // instead of being cut off by the canvas's own edge.
+      const hc = h / (1 + (o.headroom || 0));
+      const w = Cat.widthFor(hc);
       canvas.style.width = w + "px";
       if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
         canvas.width = Math.round(w * dpr);
@@ -553,15 +598,15 @@ function mochi(canvas, opts) {
       const ctx = canvas.getContext("2d");
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       ctx.clearRect(0, 0, w, h);
-      const img = Cat.frame(h, rig.mood);
+      const img = Cat.frame(hc, rig.mood);
       ctx.save();
       // From the bottom centre: a squash presses him down rather than
       // shrinking him toward the middle of the frame.
       ctx.translate(w / 2, h);
       ctx.scale(rig.scaleX, rig.scaleY);
       ctx.translate(-w / 2, -h);
-      ctx.translate(0, rig.offsetY * h / Cat.VH);
-      ctx.drawImage(img, 0, 0, w, h);
+      ctx.translate(0, rig.offsetY * hc / Cat.VH);
+      ctx.drawImage(img, 0, h - hc, w, hc);
       ctx.restore();
     },
     play(beat, face) {
@@ -578,7 +623,12 @@ let lastFrame = 0;
 function tick(now) {
   const dt = lastFrame ? Math.min((now - lastFrame) / 1000, 0.05) : 0;
   lastFrame = now;
-  for (const c of catsLive) { c.rig.advance(dt); c.paint(); }
+  // A screen that was replaced takes its cats with it.
+  for (let i = catsLive.length - 1; i >= 0; i--) {
+    const c = catsLive[i];
+    if (!c.canvas.isConnected) { catsLive.splice(i, 1); continue; }
+    c.rig.advance(dt); c.paint();
+  }
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
