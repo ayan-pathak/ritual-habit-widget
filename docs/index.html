@@ -26,7 +26,8 @@
       <span class="tile"><canvas id="brandCat" style="height:24px"></canvas></span>Ritual
     </a>
     <nav aria-label="Sections">
-      <a href="#how">How it works</a>
+      <a href="#why">Why Ritual</a>
+      <a href="#journey">Your year</a>
       <a href="#mochi">Mochi</a>
       <a href="#price">Price</a>
     </nav>
@@ -41,7 +42,7 @@
   <div class="wrap">
     <p class="deal"><span class="dot"></span>No ads<i>·</i>No tracking<i>·</i>Pay once or never<i>·</i><b>You choose</b></p>
     <h1>Build your new <em>identity</em>,<br> from your home screen.</h1>
-    <p class="sub">You pick up your phone all day. Now every time you do, you see who you're becoming.</p>
+    <p class="sub">Never open the app. Tap the widget once a day, watch your year fill in, and become the person you said you'd be.</p>
     <div class="stores center">
       <a class="store" data-store="play" href="#get">
         <svg viewBox="0 0 24 24" aria-hidden="true" class="glyph"><path fill="#00D2FF" d="M3.9 2.1c-.3.3-.5.8-.5 1.4v17c0 .6.2 1.1.5 1.4L13 12z"/><path fill="#00E27A" d="M3.9 2.1 16.1 9 13 12z"/><path fill="#FFCE00" d="M16.1 9l3.6 2c.9.5.9 1.5 0 2l-3.6 2-3.1-3z"/><path fill="#FF3A44" d="M3.9 21.9 13 12l3.1 3z"/></svg>
@@ -82,66 +83,124 @@
   <div class="row rev" id="rowB"></div>
 </section>
 
-<!-- How it works, as one bento -->
-<section id="how" class="how">
+<!-- The pain, first -->
+<section id="why" class="why">
   <div class="wrap">
     <div class="head">
-      <h2>Small taps.<br><em>A whole new you.</em></h2>
-      <p class="sub">One sentence, one square a day, and a little cat who notices every single one.</p>
+      <span class="tag">Why Ritual</span>
+      <h2>Most habit apps are deleted<br><em>by week three.</em></h2>
+      <p class="sub">Opening an app to log a habit is a second habit, and it's the one that breaks first. Ritual lives where you already look a hundred times a day.</p>
+    </div>
+    <div class="reasons">
+      <article>
+        <div class="shot"><canvas id="whyA"></canvas></div>
+        <h3>Never open the app.</h3>
+        <p>Your ritual sits on your home screen. One tap marks today, right there, between your camera and your messages.</p>
+      </article>
+      <article>
+        <div class="shot"><canvas id="whyB"></canvas></div>
+        <h3>See your whole year.</h3>
+        <p>Every day you keep stays lit. A bad week costs a few squares and never wipes out the good months behind it.</p>
+      </article>
+      <article>
+        <div class="shot"><canvas id="whyC"></canvas></div>
+        <h3>Become someone.</h3>
+        <p>Every ritual starts with a sentence about who you want to be. Thirty days later, it's true.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- A year with Ritual, told in order -->
+<section id="journey" class="journey">
+  <div class="wrap">
+    <div class="head">
+      <span class="tag">Your year with Ritual</span>
+      <h2>One square a day.<br><em>A new you by December.</em></h2>
     </div>
 
-    <div class="bento">
-      <article class="cell wide dark" id="wallCell">
-        <div class="copy">
-          <span class="tag">Every day</span>
-          <h3>Empty squares are hard to ignore.</h3>
-          <p>Your whole year lives on your home screen. Tap and today fills in. Go on, try it.</p>
-        </div>
-        <div class="art wall">
-          <canvas class="card" id="wallCard" role="button" tabindex="0" aria-label="Mark today"></canvas>
-        </div>
-      </article>
+    <ol class="chapters" id="chapters">
 
-      <article class="cell paper" id="sentence">
+      <li class="chapter" id="sentence">
         <div class="copy">
-          <span class="tag">Day one</span>
-          <h3>Who do you want to be?</h3>
+          <span class="when">Day 1</span>
+          <h3>Say who you want to be.</h3>
+          <p>Every ritual starts with one question: what's something you'd like to be true about you? Pick an ending or write your own.</p>
         </div>
-        <div class="art said">
+        <div class="art paper said">
           <p class="line">I am someone who <span class="end" id="sentenceEnd">reads before bed</span>.</p>
           <div class="chips" id="chips" role="group" aria-label="Try an ending"></div>
         </div>
-      </article>
+      </li>
 
-      <article class="cell orange thirty">
+      <li class="chapter">
         <div class="copy">
-          <span class="tag">Day thirty</span>
-          <h3>Now you can say it out loud.</h3>
+          <span class="when">Every day</span>
+          <h3>Tap it from your home screen. That's it.</h3>
+          <p>No app to open, no list to tick. Tap the widget and today fills in, the card flips to ink, and Mochi pops up with your count. Go on, tap it.</p>
         </div>
-        <div class="stand" data-pose="party" data-h="0.62"></div>
-        <div class="bubble" id="carryOn" style="right:10%;top:44%">carry on?</div>
-      </article>
+        <div class="art dark wall">
+          <canvas class="card" id="wallCard" role="button" tabindex="0" aria-label="Mark today"></canvas>
+        </div>
+      </li>
 
-      <article class="cell cream" id="shelf">
+      <li class="chapter" id="year">
         <div class="copy">
-          <span class="tag">Your shelf</span>
-          <h3>Collect who you've become.</h3>
+          <span class="when">All year</span>
+          <h3>Watch your year fill in.</h3>
+          <p>Every unlock shows you how far you've come. You don't need a perfect year, just a visible one. Drag to see what showing up looks like.</p>
         </div>
-        <div class="entries" id="entries"></div>
-      </article>
+        <div class="art dark yearbox">
+          <div class="tally">
+            <p><b id="figDays">0</b><span>days kept</span></p>
+            <p><b id="figRun">0</b><span>longest run</span></p>
+            <p><b id="figPct">0%</b><span>of the year so far</span></p>
+          </div>
+          <canvas class="card" id="yearCard"></canvas>
+          <label class="scrub" for="scrub"><span>How often you show up</span>
+            <input id="scrub" type="range" min="20" max="100" value="72">
+          </label>
+        </div>
+      </li>
 
-      <article class="cell red share">
+      <li class="chapter">
         <div class="copy">
-          <span class="tag">Every ten days</span>
-          <h3>Post the proof. You earned it.</h3>
+          <span class="when">Day 30</span>
+          <h3>It's official. You're someone new.</h3>
+          <p>Thirty days, with six spare for when life happens. Then Ritual makes it official: the sentence is yours, Mochi throws you a party, and you carry on.</p>
         </div>
-        <div class="art share-art" id="shareArt">
+        <div class="art orange thirty">
+          <div class="said-big"><b>You can say it now.</b><span>I am someone who reads before bed.</span></div>
+          <div class="stand" data-pose="party" data-h="0.6"></div>
+          <div class="bubble" id="carryOn" style="right:8%;top:46%">carry on?</div>
+        </div>
+      </li>
+
+      <li class="chapter">
+        <div class="copy">
+          <span class="when">Then</span>
+          <h3>Tell everyone. You earned it.</h3>
+          <p>Your sentence and your real grid, ready for Instagram Stories in one tap. Every ten days after, Mochi reminds you there's another post in it.</p>
+        </div>
+        <div class="art red share-art" id="shareArt">
           <canvas class="story" id="story"></canvas>
-          <div class="selfie" data-pose="selfie" data-h="0.46"></div>
-          <div class="bubble" id="deserve" style="right:6%;top:4%">you deserve it!</div>
+          <div class="selfie" data-pose="selfie" data-h="0.5"></div>
+          <div class="bubble" id="deserve" style="right:6%;top:7%">you deserve it!</div>
         </div>
-      </article>
-    </div>
+      </li>
+
+      <li class="chapter" id="shelf">
+        <div class="copy">
+          <span class="when">Day 365</span>
+          <h3>Look back at who you became.</h3>
+          <p>Every identity you make official lands on your shelf, next to the grid that earned it. By December, your shelf is your year.</p>
+        </div>
+        <div class="art cream shelfbox">
+          <p class="shelf-head"><b>Your shelf</b><span id="shelfYear"></span></p>
+          <div class="entries" id="entries"></div>
+        </div>
+      </li>
+    </ol>
   </div>
 </section>
 
@@ -249,7 +308,7 @@ const lazy = new IntersectionObserver(entries => {
     const host = e.target;
     if (e.isIntersecting && !host._st) {
       let h = +host.dataset.h;
-      if (h < 1) h = Math.round((host.closest(".cell, .pose, .panel") || host.parentElement).clientHeight * h);
+      if (h < 1) h = Math.round((host.closest(".art, .pose, .panel") || host.parentElement).clientHeight * h);
       host._st = body(host, host.dataset.pose, h, host.dataset.say ? { say: host.dataset.say } : null);
     } else if (!e.isIntersecting && host._st) {
       host.querySelectorAll("canvas.mbody").forEach(c => c.remove());
@@ -325,23 +384,40 @@ function start() {
   /* The widget you can tap */
   wall();
 
-  /* The shelf */
-  const shelf = [["reads before bed.", 48, 0, 150], ["moves every day.", 36, 1, 80]];
+  /* Why: the widget, a year with gaps in it, and a ritual kept today */
+  const wa = $("#whyA"), wb = $("#whyB"), wc = $("#whyC");
+  wa._paint = () => R.paintCard(wa, R.demoModel({ accent: 0, run: 4, title: "Read before bed" }), { action: true, corner: 20 });
+  wb._paint = () => R.paintCard(wb, R.demoModel({ accent: 2, run: 11 }), { header: false, footer: false, cat: false, corner: 16, padDp: 12, ratio: 353 / 92 });
+  wc._paint = () => R.paintCard(wc, R.demoModel({ accent: 3, marked: true, run: 29, title: "Run before work", slot: "Morning" }), { action: true, corner: 20 });
+
+  /* The year you can scrub */
+  yearScrub();
+
+  /* The shelf at the end of the year: what each season made official */
+  const now = new Date();
+  $("#shelfYear").textContent = now.getFullYear();
+  const shelf = [["reads before bed", 0, 1, 140], ["runs before work", 3, 3, 96], ["drinks enough water", 2, 6, 60], ["writes every morning", 1, 9, 31]];
   const entries = $("#entries");
-  shelf.forEach(([said, days, accent, back]) => {
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  shelf.forEach(([said, accent, month, days]) => {
     const e = document.createElement("div");
     e.className = "entry";
-    e.innerHTML = `<div class="top"><p>I am someone who ${said}</p><b>${days} days</b></div><canvas></canvas>`;
+    e.innerHTML = `<p>I am someone who <b>${said}</b>.</p><canvas></canvas><span>Official in ${MONTHS[month]} · ${days} days kept</span>`;
     entries.appendChild(e);
     const c = e.querySelector("canvas");
-    c._paint = () => R.paintCard(c, lastDays(R.demoModel({ accent, marked: !back }), days, back),
-      { header: false, footer: false, cat: false, corner: 12, padDp: 10, ratio: 353 / 80 });
+    const doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 864e5);
+    const from = Math.round(doy * (month + .5) / 12) - 30;
+    c._paint = () => R.paintCard(c, lastDays(R.demoModel({ accent, marked: true }), days, Math.max(0, doy - from - days)),
+      { header: false, footer: false, cat: false, corner: 10, padDp: 10, ratio: 353 / 80 });
   });
+
+  /* The rail down the year fills as you read */
+  rail();
 
   /* Share */
   const story = $("#story"), art = $("#shareArt");
   story._paint = () => {
-    const h = Math.max(200, Math.min(420, art.clientHeight - 8, art.clientWidth * .52 / (1080 / 1920)));
+    const h = Math.max(200, Math.min(400, art.clientHeight - 40, art.clientWidth * .5 / (1080 / 1920)));
     R.Story.paint(story, h, Object.assign(R.demoModel({ accent: 0, run: 13, marked: true, title: "Move every day" }),
       { identity: "I am someone who moves every day" }));
   };
@@ -372,6 +448,44 @@ function start() {
 
   paintAll();
   let rt; addEventListener("resize", () => { clearTimeout(rt); rt = setTimeout(paintAll, 120); });
+}
+
+/* The year card, kept as often as the slider says. Kept days come in runs,
+   the way real ones do, so the longest run means something. */
+function yearScrub() {
+  const canvas = $("#yearCard"), input = $("#scrub");
+  const hash = n => { n = (n ^ 61) ^ (n >>> 16); n = Math.imul(n, 9); n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); return ((n ^ (n >>> 15)) >>> 0) / 4294967296; };
+  const model = () => {
+    const pct = input.value / 100, m = R.demoModel({ accent: 0, run: 0, marked: true, title: "Read before bed" });
+    const now = new Date(), doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 864e5);
+    const done = new Set();
+    let run = 0, best = 0;
+    for (let d = 1; d <= doy; d++) {
+      const keep = d === doy || hash(d) * .35 + hash(Math.floor(d / 6) + 999) * .65 < pct;
+      if (keep) { done.add(d); run++; best = Math.max(best, run); } else run = 0;
+    }
+    $("#figDays").textContent = done.size;
+    $("#figRun").textContent = best;
+    $("#figPct").textContent = Math.round(done.size / doy * 100) + "%";
+    return Object.assign(m, { doneDaysOfYear: done, totalDone: done.size, streak: run });
+  };
+  canvas._paint = () => R.paintCard(canvas, model(), { corner: 22 });
+  input.addEventListener("input", () => canvas._paint());
+}
+
+/* The lime line down the chapters follows the middle of the screen, and
+   each chapter's marker lights as the line reaches it. */
+function rail() {
+  const list = $("#chapters"), items = [...list.querySelectorAll(".chapter")];
+  const update = () => {
+    const r = list.getBoundingClientRect(), mid = innerHeight * .55;
+    const p = Math.max(0, Math.min(1, (mid - r.top) / r.height));
+    list.style.setProperty("--p", p.toFixed(4));
+    items.forEach(li => li.classList.toggle("on", li.getBoundingClientRect().top < mid));
+  };
+  addEventListener("scroll", update, { passive: true });
+  addEventListener("resize", update);
+  update();
 }
 
 function paintAll() {
