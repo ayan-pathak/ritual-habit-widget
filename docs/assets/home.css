@@ -89,11 +89,9 @@ h2 em { color: var(--soft); }
 section { padding-block: clamp(72px, 10vw, 140px); }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
-.hero { position: relative; text-align: center; padding-block: clamp(48px, 7vw, 96px) 0; overflow: hidden; touch-action: pan-y; }
+.hero { position: relative; text-align: center; padding-block: clamp(48px, 7vw, 96px) 0; overflow: hidden; }
 .hero > .wrap { position: relative; z-index: 1; }
-/* The field of squares behind the hero, fading out toward the edges. */
-.field { position: absolute; inset: 0; z-index: 0; pointer-events: none;
-  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 38%, #000 20%, transparent 78%); mask-image: radial-gradient(ellipse 70% 60% at 50% 38%, #000 20%, transparent 78%); }
+
 .hero .sub { margin-inline: auto; }
 .deal { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 8px; margin: 0 0 28px; padding: 7px 14px 7px 12px;
   border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface); font-size: 13px; font-weight: 600; color: var(--soft); }
@@ -180,6 +178,8 @@ section { padding-block: clamp(72px, 10vw, 140px); }
 .cream { background: var(--cream); color: var(--dark); }
 .orange { background: var(--orange); color: var(--dark); }
 .red { background: var(--red); color: var(--paper); }
+.lime { background: var(--lime); color: var(--dark); }
+.with { justify-self: start; font-size: 12px; font-weight: 800; letter-spacing: .04em; color: var(--dark); background: var(--lime); padding: 5px 10px; border-radius: 999px; }
 
 .wall { display: flex; align-items: flex-end; padding-top: 130px !important; }
 .wall canvas { width: 100%; border-radius: 24px; cursor: pointer; }
@@ -208,11 +208,38 @@ section { padding-block: clamp(72px, 10vw, 140px); }
 .said-big b { display: block; font-size: clamp(26px, 2.6vw, 34px); letter-spacing: -.035em; line-height: 1.05; }
 .said-big span { display: block; margin-top: 10px; font-size: clamp(18px, 1.8vw, 22px); font-weight: 800; letter-spacing: -.02em; opacity: .7; }
 .art .stand { position: absolute; left: 0; right: 0; bottom: 0; display: flex; justify-content: center; pointer-events: none; }
-canvas.mbody { flex: none; }
+canvas.mbody { flex: none; max-width: none; }
 
-.share-art { display: flex; align-items: flex-end; justify-content: center; min-height: 440px !important; padding-bottom: 0 !important; }
-.share-art .story { border-radius: 14px; transform: rotate(-4deg); transform-origin: bottom center; margin-bottom: -40px; }
-.share-art .selfie { display: flex; margin-left: -30px; }
+.share-art { display: flex; align-items: flex-end; justify-content: center; min-height: 480px !important; padding-bottom: 0 !important; }
+.share-art .selfie { display: flex; margin-left: -26px; position: relative; z-index: 2; }
+@media (max-width: 600px) {
+  .share-art { justify-content: flex-start; }
+  .share-art .selfie { position: absolute; right: -6px; top: 0; bottom: 0; width: 55%; margin: 0; align-items: flex-end; justify-content: flex-end; pointer-events: none; }
+  .share-art .selfie canvas { max-width: none; transform: scale(.7); transform-origin: 100% 97%; }
+  .share-art .bubble { top: 5% !important; }
+}
+
+/* A phone in the middle of posting the story: the composer's own chrome
+   over the real card, then the toast once it's shared. */
+.ig { flex: none; align-self: flex-end; margin-bottom: 28px; padding: 8px; border-radius: 36px; background: #050504; border: 1px solid var(--line-2); transform: rotate(-3deg); transform-origin: bottom center; }
+.ig-screen { position: relative; border-radius: 28px; overflow: hidden; }
+.ig-screen .story { display: block; }
+.ig-top { position: absolute; left: 0; right: 0; top: 0; display: flex; justify-content: space-between; align-items: center; padding: 14px 14px; }
+.ig-x { width: 16px; height: 16px; position: relative; }
+.ig-x::before, .ig-x::after { content: ""; position: absolute; left: 7px; top: -1px; width: 2px; height: 18px; border-radius: 2px; background: #12120F; transform: rotate(45deg); }
+.ig-x::after { transform: rotate(-45deg); }
+.ig-tools { display: flex; gap: 8px; }
+.ig-tools i { width: 26px; height: 26px; border-radius: 50%; background: rgba(18, 18, 15, .78); color: #fff; font: 800 11px/26px var(--sans); text-align: center; font-style: normal; }
+.ig-bottom { position: absolute; left: 0; right: 0; bottom: 0; display: flex; gap: 6px; align-items: center; padding: 12px 10px 14px; background: rgba(18, 18, 15, .86); }
+.ig-pill { display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 11px 0 6px; border-radius: 999px; background: rgba(255, 255, 255, .14); color: #fff; font-size: 11.5px; font-weight: 700; white-space: nowrap; transition: transform .15s; }
+.ig-pill:not(.you) { padding-left: 11px; }
+.ig-pill .av { width: 20px; height: 20px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 0 2px #12120F, 0 0 0 3.5px #fff; }
+.ig-pill.press { transform: scale(.92); }
+.ig-send { margin-left: auto; width: 30px; height: 30px; border-radius: 50%; background: #fff; position: relative; flex: none; }
+.ig-send::after { content: ""; position: absolute; left: 10px; top: 9px; width: 8px; height: 8px; border: solid #12120F; border-width: 2.5px 2.5px 0 0; transform: rotate(45deg); }
+.ig-toast { position: absolute; left: 50%; top: 46%; transform: translate(-50%, -50%) scale(.85); padding: 10px 16px; border-radius: 999px; background: rgba(18, 18, 15, .9); color: #fff; font-size: 13px; font-weight: 700; white-space: nowrap; opacity: 0; transition: opacity .25s, transform .3s cubic-bezier(.3, 1.6, .5, 1); }
+.ig-toast::before { content: "✓"; color: var(--lime); margin-right: 8px; font-weight: 800; }
+.ig-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 
 .shelfbox { display: flex; flex-direction: column; gap: 16px; }
 .shelf-head { margin: 0; display: flex; justify-content: space-between; align-items: baseline; }
@@ -248,8 +275,12 @@ canvas.mbody { flex: none; }
 .amount small { font-family: var(--serif); font-style: italic; font-weight: 400; font-size: .4em; letter-spacing: 0; opacity: .7; }
 .plan ul { list-style: none; margin: 8px 0 0; display: grid; gap: 10px; border-top: 1px solid rgba(127, 127, 120, .3); padding: 18px 0 0; }
 .plan li { display: flex; gap: 10px; align-items: center; font-weight: 600; }
-.plan li::before { content: ""; width: 14px; height: 14px; flex: none; border-radius: 4px; background: currentColor; opacity: .9; }
-.plan:not(.lime) li::before { background: var(--lime); }
+.plan li { align-items: flex-start; line-height: 1.35; }
+.plan li::before { content: "✓"; width: 18px; height: 18px; flex: none; border-radius: 5px; background: var(--dark); color: var(--lime); font-size: 11px; font-weight: 800; line-height: 18px; text-align: center; margin-top: 1px; }
+.plan:not(.lime) li::before { background: var(--lime); color: var(--dark); }
+.plan li.no { color: var(--faint); }
+.plan li.no::before { content: "–"; background: transparent; color: var(--faint); box-shadow: inset 0 0 0 1.5px var(--line-2); }
+.fine { max-width: 52ch; margin: 22px auto 0; text-align: center; color: var(--soft); font-size: 15px; }
 .promise { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 28px; margin: 32px 0 0; color: var(--soft); font-weight: 600; font-size: 15px; }
 .promise span::before { content: "✓"; color: var(--lime); margin-right: 8px; font-weight: 800; }
 @media (max-width: 600px) { .plans { grid-template-columns: 1fr; } }

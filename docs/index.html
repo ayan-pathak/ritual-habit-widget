@@ -40,7 +40,6 @@
 
 <!-- Hero: the promise, then the product itself -->
 <section class="hero" id="hero">
-  <canvas class="field" id="field" aria-hidden="true"></canvas>
   <div class="wrap">
     <p class="deal"><span class="dot"></span>No ads<i>·</i>No tracking<i>·</i>Pay once or never<i>·</i><b>You choose</b></p>
     <h1>Build your new <em>identity</em>,<br> from your home screen.</h1>
@@ -89,8 +88,7 @@
 <section id="watch" class="film">
   <div class="wrap">
     <div class="head reveal">
-      <span class="tag">The film · 0:30</span>
-      <h2>Thirty seconds.<br><em>Fifty thousand years.</em></h2>
+      <h2>Fifty thousand years.<br><em>But now, you choose.</em></h2>
     </div>
     <div class="frame reveal">
       <iframe src="film/index.html?embed" title="Ritual, the thirty second film" loading="lazy" allow="fullscreen" allowfullscreen></iframe>
@@ -178,29 +176,43 @@
         </div>
       </li>
 
-      <li class="chapter reveal" data-tint="#21130A">
+      <li class="chapter reveal" data-tint="#151A0B">
         <div class="copy">
           <span class="when">Day 30</span>
           <h3>It's official. You're someone new.</h3>
           <p>Thirty days, with six spare for when life happens. Then Ritual makes it official: the sentence is yours, Mochi throws you a party, and you carry on.</p>
         </div>
-        <div class="art orange thirty">
-          <div class="said-big"><b>You can say it now.</b><span>I am someone who reads before bed.</span></div>
+        <div class="art lime thirty">
+          <div class="said-big"><b>You can say it now.</b><span>I am someone who <i class="pick-end">reads before bed</i>.</span></div>
           <div class="stand" data-pose="party" data-h="0.6"></div>
           <div class="bubble" id="carryOn" style="right:8%;top:46%">carry on?</div>
         </div>
       </li>
 
-      <li class="chapter reveal" data-tint="#210E0B">
+      <li class="chapter reveal" data-tint="#121410">
         <div class="copy">
           <span class="when">Then</span>
           <h3>Tell everyone. You earned it.</h3>
+          <span class="with">With Lifetime</span>
           <p>Your sentence and your real grid, ready for Instagram Stories in one tap. Every ten days after, Mochi reminds you there's another post in it.</p>
         </div>
-        <div class="art red share-art" id="shareArt">
-          <canvas class="story" id="story"></canvas>
+        <div class="art dark share-art" id="shareArt">
+          <div class="ig" id="ig">
+            <div class="ig-screen">
+              <canvas class="story" id="story"></canvas>
+              <div class="ig-top" aria-hidden="true">
+                <span class="ig-x"></span>
+                <span class="ig-tools"><i>Aa</i><i></i><i></i></span>
+              </div>
+              <div class="ig-bottom" aria-hidden="true">
+                <span class="ig-pill you" id="igYou"><span class="av"></span>Your story</span>
+                <span class="ig-send"></span>
+              </div>
+              <div class="ig-toast" id="igToast">Shared to your story</div>
+            </div>
+          </div>
           <div class="selfie" data-pose="selfie" data-h="0.5"></div>
-          <div class="bubble" id="deserve" style="right:6%;top:7%">you deserve it!</div>
+          <div class="bubble" id="deserve" style="right:5%;top:8%">you deserve it!</div>
         </div>
       </li>
 
@@ -241,21 +253,27 @@
         <span class="tag">Free</span>
         <p class="amount">$0<small>forever</small></p>
         <ul>
-          <li>Your first ritual</li>
-          <li>The home screen widget</li>
-          <li>Mochi, your shelf and stories</li>
+          <li>One ritual, with its widget on your home screen</li>
+          <li>Mark today from the widget, every day, for good</li>
+          <li>Your whole year, day thirty and your shelf</li>
+          <li>Mochi, all of him</li>
+          <li class="no">A second ritual</li>
+          <li class="no">Sharing to Instagram Stories</li>
+          <li class="no">Backup to your account</li>
         </ul>
       </div>
       <div class="plan lime">
         <span class="tag">Lifetime</span>
         <p class="amount">$9.99<small>one time</small></p>
         <ul>
-          <li>Every ritual you want</li>
-          <li>A widget for each one</li>
-          <li>Yours for good</li>
+          <li>Everything in Free</li>
+          <li>As many rituals as you want, each with its own widget</li>
+          <li>Your sentence and real grid as an Instagram story</li>
+          <li>Every square backed up, so a new phone picks up where you left off</li>
         </ul>
       </div>
     </div>
+    <p class="fine">Whatever you choose, the days you've kept stay yours. Marking today, the widget and your year never sit behind the price.</p>
     <p class="promise"><span>No ads</span><span>No tracking</span><span>No subscription</span></p>
   </div>
 </section>
@@ -302,6 +320,12 @@ const R = window.Ritual;
 const $ = s => document.querySelector(s);
 const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
 const SUGGEST = ["reads before bed", "moves every day", "drinks enough water", "writes a little daily"];
+/* What each ending is called on the widget. */
+const TITLES = { "reads before bed": ["Read before bed", "Evening"], "moves every day": ["Move every day", "Morning"],
+  "drinks enough water": ["Drink enough water", "All day"], "writes a little daily": ["Write a little", "Morning"] };
+/* The ending picked on day one is the ritual every later picture shows. */
+let pick = SUGGEST[0];
+const pickTitle = () => TITLES[pick][0], pickSlot = () => TITLES[pick][1];
 const MARQUEE = ["reads before bed", "runs before work", "calls mum on Sundays", "writes every morning", "meditates daily", "cooks at home",
   "is off junk food", "sleeps by eleven", "learns Spanish", "stretches daily", "drinks enough water", "plays guitar", "journals at night", "walks 10k steps"];
 
@@ -390,8 +414,9 @@ function start() {
     b.addEventListener("click", () => {
       chips.querySelectorAll(".chip").forEach(x => x.setAttribute("aria-pressed", "false"));
       b.setAttribute("aria-pressed", "true");
-      end.textContent = t; end.style.background = a.block; end.style.color = a.onBlock;
+      end.textContent = t;
       end.classList.remove("pop"); void end.offsetWidth; end.classList.add("pop");
+      pick = t; applyPick();
     });
     chips.appendChild(b);
   });
@@ -411,26 +436,12 @@ function start() {
   /* The shelf at the end of the year: what each season made official */
   const now = new Date();
   $("#shelfYear").textContent = now.getFullYear();
-  const shelf = [["reads before bed", 0, 1, 140], ["runs before work", 3, 3, 96], ["drinks enough water", 2, 6, 60], ["writes every morning", 1, 9, 31]];
-  const entries = $("#entries");
-  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-  shelf.forEach(([said, accent, month, days]) => {
-    const e = document.createElement("div");
-    e.className = "entry";
-    e.innerHTML = `<p>I am someone who <b>${said}</b>.</p><canvas></canvas><span>Official in ${MONTHS[month]} · ${days} days kept</span>`;
-    entries.appendChild(e);
-    const c = e.querySelector("canvas");
-    const doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 864e5);
-    const from = Math.round(doy * (month + .5) / 12) - 30;
-    c._paint = () => R.paintCard(c, lastDays(R.demoModel({ accent, marked: true }), days, Math.max(0, doy - from - days)),
-      { header: false, footer: false, cat: false, corner: 10, padDp: 10, ratio: 353 / 80 });
-  });
+  shelf();
 
   /* The rail down the year fills as you read */
   rail();
 
-  /* The premium layer: the field of squares, the tilt, the reveals */
-  field();
+  /* The tilt and the reveals */
   tilt();
   const rv = new IntersectionObserver(es => es.forEach(e => {
     if (e.isIntersecting) { e.target.classList.add("in"); rv.unobserve(e.target); }
@@ -440,10 +451,12 @@ function start() {
   /* Share */
   const story = $("#story"), art = $("#shareArt");
   story._paint = () => {
-    const h = Math.max(200, Math.min(400, art.clientHeight - 40, art.clientWidth * .5 / (1080 / 1920)));
-    R.Story.paint(story, h, Object.assign(R.demoModel({ accent: 0, run: 13, marked: true, title: "Move every day" }),
-      { identity: "I am someone who moves every day" }));
+    const narrow = art.clientWidth < 520;
+    const h = narrow ? Math.min(300, Math.round((art.clientWidth - 70) / (1080 / 1920))) : Math.round(Math.min(400, art.clientHeight - 110, art.clientWidth * .5 / (1080 / 1920)));
+    R.Story.paint(story, h, Object.assign(R.demoModel({ accent: 0, run: 29, marked: true, title: pickTitle(), slot: pickSlot() }),
+      { identity: "I am someone who " + pick }));
   };
+  postLoop();
 
   /* Mochi, every moment, in a row you can swipe */
   const POSES = [
@@ -479,7 +492,7 @@ function yearScrub() {
   const canvas = $("#yearCard"), input = $("#scrub");
   const hash = n => { n = (n ^ 61) ^ (n >>> 16); n = Math.imul(n, 9); n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); return ((n ^ (n >>> 15)) >>> 0) / 4294967296; };
   const model = () => {
-    const pct = input.value / 100, m = R.demoModel({ accent: 0, run: 0, marked: true, title: "Read before bed" });
+    const pct = input.value / 100, m = R.demoModel({ accent: 0, run: 0, marked: true, title: pickTitle(), slot: pickSlot() });
     const now = new Date(), doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 864e5);
     const done = new Set();
     let run = 0, best = 0;
@@ -513,53 +526,53 @@ function rail() {
   update();
 }
 
-/* Behind the hero, a year's worth of empty squares. Now and then one fills
-   in, the pointer fills the ones it passes, and a tap sends a ring out. */
-function field() {
-  const cv = $("#field"), hero = $("#hero"), ctx = cv.getContext("2d");
-  const STEP = 20, SIZE = 14, R = 110;
-  let w = 0, h = 0, cols = 0, rows = 0, lit = null, dpr = 1, on = true;
-  let px = -1e4, py = -1e4;
-  const rings = [];
-  const size = () => {
-    dpr = Math.min(2, devicePixelRatio || 1);
-    w = hero.clientWidth; h = hero.clientHeight;
-    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-    cv.style.width = w + "px"; cv.style.height = h + "px";
-    cols = Math.ceil(w / STEP) + 1; rows = Math.ceil(h / STEP) + 1;
-    lit = new Float32Array(cols * rows);
+/* Everything after day one follows the ending picked there. */
+function applyPick() {
+  document.querySelectorAll(".pick-end").forEach(el => { el.textContent = pick; });
+  shelf();
+  ["#wallCard", "#yearCard", "#story"].forEach(s => { const c = $(s); if (c._paint) c._paint(); });
+}
+
+/* The shelf at the end of the year: the ritual picked on day one went up
+   first, and three more followed it through the seasons. */
+function shelf() {
+  const now = new Date(), entries = $("#entries");
+  $("#shelfYear").textContent = now.getFullYear();
+  const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const rest = SUGGEST.filter(t => t !== pick);
+  const list = [[pick, 0, 1, 140], [rest[0], 2, 3, 96], [rest[1], 0, 6, 60], [rest[2], 2, 9, 31]];
+  const doy = Math.floor((now - new Date(now.getFullYear(), 0, 0)) / 864e5);
+  entries.innerHTML = "";
+  list.forEach(([said, accent, month, days]) => {
+    const e = document.createElement("div");
+    e.className = "entry";
+    e.innerHTML = `<p>I am someone who <b>${said}</b>.</p><canvas></canvas><span>Official in ${MONTHS[month]} · ${days} days kept</span>`;
+    entries.appendChild(e);
+    const c = e.querySelector("canvas");
+    const from = Math.round(doy * (month + .5) / 12) - 30;
+    c._paint = () => R.paintCard(c, lastDays(R.demoModel({ accent, marked: true }), days, Math.max(0, doy - from - days)),
+      { header: false, footer: false, cat: false, corner: 10, padDp: 10, ratio: 353 / 80 });
+    c._paint();
+  });
+}
+
+/* While the share chapter is on screen, the story is posted now and then:
+   the pill is pressed, the toast comes up, and Mochi is delighted. */
+function postLoop() {
+  const art = $("#shareArt"), you = $("#igYou"), toast = $("#igToast");
+  let seen = false;
+  new IntersectionObserver(es => { seen = es[0].isIntersecting; }, { threshold: .5 }).observe(art);
+  const post = () => {
+    if (!seen || document.visibilityState !== "visible") return;
+    you.classList.add("press"); setTimeout(() => you.classList.remove("press"), 220);
+    setTimeout(() => toast.classList.add("show"), 260);
+    setTimeout(() => toast.classList.remove("show"), 2600);
+    const sf = art.querySelector(".selfie");
+    if (sf._st) sf._st.kick();
   };
-  size();
-  addEventListener("resize", size);
-  hero.addEventListener("pointermove", e => { const r = hero.getBoundingClientRect(); px = e.clientX - r.left; py = e.clientY - r.top; });
-  hero.addEventListener("pointerleave", () => { px = py = -1e4; });
-  hero.addEventListener("pointerdown", e => { const r = hero.getBoundingClientRect(); rings.push({ x: e.clientX - r.left, y: e.clientY - r.top, t: performance.now() }); });
-  new IntersectionObserver(es => { on = es[0].isIntersecting; if (on && !still) requestAnimationFrame(draw); }).observe(hero);
-  const ox = () => (w - (cols - 1) * STEP) / 2;
-  function draw(now) {
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, w, h);
-    const x0 = ox();
-    if (!still) for (let k = 0; k < 2; k++) lit[(Math.random() * lit.length) | 0] = 1;
-    for (let i = rings.length - 1; i >= 0; i--) if (now - rings[i].t > 1400) rings.splice(i, 1);
-    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
-      const x = x0 + i * STEP, y = j * STEP, n = j * cols + i;
-      let v = lit[n] * .965;
-      const dx = x - px, dy = y - py, d = Math.sqrt(dx * dx + dy * dy);
-      if (d < R) v = Math.max(v, 1 - d / R);
-      for (const r of rings) {
-        const rad = (now - r.t) * .6, dd = Math.abs(Math.hypot(x - r.x, y - r.y) - rad);
-        if (dd < 18) v = Math.max(v, (1 - dd / 18) * (1 - (now - r.t) / 1400));
-      }
-      lit[n] = v;
-      if (v > .02) { ctx.fillStyle = `rgba(201,247,63,${(v * .6).toFixed(3)})`; }
-      else ctx.fillStyle = "rgba(242,239,228,.045)";
-      ctx.fillRect(x - SIZE / 2, y - SIZE / 2, SIZE, SIZE);
-    }
-    if (on && !still) requestAnimationFrame(draw);
-  }
-  if (still) { for (let k = 0; k < 60; k++) lit[(Math.random() * lit.length) | 0] = .8; }
-  requestAnimationFrame(draw);
+  if (still) { toast.classList.add("show"); return; }
+  setTimeout(post, 1600);
+  setInterval(post, 6000);
 }
 
 /* The phone leans toward the pointer, and the widgets beside it drift the
@@ -608,7 +621,7 @@ function demo() {
 function wall() {
   const canvas = $("#wallCard");
   let marked = false, seen = false;
-  const model = () => R.demoModel({ marked, run: 9, title: "Read before bed", slot: "Evening" });
+  const model = () => R.demoModel({ marked, run: 9, title: pickTitle(), slot: pickSlot() });
   canvas._paint = () => R.paintCard(canvas, model(), { action: true, corner: 24 });
   const toggle = () => {
     marked = !marked; canvas._paint();
