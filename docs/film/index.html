@@ -1,0 +1,899 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Ritual Pencil Spot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&display=swap">
+<style>
+  :root{
+    --page:#E7E3D4; --surface:#F4F2EA; --ink:#12120F; --on-ink:#F4F2EA;
+    --ink-soft:rgba(18,18,15,.6); --rule:rgba(18,18,15,.14); --lime:#C9F73F; --on-lime:#12120F;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --page:#12120F; --surface:#1C1C18; --ink:#F4F2EA; --on-ink:#12120F;
+      --ink-soft:rgba(244,242,234,.6); --rule:rgba(244,242,234,.14); color-scheme:dark; }
+  }
+  :root[data-theme="dark"]{ --page:#12120F; --surface:#1C1C18; --ink:#F4F2EA; --on-ink:#12120F;
+    --ink-soft:rgba(244,242,234,.6); --rule:rgba(244,242,234,.14); color-scheme:dark; }
+
+  html,body{background:var(--page)}
+  body{color:var(--ink);font:500 15px/1.5 Archivo,"Segoe UI",system-ui,sans-serif;padding-inline:16px;padding-block:32px 64px}
+  .wrap{max-width:1160px;margin:0 auto;display:grid;gap:20px}
+  .eyebrow{font:700 12px/1 Archivo,system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-soft);margin:0}
+  h1{font-weight:800;font-size:clamp(30px,5vw,50px);line-height:1;letter-spacing:-.03em;margin:.35em 0 0;text-wrap:balance}
+  .stage{border-radius:14px;overflow:hidden;background:#F4F2EA}
+  .stage:fullscreen{display:grid;place-items:center;border-radius:0;background:#000}
+  .stage:fullscreen canvas{width:min(100vw,177.78vh)}
+  .stage.max{position:fixed;inset:0;z-index:50;border-radius:0;background:#000;display:grid;place-items:center;max-width:none;margin:0}
+  .stage.max canvas{width:min(100vw,177.78vh)}
+  .exitmax{position:absolute;top:14px;right:14px;z-index:2;display:none;background:rgba(18,18,15,.7);color:#F4F2EA;border:1px solid rgba(244,242,234,.3)}
+  .stage.max .exitmax,.stage:fullscreen .exitmax{display:inline-flex}
+  canvas{display:block;width:100%;max-width:100%;aspect-ratio:16/9;cursor:pointer}
+  .bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  button{background:var(--surface);border:1px solid var(--rule);color:var(--ink);height:40px;padding:0 16px;border-radius:999px;
+    font:600 14px/1 Archivo,system-ui,sans-serif;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
+  button:hover{border-color:var(--ink-soft)}
+  button:focus-visible,input:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+  button.primary{background:var(--lime);border-color:var(--lime);color:var(--on-lime);min-width:104px;justify-content:center}
+  button svg{width:14px;height:14px;fill:currentColor}
+  input[type=range]{flex:1 1 220px;accent-color:var(--ink);min-width:0}
+  .tc{font:600 13px/1 Archivo,system-ui,sans-serif;color:var(--ink-soft);font-variant-numeric:tabular-nums;min-width:96px;text-align:right}
+  label.loop{display:inline-flex;gap:6px;align-items:center;font-weight:600;font-size:14px;color:var(--ink-soft);cursor:pointer}
+  label.loop input{accent-color:var(--ink)}
+  .shots{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;list-style:none;padding:0;margin:0}
+  .shots button{width:100%;height:auto;border-radius:10px;padding:11px 12px 12px;flex-direction:column;align-items:flex-start;gap:4px;text-align:left}
+  .shots .t{font-size:11px;color:var(--ink-soft);font-variant-numeric:tabular-nums;letter-spacing:.06em}
+  .shots .n{font-weight:800;font-size:15px;letter-spacing:-.01em}
+  .shots .d{font-weight:500;font-size:12.5px;line-height:1.35;color:var(--ink-soft)}
+  .shots li[aria-current="true"] button{border-color:var(--ink);box-shadow:inset 0 -3px 0 var(--lime)}
+  @media (max-width:560px){.tc{min-width:0}}
+
+  /* Embedded in the home page: the frame and its controls only. */
+  html.embed, html.embed body{background:transparent}
+  html.embed body{padding:0;overflow:hidden}
+  html.embed .wrap{max-width:none;gap:0}
+  html.embed .wrap > div:first-child, html.embed .wrap > .eyebrow, html.embed .shots{display:none}
+  html.embed .stage{border-radius:0}
+  html.embed .bar{position:fixed;left:12px;right:12px;bottom:12px;padding:8px 10px;border-radius:14px;background:rgba(18,18,15,.72);
+    color:#F4F2EA;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s}
+  html.embed body:hover .bar, html.embed .bar:focus-within, html.embed.paused .bar{opacity:1;transform:none}
+  html.embed .bar button{color:#F4F2EA;background:rgba(244,242,234,.12);border-color:transparent}
+  html.embed .bar button.primary{background:#C9F73F;color:#12120F}
+  html.embed .bar .loop, html.embed #restart{display:none}
+  html.embed .tc{color:rgba(244,242,234,.7)}
+  html.embed #scrub{accent-color:#C9F73F}
+</style>
+
+<script>if (/[?&]embed/.test(location.search)) document.documentElement.classList.add("embed");</script>
+<div class="wrap">
+  <div>
+    <p class="eyebrow">Ritual · :30 spot · pencil on paper</p>
+    <h1>For 50,000 years, your habits were chosen for you.</h1>
+  </div>
+
+  <div class="stage" id="stageWrap">
+    <button class="exitmax" id="exitmax" type="button">Exit full screen</button>
+    <canvas id="stage" role="img" aria-label="Animated pencil-sketch ad: hunger, the seasons, the clock and the phone chose people's habits; now you choose, one square a day, with Ritual"></canvas>
+  </div>
+
+  <div class="bar">
+    <button class="primary" id="play"><svg viewBox="0 0 16 16" id="playIcon"><path d="M4 2.5v11l9-5.5z"/></svg><span id="playTxt">Play</span></button>
+    <button id="restart"><svg viewBox="0 0 16 16"><path d="M8 2.5a5.5 5.5 0 1 1-5.2 3.7l1.4.5A4 4 0 1 0 8 4v2L4.5 3.2 8 .5z"/></svg>Replay</button>
+    <input type="range" id="scrub" min="0" max="30" step="0.01" value="0" aria-label="Seek">
+    <span class="tc" id="tc">0:00.0 / 0:30</span>
+    <label class="loop"><input type="checkbox" id="loop"> Loop</label>
+    <button id="fs"><svg viewBox="0 0 16 16"><path d="M2 2h5v1.5H3.5V7H2zm7 0h5v5h-1.5V3.5H9zM2 9h1.5v3.5H7V14H2zm10.5 0H14v5H9v-1.5h3.5z"/></svg>Full screen</button>
+  </div>
+
+  <p class="eyebrow">Shot list</p>
+  <ol class="shots" id="shots"></ol>
+</div>
+
+<script>
+(() => {
+const W = 1600, H = 900, PAN = 0.45, GY = 780, TY = 852;
+const INK = '#12120F', PAPER = '#F4F2EA', CREAM = '#E7E3D4';
+const LIME = '#C9F73F', RED = '#E5331C', BUTTER = '#EDE55C', ORANGE = '#F26A1B';
+const ARCH = 'Archivo, "Segoe UI", system-ui, sans-serif';
+const LIGHT = [-.6, -.8];
+
+const cv = document.getElementById('stage'), ctx = cv.getContext('2d');
+let k = 1, SID = 0, BOIL = 0, T = 0, tip = null, LOGO_TH = null;
+const IMG = {};
+const load = (key, src) => new Promise(r => { const i = new Image(); i.onload = () => { IMG[key] = i; r(); }; i.onerror = () => r(); i.src = src; });
+const assets = Promise.all([load('resting', 'mochi/resting.svg'), load('pleased', 'mochi/pleased.svg'), load('icon', 'img/icon.png')]);
+
+/* ================= math ================= */
+const clamp = (v, a = 0, b = 1) => Math.max(a, Math.min(b, v));
+const seg = (v, a, b) => clamp((v - a) / (b - a));
+const lerp = (a, b, t) => a + (b - a) * t;
+const lp = (A, B, t) => [lerp(A[0], B[0], t), lerp(A[1], B[1], t)];
+const eo = x => 1 - Math.pow(1 - x, 3);
+const eio = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const back = x => { if (x <= 0) return 0; if (x >= 1) return 1; const c = 1.9; return 1 + (c + 1) * Math.pow(x - 1, 3) + c * Math.pow(x - 1, 2); };
+const add = (a, b, s = 1) => [a[0] + b[0] * s, a[1] + b[1] * s];
+const unit = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; };
+function hash(a, b) {
+  let x = Math.imul(a | 0, 0x27d4eb2d) ^ Math.imul((b | 0) + 0x165667b1, 0x9e3779b1);
+  x = Math.imul(x ^ (x >>> 15), 0x85ebca6b); x = Math.imul(x ^ (x >>> 13), 0xc2b2ae35); x ^= x >>> 16;
+  return (x >>> 0) / 4294967295 * 2 - 1;
+}
+
+/* ================= point builders ================= */
+function ln(x1, y1, x2, y2, step = 22) {
+  const n = Math.max(2, Math.ceil(Math.hypot(x2 - x1, y2 - y1) / step)), o = [];
+  for (let i = 0; i <= n; i++) o.push([x1 + (x2 - x1) * i / n, y1 + (y2 - y1) * i / n]);
+  return o;
+}
+function poly(ps, step) { let o = []; for (let i = 0; i < ps.length - 1; i++) { const s = ln(ps[i][0], ps[i][1], ps[i + 1][0], ps[i + 1][1], step); o = o.concat(i ? s.slice(1) : s); } return o; }
+function circ(cx, cy, rx, ry = rx, a0 = -2.2, sw = Math.PI * 2.1) {
+  const n = Math.max(12, Math.ceil(Math.abs(sw) * Math.max(rx, ry) / 14)), o = [];
+  for (let i = 0; i <= n; i++) { const a = a0 + sw * i / n, q = 1 + .03 * Math.sin(i / n * 10); o.push([cx + Math.cos(a) * rx * q, cy + Math.sin(a) * ry * q]); }
+  return o;
+}
+function bez(a, b, c, d, n = 24) {
+  const o = [];
+  for (let i = 0; i <= n; i++) { const t = i / n, u = 1 - t;
+    o.push([u*u*u*a[0] + 3*u*u*t*b[0] + 3*u*t*t*c[0] + t*t*t*d[0], u*u*u*a[1] + 3*u*u*t*b[1] + 3*u*t*t*c[1] + t*t*t*d[1]]); }
+  return o;
+}
+function rr(x, y, w, h, r) {
+  const o = [], arc = (cx, cy, a0) => { for (let i = 0; i <= 5; i++) { const a = a0 + i / 5 * Math.PI / 2; o.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } };
+  arc(x + w - r, y + r, -Math.PI / 2); arc(x + w - r, y + h - r, 0); arc(x + r, y + h - r, Math.PI / 2); arc(x + r, y + r, Math.PI); o.push([x + r + 3, y - 1]);
+  return poly(o);
+}
+function cut(P, p) {
+  if (p >= 1) return P;
+  const d = [0]; let L = 0;
+  for (let i = 1; i < P.length; i++) { L += Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]); d.push(L); }
+  const tg = L * p, o = [P[0]];
+  for (let i = 1; i < P.length; i++) {
+    if (d[i] <= tg) o.push(P[i]);
+    else { const f = (tg - d[i - 1]) / (d[i] - d[i - 1] || 1); o.push(lp(P[i - 1], P[i], f)); break; }
+  }
+  return o;
+}
+function trace(P) {
+  ctx.beginPath(); ctx.moveTo(P[0][0], P[0][1]);
+  for (let i = 1; i < P.length - 1; i++) ctx.quadraticCurveTo(P[i][0], P[i][1], (P[i][0] + P[i + 1][0]) / 2, (P[i][1] + P[i + 1][1]) / 2);
+  const l = P[P.length - 1]; ctx.lineTo(l[0], l[1]);
+}
+
+/* ================= pencil ================= */
+function sk(pts, p = 1, o = {}) {
+  const id = o.id ?? ++SID;
+  if (p <= 0 || !pts || pts.length < 2) return null;
+  const amp = o.amp ?? 1.3, a = o.a ?? 1;
+  const J = pts.map((q, i) => [q[0] + hash(id * 97 + i, BOIL) * amp, q[1] + hash(id * 97 + i, BOIL + 7919) * amp]);
+  const P = cut(J, p);
+  ctx.strokeStyle = o.c || INK; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.globalAlpha = a * .9; ctx.lineWidth = o.w || 2.2; trace(P); ctx.stroke();
+  if (!o.one) {
+    const dx = hash(id, BOIL + 3) * 1.3, dy = hash(id, BOIL + 11) * 1.3;
+    ctx.globalAlpha = a * .38; ctx.lineWidth = (o.w || 2.2) * .5; trace(P.map(q => [q[0] + dx, q[1] + dy])); ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+  const e = P[P.length - 1]; return { x: e[0], y: e[1] };
+}
+/* Ritual's lime marker, edged in ink so it reads on paper. */
+function mark(pts, p, w = 8) { const id = ++SID; sk(pts, p, { c: INK, w: w + 4, one: true, id, amp: 1 }); sk(pts, p, { c: LIME, w, one: true, id, amp: 1 }); }
+function fillPts(pts, col, a = 1) { if (a <= 0 || !pts || pts.length < 3) return; ctx.globalAlpha = a; ctx.fillStyle = col; trace(pts); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1; }
+function hatch(pts, p, o = {}) {
+  const base = SID; SID += 200;
+  if (p <= 0 || pts.length < 3) return;
+  ctx.save(); trace(pts); ctx.closePath(); ctx.clip();
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+  for (const q of pts) { x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]); }
+  const h = y1 - y0, gap = o.gap || 10, xs = [];
+  for (let x = x0 - h; x < x1; x += gap) xs.push(x);
+  const n = Math.min(xs.length, Math.floor(xs.length * p) + 1), keep = SID, st = Math.max(30, h);
+  for (let i = 0; i < n; i++) { SID = base + i; sk(ln(xs[i], y1 + 4, xs[i] + h + 8, y0 - 4, st), 1, { w: o.w || 1.1, a: o.a ?? .4, one: true, amp: .8, c: o.c || INK }); }
+  if (o.cross) for (let i = 0; i < n; i += 2) { SID = base + 100 + i; sk(ln(xs[i] + h + 8, y1 + 4, xs[i], y0 - 4, st), 1, { w: (o.w || 1.1) * .9, a: (o.a ?? .4) * .7, one: true, amp: .8 }); }
+  SID = keep; ctx.restore();
+}
+function sq(x, y, s, col, a = 1, r = .28) { if (a <= 0 || s <= 0) return; ctx.globalAlpha = a; ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect(x, y, s, s, s * r); ctx.fill(); ctx.globalAlpha = 1; }
+function dot(x, y, r, col = INK, a = 1) { ctx.globalAlpha = a; ctx.fillStyle = col; ctx.beginPath(); ctx.arc(x, y, r, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+
+/* ================= type ================= */
+const font = (size, wt = 800) => `${wt} ${size}px ${ARCH}`;
+function setLS(v) { if ('letterSpacing' in ctx) ctx.letterSpacing = v; }
+function measure(txt, f, ls = '0px') { ctx.save(); ctx.font = f; setLS(ls); const w = ctx.measureText(txt).width; ctx.restore(); return w; }
+function write(parts, x, y, size, p, o = {}) {
+  if (typeof parts === 'string') parts = [[parts, false]];
+  const f = font(size, o.wt || 800), ls = o.ls ?? `${-.025 * size}px`;
+  const ws = parts.map(q => measure(q[0], f, ls)), tw = ws.reduce((a, b) => a + b, 0);
+  const sx = o.center ? x - tw / 2 : x;
+  if (o.hl !== undefined) { let cx = sx;
+    parts.forEach((q, i) => { if (q[1]) sk(ln(cx - 8, y - size * .3, cx + ws[i] + 6, y - size * .34, 40), o.hl, { c: LIME, w: size * .62, one: true, amp: 1.2 }); else SID++; cx += ws[i]; }); }
+  if (p <= 0) return tw;
+  ctx.save(); ctx.font = f; setLS(ls); ctx.textAlign = 'left';
+  ctx.beginPath(); ctx.rect(sx - 24, y - size * 1.3, (tw + 48) * p, size * 1.9); ctx.clip();
+  let cx = sx;
+  parts.forEach((q, i) => {
+    ctx.globalAlpha = o.a ?? 1;
+    if (o.inked) {
+      ctx.fillStyle = o.fill; ctx.fillText(q[0], cx, y);
+      ctx.strokeStyle = INK; ctx.lineJoin = 'round';
+      const d1 = hash(SID + i, BOIL) * 1.3, d2 = hash(SID + i, BOIL + 5) * 1.3;
+      ctx.lineWidth = o.inked; ctx.strokeText(q[0], cx + d1, y + d2);
+      ctx.globalAlpha = .4; ctx.lineWidth = o.inked * .5; ctx.strokeText(q[0], cx - d2, y + d1);
+    } else { ctx.fillStyle = o.c || INK; ctx.fillText(q[0], cx, y); }
+    cx += ws[i];
+  });
+  ctx.restore(); SID += 3; return tw;
+}
+function label(txt, x, y, size, p, o = {}) {
+  if (p <= 0) return 0;
+  ctx.save(); ctx.font = font(size, o.wt || 700); setLS(`${(o.track ?? .2) * size}px`);
+  ctx.textAlign = o.align || 'left'; ctx.fillStyle = o.c || INK; ctx.globalAlpha = (o.a ?? 1) * p;
+  ctx.fillText(txt, x, y); const w = ctx.measureText(txt).width; ctx.restore(); return w;
+}
+function stamp(txt, x, y, lt) {
+  const w = measure(txt, font(20, 700), `${.2 * 20}px`);
+  sk(poly([[x - 16, y - 30], [x + w + 18, y - 33], [x + w + 20, y + 14], [x - 18, y + 16], [x - 15, y - 35]]), seg(lt, .08, .4), { w: 1.8, a: .7 });
+  label(txt, x, y, 20, seg(lt, .05, .3), { a: .7 });
+}
+function caption(era, parts, lt) { stamp(era.toUpperCase(), 112, 126, lt); write(parts, 108, 236, 70, eo(seg(lt, .3, .95)), { hl: eo(seg(lt, .75, 1.1)) }); }
+function pencil(x, y) {
+  ctx.save(); ctx.translate(x, y); ctx.rotate(-1.0);
+  ctx.globalAlpha = .1; ctx.fillStyle = INK; ctx.fillRect(40, 4, 160, 22); ctx.globalAlpha = 1;
+  ctx.lineWidth = 2.5; ctx.strokeStyle = INK; ctx.lineJoin = 'round';
+  ctx.fillStyle = LIME; ctx.beginPath(); ctx.rect(34, -11, 150, 22); ctx.fill(); ctx.stroke();
+  ctx.globalAlpha = .25; ctx.beginPath(); ctx.moveTo(34, 0); ctx.lineTo(184, 0); ctx.stroke(); ctx.globalAlpha = 1;
+  ctx.fillStyle = INK; ctx.fillRect(184, -11, 20, 22);
+  ctx.fillStyle = '#E9D6B8'; ctx.beginPath(); ctx.moveTo(34, -11); ctx.lineTo(0, 0); ctx.lineTo(34, 11); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = INK; ctx.beginPath(); ctx.moveTo(11, -3.8); ctx.lineTo(0, 0); ctx.lineTo(11, 3.8); ctx.closePath(); ctx.fill();
+  ctx.restore();
+}
+
+/* =====================================================================
+   People, drawn properly: contoured limbs, profile heads, hands with
+   fingers, clothes with seams and folds, hatched on the shadow side.
+   ===================================================================== */
+const interp = (keys, u) => { for (let i = 1; i < keys.length; i++) if (u <= keys[i][0]) { const [u0, r0] = keys[i - 1], [u1, r1] = keys[i]; return lerp(r0, r1, (u - u0) / (u1 - u0 || 1)); } return keys[keys.length - 1][1]; };
+const PROF = {
+  arm:     [[0, 10], [.2, 10.4], [.44, 7.6], [.5, 7], [.62, 8.4], [.86, 6], [1, 5.2]],
+  sleeveL: [[0, 12.5], [.45, 10.5], [.5, 10], [.62, 10], [1, 8.2]],
+  leg:     [[0, 15], [.18, 14], [.46, 9.6], [.5, 9], [.62, 10.8], [.86, 6.8], [1, 5.8]],
+  pants:   [[0, 17], [.46, 12], [.5, 11.6], [.7, 11], [1, 9.8]],
+};
+function pathPts(J, n = 9) { const o = []; for (let s = 0; s < J.length - 1; s++) for (let i = s ? 1 : 0; i <= n; i++) o.push(lp(J[s], J[s + 1], i / n)); return o; }
+function sides(P, R) {
+  const A = [], B = [];
+  for (let i = 0; i < P.length; i++) { const a = P[Math.max(0, i - 1)], b = P[Math.min(P.length - 1, i + 1)], [tx, ty] = unit(a, b);
+    A.push([P[i][0] - ty * R[i], P[i][1] + tx * R[i]]); B.push([P[i][0] + ty * R[i], P[i][1] - tx * R[i]]); }
+  return [A, B];
+}
+/* One limb or sleeve: fill with paper to occlude, hatch the shadow side, draw both contours. */
+function limb(J, keys, s, p, o = {}) {
+  const P = pathPts(J), R = P.map((_, i) => interp(keys, i / (P.length - 1)) * s), [A, B] = sides(P, R);
+  if (p <= 0) { SID += 206; return { A, B, P }; }
+  const body = A.concat(B.slice().reverse());
+  fillPts(body, PAPER, seg(p, 0, .3));
+  if (o.wash) fillPts(body, o.wash, .55 * seg(p, .3, .8));
+  const m = Math.floor(P.length / 2), nA = unit(P[m], A[m]), shadowA = nA[0] * LIGHT[0] + nA[1] * LIGHT[1] < 0;
+  if (o.cloth) hatch(body, seg(p, .4, .9), { gap: 8, a: .2, cross: o.cross }); else SID += 200;
+  hatch((shadowA ? A : B).concat(P.slice().reverse()), seg(p, .5, 1), { gap: o.gap || 4.5, a: o.ha ?? .45, cross: o.cross });
+  if (o.skin && J.length > 2) { const j = 9, lit = shadowA ? B : A, sh = shadowA ? A : B;
+    sk(poly([lp(P[j - 1], lit[j - 1], .7), lp(P[j], lit[j], .95), lp(P[j + 1], lit[j + 1], .7)], 4), seg(p, .6, 1), { w: 1.2, one: true, a: .7 });
+    sk(poly([lp(P[j + 3], sh[j + 3], .9), lp(P[j + 5], sh[j + 5], .55), lp(P[j + 7], sh[j + 7], .8)], 4), seg(p, .6, 1), { w: 1.1, one: true, a: .6 });
+    sk(poly([lp(P[3], lit[3], .8), lp(P[5], lit[5], .5)], 4), seg(p, .6, 1), { w: 1.1, one: true, a: .55 }); } else SID += 3;
+  sk(A, p, { w: o.w || 2.1 }); sk(B, p, { w: o.w || 2.1 });
+  if (o.cuff) { const j = P.length - 1; sk(poly([A[j], B[j]]), seg(p, .6, 1), { w: 1.8, one: true }); } else SID++;
+  if (o.fold && J.length > 2) { const j = 9, inner = shadowA ? B : A;
+    for (let f = -1; f <= 1; f++) { const q = inner[j + f * 2], c = P[j + f * 2]; sk(poly([q, lp(q, c, .55)]), seg(p, .6, 1), { w: 1.3, one: true, a: .7 }); } } else SID += 3;
+  return { A, B, P };
+}
+function ik(S, Tg, l1, l2, bend) {
+  const dx = Tg[0] - S[0], dy = Tg[1] - S[1], d = clamp(Math.hypot(dx, dy), Math.abs(l1 - l2) + 1, l1 + l2 - .5);
+  const th = Math.atan2(dy, dx), a = Math.acos(clamp((l1 * l1 + d * d - l2 * l2) / (2 * l1 * d), -1, 1));
+  return [S, [S[0] + Math.cos(th + bend * a) * l1, S[1] + Math.sin(th + bend * a) * l1], [S[0] + Math.cos(th) * d, S[1] + Math.sin(th) * d]];
+}
+/* Hand: open (fingers spread along the forearm) or gripping (a fist with knuckles). */
+function hand(E, Wr, s, dir, p, grip, wash) {
+  const u = unit(E, Wr), n = [-u[1] * dir, u[0] * dir], P = (a, b) => [Wr[0] + (u[0] * a + n[0] * b) * s, Wr[1] + (u[1] * a + n[1] * b) * s];
+  if (p <= 0) { SID += 12; return; }
+  if (grip) {
+    const fist = [P(-1, -6), P(6, -8), P(13, -6.5), P(15, 0), P(13, 6.5), P(6, 7.5), P(-1, 6), P(-1, -6)];
+    fillPts(poly(fist, 6), PAPER); sk(poly(fist, 6), p, { w: 1.9 });
+    for (let i = 0; i < 3; i++) sk(poly([P(10, -5 + i * 4), P(14, -4 + i * 4)], 4), p, { w: 1.2, one: true, a: .8 });
+    sk(poly([P(2, -7), P(8, -9), P(12, -7)], 4), p, { w: 1.5, one: true });
+    return;
+  }
+  const palm = [P(0, -5), P(9, -6), P(11, -1), P(10, 5.5), P(0, 5), P(0, -5)];
+  fillPts(poly(palm, 5), PAPER); sk(poly(palm, 5), p, { w: 1.8 });
+  for (let i = 0; i < 4; i++) { const b = -4.6 + i * 3.2, L = [8, 10, 9.5, 7.5][i]; sk(poly([P(9.5, b), P(10 + L * .6, b - .3 + i * .2), P(10 + L, b + i * .35)], 4), p, { w: 1.6, one: true }); }
+  sk(poly([P(3, -5.5), P(7, -10), P(12, -10.5)], 4), p, { w: 1.7, one: true });
+}
+function footwear(A, dir, s, p, kind, wash) {
+  const P = (a, b) => [A[0] + a * dir * s, A[1] + b * s];
+  if (p <= 0) { SID += 10; return; }
+  if (kind === 'bare') {
+    const f = [P(-5, -4), P(-8, 8), P(-4, 12), P(20, 13), P(25, 10), P(20, 5), P(9, 1), P(5, -4)];
+    fillPts(poly(f, 5), PAPER); sk(poly(f, 5), p, { w: 1.9 });
+    for (let i = 0; i < 3; i++) sk(poly([P(15 + i * 3, 13), P(16 + i * 3, 9)], 3), p, { w: 1.1, one: true, a: .7 });
+    return;
+  }
+  const top = kind === 'boot' ? -14 : -5;
+  const f = [P(-7, top), P(-9, 6), P(-8, 14), P(25, 15), P(30, 11), P(27, 4), P(14, 0), P(7, top)];
+  fillPts(poly(f, 5), PAPER); if (wash) fillPts(poly(f, 5), wash, .6);
+  hatch(poly([P(-8, 8), P(28, 9), P(29, 14), P(-8, 14)], 5), p, { gap: 3.5, a: .6 });
+  sk(poly(f, 5), p, { w: 2 });
+  sk(poly([P(-8, 10), P(29, 10.5)], 5), p, { w: kind === 'sneaker' ? 2.6 : 1.8, one: true });
+  for (let i = 0; i < 3; i++) sk(poly([P(7 + i * 4, -1 + i), P(10 + i * 4, 2 + i)], 3), p, { w: 1.1, one: true, a: .8 });
+}
+/* Head in profile, in head units: u toward the face, v down. */
+const HEAD = {
+  back: [[-.22, .62], [-.34, .36], [-.48, .1], [-.5, -.18], [-.4, -.42], [-.18, -.56], [.08, -.58], [.3, -.48], [.42, -.3], [.45, -.12]],
+  face: [[.45, -.12], [.47, -.06], [.44, .02], [.52, .12], [.6, .21], [.52, .25], [.49, .27], [.52, .33], [.47, .36], [.5, .4], [.45, .45], [.47, .52], [.4, .58], [.28, .6], [.2, .63], [.2, .9]],
+  neckB: [[-.22, .6], [-.2, .92]],
+  jaw: [[.38, .57], [.14, .52], [-.02, .4], [-.06, .22]],
+  ear: [[-.02, 0], [-.12, -.06], [-.18, .04], [-.15, .18], [-.06, .24], [-.03, .2]],
+  earIn: [[-.08, .05], [-.12, .1], [-.09, .16]],
+  lidU: [[.25, -.02], [.31, -.06], [.38, -.03]], lidL: [[.27, .02], [.36, .01]],
+  brow: [[.22, -.12], [.32, -.15], [.42, -.11]], nostril: [[.5, .2], [.53, .23], [.5, .24]],
+  mouth: [[.4, .365], [.48, .36]], cheek: [[.34, .2], [.37, .3]],
+};
+const HAIR = {
+  short: [[.34, -.4], [.2, -.57], [-.05, -.65], [-.34, -.53], [-.53, -.2], [-.5, .1], [-.36, .22], [-.3, 0], [-.12, -.1], [.02, -.28], [.2, -.37]],
+  long: [[.34, -.4], [.2, -.59], [-.05, -.67], [-.37, -.55], [-.56, -.2], [-.6, .3], [-.58, .95], [-.36, 1.08], [-.22, .72], [-.2, .3], [-.12, -.08], [.02, -.28], [.2, -.38]],
+  bun: [[.34, -.4], [.2, -.57], [-.05, -.65], [-.34, -.53], [-.53, -.2], [-.5, .08], [-.36, .16], [-.28, 0], [-.12, -.1], [.02, -.28], [.2, -.37]],
+  beard: [[.47, .48], [.42, .63], [.2, .68], [0, .52], [-.07, .26], [.03, .3], [.2, .46], [.36, .44], [.46, .44]],
+};
+function head(hd, dir, s, tilt, p, o = {}) {
+  const Hs = 27 * s, a = tilt * dir, ca = Math.cos(a), sa = Math.sin(a);
+  const M = ([u, v]) => { const U = u * dir * Hs, V = v * Hs; return [hd[0] + U * ca - V * sa, hd[1] + U * sa + V * ca]; };
+  const L = arr => poly(arr.map(M), 6);
+  if (p <= 0) { SID += 420; return M; }
+  const skull = HEAD.back.concat(HEAD.face.slice(1, 14)).map(M);
+  fillPts(poly(skull, 6), PAPER);
+  fillPts(poly([[.2, .6], [.2, .95], [-.2, .95], [-.22, .6]].map(M), 6), PAPER);
+  hatch(poly([[-.22, .6], [-.2, .95], [0, .95], [.02, .55], [-.06, .22], [-.2, .3]].map(M), 6), seg(p, .5, 1), { gap: 4.5, a: .35 });
+  const hp = seg(p, .15, .8);
+  sk(L(HEAD.back), hp, { w: 2 }); sk(L(HEAD.face), hp, { w: 2 }); sk(L(HEAD.neckB), hp, { w: 2 });
+  sk(L(HEAD.jaw), seg(p, .4, .9), { w: 1.3, a: .7, one: true });
+  sk(L(HEAD.ear), seg(p, .4, .9), { w: 1.7 }); sk(L(HEAD.earIn), seg(p, .5, .9), { w: 1.2, one: true });
+  const fp = seg(p, .55, 1);
+  sk(L(HEAD.brow), fp, { w: 2.6, one: true });
+  sk(L(o.shut ? HEAD.lidL : HEAD.lidU), fp, { w: 1.7, one: true }); if (!o.shut) sk(L(HEAD.lidL), fp, { w: 1.2, one: true, a: .7 }); else SID++;
+  if (fp > .5 && !o.shut) { const e = M([.335 + (o.look || 0) * .02, -.012 + (o.down ? .012 : 0)]); dot(e[0], e[1], 2.1 * s); }
+  sk(L(HEAD.nostril), fp, { w: 1.3, one: true }); sk(L(HEAD.mouth), fp, { w: 1.5, one: true }); sk(L(HEAD.cheek), fp, { w: 1, one: true, a: .5 });
+  // hair: a hatched mass with a few strands on top
+  const hs = HAIR[o.hair || 'short'], mass = poly(hs.map(M), 6);
+  if (o.hair !== 'none') {
+    fillPts(mass, PAPER, seg(p, .2, .5));
+    hatch(mass, seg(p, .3, .9), { gap: o.fair ? 5 : 3.2, a: o.fair ? .35 : .6, cross: !o.fair });
+    sk(mass, seg(p, .2, .8), { w: 1.8 });
+    for (let i = 0; i < 7; i++) { const a0 = hs[1 + i % (hs.length - 3)], b0 = hs[(3 + i) % hs.length]; sk(L([a0, lp(a0, b0, .5), [b0[0] + .04, b0[1]]]), seg(p, .5, 1), { w: 1.1, one: true, a: .6 }); }
+    if (o.hair === 'bun') { const b = circ(...M([-.46, -.5]), 7 * s); fillPts(b, PAPER); hatch(b, seg(p, .4, 1), { gap: 3, a: .55, cross: true }); sk(b, seg(p, .3, .9), { w: 1.8 }); } else SID += 202;
+  } else SID += 420;
+  if (o.beard) { const bd = poly(HAIR.beard.map(M), 6); fillPts(bd, PAPER); hatch(bd, seg(p, .5, 1), { gap: 3, a: .6, cross: true }); sk(bd, seg(p, .5, 1), { w: 1.6 }); } else SID += 202;
+  if (o.hat) o.hat(M, p, s);
+  return M;
+}
+const HATS = {
+  straw: (M, p, s) => { const brim = circ(...M([.02, -.46]), 40 * s, 8 * s, 0, Math.PI * 2.05);
+    const crown = poly([[-.44, -.48], [-.36, -.95], [.3, -.97], [.42, -.48]].map(M), 6);
+    fillPts(crown, PAPER); fillPts(brim, PAPER); fillPts(brim, BUTTER, .45); fillPts(crown, BUTTER, .45);
+    hatch(crown, seg(p, .5, 1), { gap: 6, a: .35 }); sk(brim, p, { w: 2 }); sk(crown, p, { w: 2 });
+    sk(poly([[-.4, -.6], [.38, -.6]].map(M), 6), p, { w: 3.2, one: true }); },
+  cap: (M, p) => { const c = poly([[-.52, -.28], [-.48, -.6], [0, -.74], [.42, -.6], [.72, -.42], [.46, -.36], [-.52, -.28]].map(M), 6);
+    fillPts(c, PAPER); hatch(c, seg(p, .4, 1), { gap: 3.4, a: .55, cross: true }); sk(c, p, { w: 2 });
+    sk(poly([[.44, -.38], [.08, -.44]].map(M), 5), p, { w: 1.4, one: true }); },
+  beret: (M, p, s) => { const b = circ(...M([-.06, -.58]), 18 * s, 6.5 * s, 0, Math.PI * 2.05); fillPts(b, PAPER); fillPts(b, RED, .55); hatch(b, seg(p, .4, 1), { gap: 4, a: .45 }); sk(b, p, { w: 2 });
+    sk(poly([[-.06, -.8], [-.02, -.95]].map(M), 4), p, { w: 2, one: true }); },
+  band: (M, p) => { const b = poly([[.44, -.36], [-.52, -.24], [-.53, -.12], [.45, -.22], [.44, -.36]].map(M), 5); fillPts(b, RED, .8); sk(b, p, { w: 1.6 }); },
+};
+/* Torso contour in body units: a = forward, b = up the spine from the hip. */
+const TORSO = {
+  front: [[17, -4], [20, 14], [17, 32], [22, 50], [26, 64], [22, 78], [11, 88]],
+  back: [[-8, 90], [-19, 80], [-23, 62], [-18, 42], [-20, 20], [-17, -4]],
+};
+function torso(hip, sho, dir, s, p, o) {
+  const L = Math.hypot(sho[0] - hip[0], sho[1] - hip[1]) || 1, u = [(sho[0] - hip[0]) / L, (sho[1] - hip[1]) / L], f = [-u[1] * dir, u[0] * dir];
+  const Qa = ([a, b]) => [hip[0] + f[0] * a * s + u[0] * b * L / 84, hip[1] + f[1] * a * s + u[1] * b * L / 84];
+  const cl = o.cloth, loose = cl === 'hoodie' ? 3 : 0, hem = cl === 'fur' ? -30 : cl === 'hoodie' ? -12 : -4;
+  const fr = TORSO.front.map(([a, b], i) => [a + loose, i === 0 ? hem : b]), bk = TORSO.back.map(([a, b], i, arr) => [a - loose, i === arr.length - 1 ? hem : b]);
+  if (cl === 'hoodie') bk.splice(0, 1, [-4, 92], [-17, 100], [-25, 88]);
+  const frP = poly(fr.map(Qa), 7), bkP = poly(bk.map(Qa), 7), hemP = cl === 'fur'
+    ? poly([[-16, -30], [-10, -38], [-4, -29], [2, -40], [8, -30], [13, -39], [17, -30]].map(Qa), 5)
+    : poly([[bk[bk.length - 1][0], hem], [0, hem - 2], [fr[0][0], hem]].map(Qa), 7);
+  const body = frP.concat(bkP);
+  if (p <= 0) { SID += 700; return Qa; }
+  fillPts(body, PAPER, seg(p, 0, .3));
+  if (o.wash) fillPts(body, o.wash, .5 * seg(p, .3, .8));
+  const frontShadow = f[0] * LIGHT[0] + f[1] * LIGHT[1] < 0;
+  const center = poly([[0, hem], [0, 88]].map(Qa), 7);
+  hatch(body, seg(p, .4, .9), { gap: cl === 'fur' ? 3.6 : 8, a: cl === 'fur' ? .42 : .2, cross: cl === 'fur' || o.dark });
+  hatch((frontShadow ? frP : bkP.slice().reverse()).concat(frontShadow ? center.slice().reverse() : center), seg(p, .5, 1), { gap: 4.5, a: .45, cross: o.dark });
+  sk(frP, p, { w: 2.1 }); sk(bkP, p, { w: 2.1 }); sk(hemP, seg(p, .3, 1), { w: 1.9 });
+  const D = (pts, w = 1.4, a = .8) => sk(poly(pts.map(Qa), 5), seg(p, .55, 1), { w, one: true, a });
+  const btn = (a, b) => { if (p > .7) { const q = Qa([a, b]); dot(q[0], q[1], 1.6 * s); } };
+  if (cl === 'shirt' || cl === 'apron') { D([[10, 86], [4, 77], [-1, 88]], 1.6); D([[16, 78], [14, 2]]); [66, 48, 30, 14].forEach(b => btn(15.5, b)); D([[4, 64], [14, 64], [14, 52], [4, 52], [4, 64]], 1.2); }
+  if (cl === 'tee') { D([[9, 86], [3, 81], [-2, 87]], 1.6); D([[4, 26], [10, 32]], 1.1, .6); D([[-6, 34], [0, 40]], 1.1, .6); }
+  if (cl === 'waistcoat') { D([[10, 86], [15, 50]], 1.6); D([[3, 86], [8, 60], [15, 50]], 1.3); D([[15, 50], [14, -4]]); [42, 30, 18, 6].forEach(b => btn(14.5, b)); D([[14, 30], [6, 22], [-2, 27]], 1.1, .7); }
+  if (cl === 'hoodie') { D([[4, 22], [19, 20], [20, 0], [4, 0], [4, 22]], 1.4); D([[12, 84], [13, 64]], 1.2); D([[8, 84], [9, 66]], 1.2); D([[-4, 92], [6, 86]], 1.6); D([[2, 40], [10, 46]], 1.1, .6); }
+  if (cl === 'fur') { D([[16, 82], [-12, 18]], 3, .9); for (let i = 0; i < 9; i++) { const b = -28 + i * 3, a = -14 + i * 3.8; D([[a, b], [a + 2, b - 7]], 1.2, .7); }
+    for (let i = 0; i < 6; i++) D([[-16 + i * 2, 70 - i * 9], [-20 + i * 2, 66 - i * 9]], 1.1, .6); }
+  if (cl === 'apron') { const ap = poly([[3, 72], [20, 70], [22, -44], [2, -44], [3, 72]].map(Qa), 6); fillPts(ap, PAPER); fillPts(ap, o.apron || ORANGE, .5);
+    hatch(ap, seg(p, .5, 1), { gap: 6, a: .3 }); sk(ap, p, { w: 2 }); D([[3, 70], [-8, 84]], 1.4); D([[3, 30], [-16, 30]], 1.4);
+    [[10, 20, LIME], [14, -10, RED], [8, -24, BUTTER]].forEach(([a, b, c]) => { if (p > .8) { const q = Qa([a, b]); dot(q[0], q[1], 3.5 * s, c, .9); } }); }
+  if (o.belt) { D([[-14, 5], [15, 5]], 1.5); D([[-14, -2], [15, -2]], 1.5); const bq = poly([[10, 6], [16, 6], [16, -3], [10, -3], [10, 6]].map(Qa), 4); sk(bq, seg(p, .6, 1), { w: 1.4, one: true }); } else SID += 3;
+  return Qa;
+}
+/* The whole person. Pose by angles (aA/aB back arm, bA/bB front arm, lA/lB back leg, rA/rB front leg) or hand targets hB/hF. */
+function person(x, gy, s, P, p = 1) {
+  const dir = P.dir || 1, lean = P.lean || 0;
+  const hip = [x, gy - 106 * s + (P.drop || 0) * s];
+  const byAng = (o, a1, a2, l1, l2) => { const kn = [o[0] + dir * Math.sin(a1) * l1, o[1] + Math.cos(a1) * l1];
+    return [o, kn, [kn[0] + dir * Math.sin(a1 + a2) * l2, kn[1] + Math.cos(a1 + a2) * l2]]; };
+  const sho = [hip[0] + dir * Math.sin(lean) * 84 * s, hip[1] - Math.cos(lean) * 84 * s];
+  const ht = lean + (P.tilt || 0), hd = [sho[0] + dir * Math.sin(ht) * 25 * s, sho[1] - Math.cos(ht) * 25 * s];
+  const legB = byAng(hip, P.lA ?? -.1, P.lB ?? .03, 53 * s, 52 * s), legF = byAng(hip, P.rA ?? .1, P.rB ?? .03, 53 * s, 52 * s);
+  const shB = add(sho, [-dir * 3 * s, 4 * s]), shF = add(sho, [dir * 2 * s, 6 * s]);
+  const armB = P.hB ? ik(shB, P.hB, 44 * s, 42 * s, dir * (P.bendB ?? 1)) : byAng(shB, P.aA ?? -.12, P.aB ?? .25, 44 * s, 42 * s);
+  const armF = P.hF ? ik(shF, P.hF, 44 * s, 42 * s, dir * (P.bendF ?? 1)) : byAng(shF, P.bA ?? .15, P.bB ?? .25, 44 * s, 42 * s);
+  const J = { hip, sho, hd, legB, legF, armB, armF, s, dir };
+  const q = (a, b) => seg(p, a, b), wash = P.wash, sl = P.sleeves || 'short', lg = P.legs || 'pants';
+  const drawArm = (A, pp) => {
+    if (sl === 'long') limb(A, PROF.sleeveL, s, pp, { wash, cuff: true, fold: true, cloth: true, cross: P.darkTop });
+    else { limb(A, PROF.arm, s, pp, { fold: true, skin: true });
+      if (sl !== 'none') limb([A[0], lp(A[0], A[1], sl === 'rolled' ? .85 : .6)], [[0, 12.8], [1, 11.6]], s, pp, { wash, cuff: true, cloth: true, cross: P.darkTop }); else SID += 210; }
+    hand(A[1], A[2], s, dir, seg(pp, .5, 1), P.grip, wash);
+  };
+  const drawLeg = (L, pp) => {
+    if (lg === 'pants') limb(L, PROF.pants, s, pp, { wash: P.pantsWash, cuff: true, fold: true, cloth: true, cross: P.darkPants });
+    else { limb(L, PROF.leg, s, pp, { fold: true, skin: true });
+      if (lg === 'shorts') limb([L[0], lp(L[0], L[1], .8)], [[0, 17.5], [1, 14]], s, pp, { wash: P.pantsWash, cuff: true, cloth: true, cross: P.darkPants }); else SID += 210; }
+    footwear(L[2], dir, s, seg(pp, .4, 1), P.feet || 'shoe', P.shoeWash);
+  };
+  if (P.behind) P.behind(J, p);
+  drawArm(armB, q(.45, .78));
+  drawLeg(legB, q(.25, .6));
+  torso(hip, sho, dir, s, q(.08, .45), { cloth: P.cloth || 'shirt', wash, dark: P.darkTop, belt: P.belt, apron: P.apron });
+  head(hd, dir, s, P.tilt || 0, q(0, .45), { hair: P.hair, beard: P.beard, hat: P.hat, fair: P.fair, down: P.tilt > .25, shut: P.shut });
+  drawLeg(legF, q(.3, .65));
+  if (P.mid) P.mid(J, p);
+  drawArm(armF, q(.55, .9));
+  if (P.front) P.front(J, p);
+  return J;
+}
+
+/* ================= scenes (local 1600×900) ================= */
+function ground(lt, x0 = 0, x1 = W) { sk(ln(x0, GY, x1, GY + 2, 30), seg(lt, 0, .45), { w: 2.2 }); }
+function flame(cx, base, h, w, sway, fill, lw) {
+  const o = [];
+  for (let i = 0; i <= 36; i++) { const th = i / 36 * Math.PI * 2, u = (1 + Math.cos(th)) / 2;
+    o.push([cx + w * Math.sin(th) * Math.pow(Math.abs(Math.sin(th / 2)), 1.5) + sway * u * u, base - h * u]); }
+  if (fill) fillPts(o, fill, .9);
+  sk(o, 1, { w: lw, amp: 1 });
+}
+function sun(x, y, r, lt) {
+  fillPts(circ(x, y, r, r, 0, Math.PI * 2), BUTTER, .9); sk(circ(x, y, r), 1, { w: 2.4 });
+  for (let i = 0; i < 8; i++) { const a = i * Math.PI / 4 + lt * .8;
+    sk(ln(x + Math.cos(a) * (r + 10), y + Math.sin(a) * (r + 10), x + Math.cos(a) * (r + 26), y + Math.sin(a) * (r + 26)), 1, { w: 2.2, one: true }); }
+}
+
+function sHook(lt) {
+  stamp('A SHORT HISTORY OF HABITS', 800 - measure('A SHORT HISTORY OF HABITS', font(20, 700), '4px') / 2, 250, lt);
+  write('For 50,000 years,', 800, 380, 96, eo(seg(lt, .2, .8)), { center: true });
+  write('your habits were', 800, 490, 96, eo(seg(lt, .6, 1.2)), { center: true });
+  write([['chosen for you.', true]], 800, 600, 96, eo(seg(lt, 1.0, 1.6)), { center: true, hl: eo(seg(lt, 1.6, 2.0)) });
+}
+
+function sHunter(lt) {
+  const gl = eo(seg(lt, .8, 1.5));
+  if (gl > 0) { const f = 1 + .06 * Math.sin(T * 23) + .04 * Math.sin(T * 37);
+    const g = ctx.createRadialGradient(860, 720, 10, 860, 720, 340 * f);
+    g.addColorStop(0, `rgba(242,106,27,${.2 * gl})`); g.addColorStop(1, 'rgba(242,106,27,0)');
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(860, 720, 340 * f, 0, 7); ctx.fill(); }
+  caption('c. 50,000 BC', [['Hunger', true], [' chose the hunter’s.', false]], lt);
+  ground(lt);
+  sk(poly([[0, 520], [150, 420], [380, 392], [540, 450], [600, 610], [612, GY]]), seg(lt, .05, .55));
+  const mouth = bez([95, GY], [100, 580], [440, 570], [455, GY], 30);
+  sk(mouth, seg(lt, .2, .6));
+  hatch(mouth, seg(lt, .4, .9), { gap: 7, a: .5, cross: true });
+  [[[150, 470], [220, 500], [260, 480]], [[420, 430], [480, 470]], [[30, 640], [70, 700]]].forEach((c, i) => sk(poly(c), seg(lt, .3 + i * .1, .6 + i * .1), { w: 1.4, a: .6 }));
+  sk(circ(1430, 170, 44), seg(lt, .3, .7), { w: 2.2 });
+  hatch(bez([1412, 131], [1452, 150], [1454, 196], [1410, 212], 12).concat(circ(1430, 170, 44, 44, 2.2, -2.3)), seg(lt, .5, .9), { gap: 5, a: .4 });
+  [[1250, 110], [1330, 270], [1540, 330], [1170, 300], [1520, 85]].forEach(([x, y], i) => {
+    const q = seg(lt, .45 + i * .06, .6 + i * .06); sk(ln(x - 9, y, x + 9, y), q, { w: 1.8 }); sk(ln(x, y - 9, x, y + 9), q, { w: 1.8 }); });
+  // fire
+  sk(ln(800, GY + 10, 925, GY - 16), seg(lt, .5, .7), { w: 4 }); sk(ln(805, GY - 18, 928, GY + 12), seg(lt, .55, .75), { w: 4 });
+  for (let i = 0; i < 7; i++) { const a = -Math.PI + i * Math.PI / 6; sk(circ(862 + Math.cos(a) * 80, GY + 6 + Math.sin(a) * 10, 12, 8), seg(lt, .4 + i * .03, .6 + i * .03), { w: 1.6 }); }
+  const fg = eo(seg(lt, .8, 1.4));
+  if (fg > 0) { flame(865, GY - 10, 175 * fg, 52 * fg, Math.sin(T * 11) * 12, ORANGE, 2.8);
+    flame(826, GY - 8, 100 * fg, 32 * fg, Math.sin(T * 13 + 1) * 9, ORANGE, 2.4);
+    flame(904, GY - 8, 120 * fg, 34 * fg, Math.sin(T * 9 + 2) * 10, ORANGE, 2.4);
+    flame(865, GY - 10, 78 * fg, 22 * fg, Math.sin(T * 15) * 6, BUTTER, 2); } else SID += 4;
+  for (let i = 0; i < 8; i++) { const ph = (T * .7 + i / 8) % 1; if (fg > .5) dot(860 + Math.sin(i * 7 + T * 3) * 40 * ph, GY - 180 - ph * 260, 2.6 * (1 - ph), ORANGE, 1 - ph); }
+  // the hunter, spear upright, fur, beard
+  const bob = Math.sin(T * 1.6) * 2;
+  person(1150, GY, 1.8, {
+    dir: -1, lean: .04, tilt: .06, cloth: 'fur', sleeves: 'none', legs: 'bare', feet: 'bare', hair: 'long', beard: true,
+    lA: -.16, lB: .06, rA: .2, rB: -.04, aA: -.08, aB: .2, hF: [1150 - 58, 530 + bob], bendF: 1, grip: true,
+    mid: (J, p) => { const q = seg(p, .55, .9); const hx = J.armF[2][0] + 4 * -1, top = 250, tipY = top - 60;
+      sk(ln(hx, GY - 2, hx - 6, top, 30), q, { w: 4.2 }); sk(ln(hx - 3, GY - 2, hx - 9, top, 30), q, { w: 1.4, a: .5, one: true });
+      const tp = poly([[hx - 20, top + 6], [hx - 7, tipY], [hx + 8, top + 6], [hx - 20, top + 6]], 6); fillPts(tp, PAPER); hatch(tp, q, { gap: 3.5, a: .5 }); sk(tp, q, { w: 2 });
+      sk(poly([[hx - 16, top + 12], [hx + 4, top + 20]]), q, { w: 2.4, one: true }); sk(poly([[hx - 16, top + 20], [hx + 4, top + 12]]), q, { w: 2.4, one: true }); },
+  }, seg(lt, .35, 1.4));
+}
+
+function sFarmer(lt) {
+  caption('c. 9,000 BC', [['The ', false], ['seasons', true], [' chose the farmer’s.', false]], lt);
+  const sp = seg(lt, .2, 2.9);
+  if (sp > 0) {
+    ctx.save(); ctx.setLineDash([4, 14]); ctx.strokeStyle = INK; ctx.globalAlpha = .25; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(900, GY, 700, 400, 0, Math.PI, Math.PI * 2); ctx.stroke(); ctx.restore();
+    if (sp < 1) { const a = Math.PI + ((sp * 2) % 1) * Math.PI; sun(900 + Math.cos(a) * 700, GY + Math.sin(a) * 400, 30, lt); } else SID += 10;
+  } else SID += 10;
+  const hill = bez([0, 700], [420, 640], [900, 740], [1600, 680], 40);
+  if (lt > 0) fillPts(hill.concat([[1600, GY + 4], [0, GY + 4]]), PAPER, 1);
+  sk(hill, seg(lt, .05, .5), { w: 2, a: .8 }); hatch(hill.concat([[1600, 720], [0, 740]]), seg(lt, .3, .8), { gap: 16, a: .18 });
+  ground(lt);
+  [800, 822].forEach((y, r) => sk(ln(820 + r * 14, y, 1420 - r * 14, y + 2, 30), seg(lt, .3 + r * .08, .7 + r * .08), { w: 1.8, a: .75 }));
+  for (let j = 0; j < 16; j++) {
+    const row = j % 2, col = Math.floor(j / 2), x = 850 + col * 72 + row * 20, y = 800 + row * 22;
+    const g = eo(seg(lt, .8 + 1.6 * j / 16, 1.1 + 1.6 * j / 16));
+    if (g <= 0) { SID += 5; continue; }
+    const leafL = bez([x, y - 22 * g], [x - 6, y - 36 * g], [x - 18, y - 36 * g], [x - 20 * g, y - 30 * g], 8);
+    const leafR = bez([x, y - 28 * g], [x + 6, y - 42 * g], [x + 18, y - 42 * g], [x + 20 * g, y - 38 * g], 8);
+    fillPts(leafL.concat([[x, y - 22 * g]]), LIME); fillPts(leafR.concat([[x, y - 28 * g]]), LIME);
+    sk(ln(x, y, x, y - 36 * g), 1, { w: 2, one: true }); sk(leafL, 1, { w: 1.8, one: true }); sk(leafR, 1, { w: 1.8, one: true });
+  }
+  // the farmer at the hoe
+  const chop = Math.sin(lt * 5), top = [520 + chop * 10, 470 - chop * 6], blade = [760 + chop * 16, GY - 4];
+  person(500, GY, 1.75, {
+    dir: 1, lean: .52 + chop * .06, tilt: .15, cloth: 'shirt', sleeves: 'rolled', legs: 'pants', feet: 'boot', hair: 'short', hat: HATS.straw, belt: true,
+    lA: -.28, lB: .12, rA: .32, rB: -.1, hB: lp(top, blade, .22), hF: lp(top, blade, .5), bendB: 1, bendF: 1, grip: true,
+    behind: (J, p) => { const q = seg(p, .5, .9); sk(ln(...top, ...blade, 30), q, { w: 4 }); sk(ln(top[0] + 2, top[1] + 2, blade[0] + 2, blade[1], 30), q, { w: 1.4, a: .5, one: true });
+      const bl = poly([[blade[0] - 8, blade[1] - 22], [blade[0] + 36, blade[1] - 12], [blade[0] + 30, blade[1] + 4], [blade[0] - 12, blade[1] - 4], [blade[0] - 8, blade[1] - 22]], 5);
+      fillPts(bl, PAPER); hatch(bl, q, { gap: 3.5, a: .55 }); sk(bl, q, { w: 2 }); },
+  }, seg(lt, .3, 1.3));
+}
+
+function sWorker(lt) {
+  caption('1850s', [['The ', false], ['clock', true], [' chose the worker’s.', false]], lt);
+  ground(lt);
+  sk(poly([[100, GY], [100, 560], [100, 500], [190, 560], [190, 500], [280, 560], [280, 500], [370, 560], [490, 560], [490, GY]]), seg(lt, 0, .5));
+  hatch(poly([[100, GY], [100, 560], [490, 560], [490, GY], [100, GY]]), seg(lt, .3, .8), { gap: 14, a: .16 });
+  sk(poly([[380, 560], [380, 330], [430, 330], [430, 560]]), seg(lt, .2, .55));
+  [140, 250, 360].forEach((x, i) => { const q = seg(lt, .4 + i * .08, .6 + i * .08); const r = rr(x, 620, 70, 60, 4); fillPts(r, PAPER); hatch(r, q, { gap: 4, a: .5, cross: true }); sk(r, q, { w: 2 }); });
+  for (let i = 0; i < 6; i++) { const ph = (lt * .5 + i / 6) % 1; if (lt > .4) sk(circ(405 + ph * 260, 300 - ph * 120, 16 + ph * 34), 1, { w: 1.8, a: (1 - ph) * .8 * seg(lt, .4, .7) }); else SID++; }
+  const cx = 1330, cy = 460, r = 160;
+  sk(ln(1318, 0, 1318, cy - r + 2), seg(lt, 0, .3), { w: 2.2 }); sk(ln(1342, 0, 1342, cy - r + 2), seg(lt, 0, .3), { w: 2.2 });
+  if (lt > .1) fillPts(circ(cx, cy, r, r, 0, Math.PI * 2), PAPER, 1);
+  const mA = -Math.PI / 2 + lt * Math.PI * 2 * 1.3, hA = -Math.PI / 2 + 1.1 + lt * Math.PI * .24;
+  if (lt > .55) { const sw = Math.min(Math.PI * 2 - .01, mA + Math.PI / 2); ctx.fillStyle = LIME; ctx.globalAlpha = .9;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r - 20, -Math.PI / 2, -Math.PI / 2 + sw); ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1; }
+  sk(circ(cx, cy, r), seg(lt, .05, .5), { w: 3 }); sk(circ(cx, cy, r - 14), seg(lt, .15, .55), { w: 1.5, a: .7 });
+  hatch(circ(cx + 6, cy + 6, r, r, -.3, 1.9).concat(circ(cx, cy, r - 14, r - 14, 1.6, -1.9)), seg(lt, .3, .8), { gap: 5, a: .35 });
+  for (let i = 0; i < 60; i++) { const a = i * Math.PI / 30, r0 = i % 5 ? r - 26 : r - 38;
+    sk(ln(cx + Math.cos(a) * r0, cy + Math.sin(a) * r0, cx + Math.cos(a) * (r - 18), cy + Math.sin(a) * (r - 18)), seg(lt, .3 + i * .004, .4 + i * .004), { w: i % 5 ? 1 : 3, one: true }); }
+  const nq = seg(lt, .5, .75);
+  [['XII', 0, -1], ['III', 1, 0], ['VI', 0, 1], ['IX', -1, 0]].forEach(([n, a, b]) => write(n, cx + a * (r - 62), cy + b * (r - 62) + 10, 26, nq, { center: true, wt: 700, ls: '0px' }));
+  sk(ln(cx, cy, cx + Math.cos(hA) * 78, cy + Math.sin(hA) * 78), seg(lt, .5, .65), { w: 6 });
+  sk(ln(cx, cy, cx + Math.cos(mA) * 118, cy + Math.sin(mA) * 118), seg(lt, .55, .7), { w: 3.4 });
+  if (lt > .6) dot(cx, cy, 8);
+  const ph = lt * 8;
+  for (let i = 0; i < 3; i++) {
+    const sn = Math.sin(ph), cs = Math.cos(ph);
+    person(600 + i * 150 + lt * 32, GY, 1.3, { dir: 1, lean: .06, tilt: .05, cloth: 'waistcoat', sleeves: 'long', legs: 'pants', feet: 'boot', hair: 'short', hat: HATS.cap, darkTop: true, darkPants: true,
+      lA: .45 * sn, rA: -.45 * sn, lB: -.08 - .6 * Math.max(0, cs), rB: -.08 - .6 * Math.max(0, -cs),
+      aA: -.35 * sn, bA: .35 * sn, aB: .3, bB: .3 }, seg(lt, .3 + i * .12, 1.2 + i * .12));
+  }
+}
+
+const BUB = [[1090, 330], [1250, 740], [1300, 470], [340, 470], [1100, 580], [560, 520], [1420, 620], [230, 640], [470, 740], [470, 380], [1440, 330], [230, 360], [1000, 720]];
+function sNow(lt) {
+  caption('Today', [['Today, ', false], ['everything', true], [' pulls at you.', false]], lt);
+  ground(lt);
+  const quiet = seg(lt, 2.5, 2.9);
+  const J = person(800, GY, 1.8, { dir: 1, lean: .06, tilt: .5, cloth: 'hoodie', sleeves: 'long', legs: 'pants', feet: 'sneaker', hair: 'bun', darkPants: true,
+    hF: [800 + 70, 470], hB: [800 + 60, 478], bendF: 1, bendB: 1, grip: true,
+    front: (J, p) => { const q = seg(p, .7, 1); if (q <= 0) return; const [x, y] = J.armF[2];
+      const ph = poly([[x - 4, y - 38], [x + 22, y - 44], [x + 30, y + 4], [x + 4, y + 10], [x - 4, y - 38]], 5); fillPts(ph, INK, .92 * q); sk(ph, q, { w: 2 });
+      if (quiet < 1) for (let i = 0; i < 3; i++) sk(ln(x + 6, y - 30 + i * 12, x + 20, y - 33 + i * 12, 10), q, { w: 1.4, c: LIME, one: true, a: .8 * (1 - quiet) }); else SID += 3; },
+  }, seg(lt, 0, .6));
+  const px = J.armF[2][0] + 12, py = J.armF[2][1] - 16;
+  BUB.forEach(([bx, by], i) => {
+    const tb = .45 + 1.7 * Math.pow(i / BUB.length, .7), q = seg(lt, tb, tb + .18) * (1 - quiet);
+    sk(ln(px, py, bx, by, 40), seg(lt, tb - .04, tb + .08) * (quiet < 1 ? 1 : 0), { w: 1.2, a: .3 * (1 - quiet), one: true });
+    if (q <= 0) { SID += 206; return; }
+    ctx.save(); ctx.translate(bx, by); const sc = back(q); ctx.scale(sc, sc); ctx.rotate(hash(i, 3) * .08);
+    const b = rr(-80, -30, 160, 60, 14);
+    fillPts(b, PAPER, 1); sk(b, 1, { w: 2.2 }); hatch(rr(-80, 18, 160, 12, 5), 1, { gap: 4, a: .3 });
+    dot(-52, 0, 10, RED);
+    sk(ln(-30, -9, 58, -9), 1, { w: 2.2, one: true }); sk(ln(-30, 11, 26, 11), 1, { w: 2.2, one: true, a: .6 });
+    ctx.restore();
+  });
+  const sc = [];
+  for (let i = 0; i <= 90; i++) { const a = i * .55, r = 70 + 22 * Math.sin(i * .9) + 12 * Math.cos(i * .37); sc.push([J.hd[0] + Math.cos(a) * r, J.hd[1] - 6 + Math.sin(a) * r * .85]); }
+  sk(sc, seg(lt, 1.4, 2.3) * (1 - quiet), { w: 1.6, a: .7, one: true });
+}
+
+const ROLES = [
+  { w: 'READER',    c: LIME,   a: '20 pages a day', b: '= about 30 books a year.' },
+  { w: 'RUNNER',    c: RED,    a: '3 km a day',     b: '= Paris to Berlin by December.' },
+  { w: 'GUITARIST', c: BUTTER, a: '15 minutes a day', b: '= 91 hours of practice a year.' },
+  { w: 'PAINTER',   c: ORANGE, a: 'One sketch a day', b: '= 365 paintings by December.' },
+];
+const ROLE_T = [.3, 2.2, 4.1, 6.0];
+function roleFigure(r, lt, p) {
+  const x = 360, s = 1.8, R = ROLES[r];
+  if (r === 0) person(x, GY, s, { dir: 1, tilt: .42, cloth: 'tee', sleeves: 'short', legs: 'pants', feet: 'sneaker', hair: 'bun', wash: R.c, darkPants: true,
+    hF: [x + 66, 486], hB: [x + 58, 494], bendF: 1, bendB: 1,
+    front: (J, pp) => { const q = seg(pp, .6, 1); if (q <= 0) { SID += 30; return; } const cx = x + 72, cy = 470;
+      const L = poly([[cx, cy + 8], [cx - 58, cy - 12], [cx - 50, cy - 56], [cx, cy - 36], [cx, cy + 8]], 6), Rr = poly([[cx, cy + 8], [cx + 58, cy - 14], [cx + 50, cy - 58], [cx, cy - 36], [cx, cy + 8]], 6);
+      fillPts(L, PAPER); fillPts(Rr, PAPER); sk(L, q, { w: 2 }); sk(Rr, q, { w: 2 });
+      sk(poly([[cx - 58, cy - 8], [cx, cy + 12], [cx + 58, cy - 10]], 6), q, { w: 2.4, one: true });
+      for (let l = 0; l < 4; l++) { sk(ln(cx - 46, cy - 44 + l * 9, cx - 8, cy - 28 + l * 9, 10), q, { w: 1, one: true, a: .55 }); sk(ln(cx + 8, cy - 28 + l * 9, cx + 46, cy - 46 + l * 9, 10), q, { w: 1, one: true, a: .55 }); } } }, p);
+  if (r === 1) { const ph = lt * 10, c = Math.cos(ph), sn = Math.sin(ph);
+    for (let i = 0; i < 4; i++) sk(ln(x - 190 - i * 24, 480 + i * 60, x - 120 - i * 24, 480 + i * 60, 20), p, { w: 2, one: true, a: .45 });
+    for (let i = 0; i < 5; i++) { const gx = ((i * 180 - lt * 900) % 900 + 900) % 900 - 100; sk(ln(gx, GY + 14, gx + 50, GY + 14, 20), p, { w: 1.6, one: true, a: .4 }); }
+    person(x, GY - 12 * Math.abs(sn), s, { dir: 1, lean: .26, tilt: -.1, cloth: 'tee', sleeves: 'short', legs: 'shorts', feet: 'sneaker', hair: 'short', hat: HATS.band, wash: R.c, darkPants: true, shoeWash: RED,
+      lA: .8 * sn, lB: -.3 - 1.1 * (.5 + .5 * c), rA: -.8 * sn, rB: -.3 - 1.1 * (.5 - .5 * c),
+      aA: -.75 * sn, aB: 1.5, bA: .75 * sn, bB: 1.5, grip: true }, p); }
+  if (r === 2) { const strum = Math.sin(lt * 16) * 7, gb = [x + 16, 612];
+    person(x, GY, s, { dir: 1, lean: -.04, tilt: .22, cloth: 'shirt', sleeves: 'long', legs: 'pants', feet: 'boot', hair: 'long', wash: R.c, darkPants: true,
+      hB: [x + 172, 526], hF: [gb[0] + 10, gb[1] - 6 + strum], bendB: 1, bendF: 1, grip: false,
+      mid: (J, pp) => { const q = seg(pp, .45, .9); if (q <= 0) { SID += 800; return; }
+        const neckEnd = [x + 250, 490], nb = [gb[0] + 60, gb[1] - 40];
+        const nk = limb([nb, neckEnd], [[0, 7], [1, 6]], 1, q, { gap: 4 });
+        for (let f = 1; f < 9; f++) { const pt = lp(nb, neckEnd, f / 9), [ux, uy] = unit(nb, neckEnd); sk(poly([[pt[0] - uy * 7, pt[1] + ux * 7], [pt[0] + uy * 7, pt[1] - ux * 7]], 4), q, { w: 1, one: true, a: .8 }); }
+        const hs = poly([neckEnd, [neckEnd[0] + 34, neckEnd[1] - 22], [neckEnd[0] + 40, neckEnd[1] - 10], [neckEnd[0] + 6, neckEnd[1] + 10], neckEnd], 5); fillPts(hs, PAPER); hatch(hs, q, { gap: 3, a: .6 }); sk(hs, q, { w: 1.8 });
+        const body = bez([gb[0] - 60, gb[1] + 10], [gb[0] - 64, gb[1] - 60], [gb[0] + 10, gb[1] - 40], [nb[0], nb[1] - 18], 14)
+          .concat(bez([nb[0], nb[1] - 18], [nb[0] + 16, nb[1] + 10], [nb[0] + 30, gb[1] + 40], [gb[0] - 6, gb[1] + 52], 14).slice(1))
+          .concat(bez([gb[0] - 6, gb[1] + 52], [gb[0] - 50, gb[1] + 60], [gb[0] - 58, gb[1] + 40], [gb[0] - 60, gb[1] + 10], 10).slice(1));
+        fillPts(body, PAPER); fillPts(body, ORANGE, .55); hatch(body, q, { gap: 5, a: .35 }); sk(body, q, { w: 2.4 });
+        const hole = circ(gb[0] + 8, gb[1] - 10, 15); fillPts(hole, INK, q); sk(circ(gb[0] + 8, gb[1] - 10, 20), q, { w: 1.2, one: true });
+        sk(poly([[gb[0] - 30, gb[1] + 20], [gb[0] - 20, gb[1] + 30]], 4), q, { w: 4, one: true });
+        for (let st = 0; st < 3; st++) sk(ln(gb[0] - 25 + st * 2, gb[1] + 24 - st * 3, neckEnd[0], neckEnd[1] - 3 + st * 3, 40), q, { w: .8, one: true, a: .7 }); } }, p);
+    [[x + 190, 380], [x + 240, 330]].forEach(([nx, ny], i) => { const b = Math.sin(T * 3 + i) * 8, q = seg(p, .8, 1);
+      if (q <= 0) { SID += 3; return; } dot(nx, ny + b, 9, INK, q); sk(ln(nx + 8, ny + b, nx + 8, ny + b - 44), q, { w: 2.6, one: true }); sk(ln(nx + 8, ny + b - 44, nx + 24, ny + b - 34), q, { w: 2.6, one: true }); }); }
+  if (r === 3) { const bx = 540, by = 400, br = [bx + 40 + Math.cos(lt * 5) * 36, by + 70 + Math.sin(lt * 7) * 34];
+    sk(ln(bx + 80, 300, bx + 10, GY, 30), p, { w: 3.2 }); sk(ln(bx + 80, 300, bx + 160, GY, 30), p, { w: 3.2 }); sk(ln(bx + 80, 300, bx + 96, GY, 30), p, { w: 2, a: .6 });
+    sk(ln(bx - 14, by + 150, bx + 176, by + 150), p, { w: 3.4 });
+    const cvs = rr(bx - 4, by - 30, 170, 176, 3); fillPts(cvs, PAPER); sk(cvs, p, { w: 2.4 });
+    [[ORANGE, 40, 30, 30], [LIME, 110, 60, 24], [BUTTER, 60, 100, 22], [RED, 128, 16, 14]].forEach(([c, dx, dy, r0], i) => { const q = seg(lt - ROLE_T[3], .3 + i * .25, .6 + i * .25); fillPts(circ(bx + dx, by + dy, r0 * q, r0 * q * .8, 0, Math.PI * 2), c, .9); });
+    person(x - 30, GY, s, { dir: 1, lean: .04, tilt: .05, cloth: 'apron', sleeves: 'rolled', legs: 'pants', feet: 'shoe', hair: 'short', hat: HATS.beret, apron: R.c, darkPants: true,
+      hF: [br[0] - 26, br[1] + 10], hB: [x + 30, 600], bendF: 1, bendB: 1, grip: true,
+      front: (J, pp) => { const q = seg(pp, .7, 1); if (q <= 0) { SID += 30; return; } const [hx, hy] = J.armF[2];
+        sk(ln(hx - 4, hy + 4, br[0], br[1], 10), q, { w: 3.4, one: true }); dot(br[0], br[1], 5, ORANGE, q);
+        const [px, py] = J.armB[2], pal = circ(px + 26, py - 2, 46, 24, 0, Math.PI * 2); fillPts(pal, PAPER); hatch(pal, q, { gap: 5, a: .3 }); sk(pal, q, { w: 2 });
+        [[LIME, -20], [RED, -2], [BUTTER, 16], [ORANGE, 32]].forEach(([c, d]) => dot(px + 26 + d, py - 8, 6, c, q)); } }, p); }
+}
+function sRoles(lt) {
+  caption('Your turn', [['Now ', false], ['you', true], [' choose.', false]], lt);
+  ground(lt, 0, 700);
+  let r = 0; for (let j = 0; j < 4; j++) if (lt >= ROLE_T[j]) r = j;
+  const rl = lt - ROLE_T[r], R = ROLES[r], out = 1 - seg(lt, (ROLE_T[r + 1] ?? 99) - .15, ROLE_T[r + 1] ?? 99);
+  roleFigure(r, lt, seg(rl, 0, .6));
+  ctx.globalAlpha = 1;
+  write(R.w, 780, 390, 104, eo(seg(rl, 0, .3)), { fill: R.c, inked: 3, ls: '1px', a: out });
+  write(R.a, 784, 462, 44, eo(seg(rl, .2, .5)), { a: out });
+  write(R.b, 784, 512, 32, eo(seg(rl, .35, .7)), { wt: 600, a: .75 * out, ls: '-.3px' });
+  label('ONE SQUARE A DAY · 365 SQUARES', 784, 572, 14, seg(rl, .3, .6) * out, { a: .6 });
+  const N = Math.floor(365 * eio(seg(rl, .35, 1.55)));
+  for (let i = 0; i < 365; i++) { const gx = 784 + Math.floor(i / 7) * 13.6, gy = 590 + (i % 7) * 13.6;
+    if (i < N) sq(gx, gy, 10.5, R.c, out); else sq(gx, gy, 10.5, INK, .1 * out); }
+  sk(rr(776, 582, 734, 104, 10), seg(lt, .2, .8), { w: 1.6, a: .6 });
+}
+
+/* The Ritual card, drawn like the app draws it. */
+const TODAY = 208, LIT = (() => { const a = []; for (let i = 0; i < 365; i++) a.push(i < TODAY && (i >= TODAY - 12 || hash(i, 5) > -.62)); return a; })();
+const LIT_N = LIT.filter(Boolean).length;
+function card(x, y, w, h, sweep, flip) {
+  const face = flip < .5 ? 0 : 1, sx = Math.abs(Math.cos(Math.PI * flip)), kk = w / 1000;
+  ctx.save(); ctx.translate(x + w / 2, y + h / 2); ctx.scale(Math.max(.001, sx), 1); ctx.translate(-w / 2, -h / 2);
+  const bg = face ? INK : LIME, fg = face ? PAPER : INK;
+  ctx.fillStyle = bg; ctx.beginPath(); ctx.roundRect(0, 0, w, h, 56 * kk); ctx.fill();
+  const pad = 56 * kk; ctx.textAlign = 'left';
+  setLS(`${.16 * 22 * kk}px`); ctx.fillStyle = fg; ctx.globalAlpha = .7; ctx.font = font(22 * kk, 700); ctx.fillText('EVENING', pad, pad + 20 * kk);
+  ctx.globalAlpha = 1; setLS(`${-.02 * 54 * kk}px`); ctx.font = font(54 * kk, 800); ctx.fillText('Read before sleep', pad, pad + 84 * kk);
+  setLS(`${.16 * 22 * kk}px`); ctx.globalAlpha = .75; ctx.font = font(22 * kk, 700); ctx.fillText(`${face ? 13 : 12} DAY STREAK`, pad, pad + 124 * kk); ctx.globalAlpha = 1;
+  const tile = 124 * kk, tx = w - pad - tile, ty = pad - 6 * kk;
+  ctx.fillStyle = face ? LIME : INK; ctx.beginPath(); ctx.roundRect(tx, ty, tile, tile, 30 * kk); ctx.fill();
+  const cat = IMG[face ? 'pleased' : 'resting'];
+  if (cat) { ctx.save(); ctx.beginPath(); ctx.roundRect(tx, ty, tile, tile, 30 * kk); ctx.clip();
+    const ch = tile * .92, cw = ch * 942 / 979.33; ctx.drawImage(cat, tx + (tile - cw) / 2, ty + tile - ch, cw, ch); ctx.restore(); }
+  const gx = pad, gy = pad + 170 * kk, pitch = (w - pad * 2) / 53, cs = pitch * .74;
+  for (let i = 0; i < 365; i++) {
+    const cx = gx + Math.floor(i / 7) * pitch, cy = gy + (i % 7) * pitch;
+    const lit = (LIT[i] && i <= sweep * TODAY) || (face && i === TODAY);
+    ctx.fillStyle = lit ? (face ? LIME : INK) : fg; ctx.globalAlpha = lit ? 1 : .13;
+    ctx.beginPath(); ctx.roundRect(cx, cy, cs, cs, cs * .28); ctx.fill(); ctx.globalAlpha = 1;
+    if (i === TODAY && !face) { ctx.strokeStyle = INK; ctx.lineWidth = 2.5 * kk; ctx.beginPath(); ctx.roundRect(cx - 2 * kk, cy - 2 * kk, cs + 4 * kk, cs + 4 * kk, cs * .32); ctx.stroke(); }
+  }
+  setLS(`${-.01 * 34 * kk}px`); ctx.font = font(34 * kk, 800); ctx.fillStyle = fg;
+  const litTxt = `${face ? LIT_N + 1 : LIT_N} lit`; ctx.fillText(litTxt, pad, h - pad);
+  const lw = ctx.measureText(litTxt).width; ctx.globalAlpha = .55; ctx.font = font(34 * kk, 500);
+  ctx.fillText(`  •  ${365 - TODAY - 1} to go`, pad + lw, h - pad); ctx.globalAlpha = 1;
+  ctx.restore();
+  return { tx: x + gx + Math.floor(TODAY / 7) * pitch + cs / 2, ty: y + gy + (TODAY % 7) * pitch + cs / 2 };
+}
+/* A drawn hand pointing: the index finger leads, the others curl under. */
+function pointer(tx, ty, s, p) {
+  const u = unit([tx + 120, ty + 260], [tx, ty]), n = [-u[1], u[0]], P = (a, b) => [tx - u[0] * a * s + n[0] * b * s, ty - u[1] * a * s + n[1] * b * s];
+  limb([P(118, 0), P(180, 0)], [[0, 30], [1, 32]], s, p, { wash: LIME, cuff: true });
+  const fist = poly([P(40, -22), P(70, -30), P(116, -26), P(120, 26), P(90, 30), P(52, 24), P(40, 10)], 6);
+  fillPts(fist, PAPER); hatch(fist.concat([P(40, 0)]), p, { gap: 5, a: .3 }); sk(fist, p, { w: 2.2 });
+  for (let i = 0; i < 3; i++) sk(poly([P(52 + i * 3, 8 + i * 7), P(76, 12 + i * 6), P(92, 10 + i * 7)], 5), p, { w: 1.4, one: true, a: .8 });
+  sk(poly([P(58, -24), P(78, -38), P(100, -30)], 5), p, { w: 1.8, one: true });
+  limb([P(44, -8), P(0, -2)], [[0, 11], [.7, 9.5], [1, 8.5]], s, p, {});
+  const nail = poly([P(4, -8), P(14, -9), P(14, 3), P(4, 3), P(4, -8)], 3); sk(nail, p, { w: 1.3, one: true });
+  sk(poly([P(26, -10), P(28, 5)], 3), p, { w: 1.1, one: true, a: .7 });
+}
+function sCard(lt) {
+  write([['One tap a day. ', false], ['Nothing resets.', true]], 800, 170, 64, eo(seg(lt, .15, .8)), { center: true, hl: eo(seg(lt, .7, 1.1)) });
+  const cx = 420, cy = 230, cw = 760, ch = 426, pop = back(seg(lt, .05, .45));
+  if (pop <= 0) { SID += 1200; return; }
+  ctx.save(); ctx.translate(800, cy + ch / 2); ctx.scale(pop, pop); ctx.translate(-800, -cy - ch / 2);
+  const t = card(cx, cy, cw, ch, seg(lt, .3, 1.05), eio(seg(lt, 1.5, 1.9)));
+  ctx.restore();
+  const tap = seg(lt, 1.05, 1.45), lift = seg(lt, 1.55, 2.0);
+  if (tap > 0 && lift < 1) { const off = 120 * (1 - eo(tap)) + 180 * eo(lift); pointer(t.tx + off * .4, t.ty + off, 1.25, 1); } else SID += 1000;
+  const rip = seg(lt, 1.4, 1.95);
+  if (rip > 0 && rip < 1) sk(circ(t.tx, t.ty, 16 + 56 * eo(rip)), 1, { w: 3, a: 1 - rip }); else SID++;
+  write('Miss a day and you lose one square, not four months.', 800, 718, 28, seg(lt, 1.9, 2.4), { center: true, wt: 600, ls: '-.2px', a: .75 });
+}
+
+function sEnd(lt) {
+  const ix = 715, iy = 96, is = 170, r = 40;
+  const q = back(seg(lt, .9, 1.25));
+  if (q > 0) { ctx.save(); ctx.translate(ix + is / 2, iy + is / 2); ctx.scale(q, q); ctx.translate(-ix - is / 2, -iy - is / 2);
+    ctx.beginPath(); ctx.roundRect(ix, iy, is, is, r); ctx.save(); ctx.clip();
+    if (IMG.icon) ctx.drawImage(IMG.icon, ix, iy, is, is); else { ctx.fillStyle = LIME; ctx.fill(); }
+    ctx.restore(); ctx.restore(); }
+  write('Ritual', 800, 448, 170, eio(seg(lt, 1.2, 1.6)), { center: true, ls: '-5px' });
+  write([["Pick who you're ", false], ['becoming.', true]], 800, 548, 56, eo(seg(lt, 1.5, 2.0)), { center: true, ls: '-1.4px', hl: eo(seg(lt, 1.9, 2.2)) });
+  write('A year of habits, on your home screen.', 800, 608, 26, seg(lt, 2.0, 2.4), { center: true, wt: 600, ls: '-.2px', a: .65 });
+  const pq = back(seg(lt, 2.2, 2.5));
+  if (pq > 0) { const txt = 'Your first ritual is free', fs = 26, pw = measure(txt, font(fs, 700), '-.2px') + fs * 2.2, ph = fs * 2.3;
+    ctx.save(); ctx.translate(800, 688); ctx.scale(pq, pq); ctx.fillStyle = LIME; ctx.beginPath(); ctx.roundRect(-pw / 2, -ph / 2, pw, ph, ph / 2); ctx.fill();
+    ctx.fillStyle = INK; ctx.font = font(fs, 700); setLS('-.2px'); ctx.textAlign = 'center'; ctx.fillText(txt, 0, fs * .36); ctx.restore(); }
+  const m = is + 24, mx = ix - 12, my = iy - 12;
+  LOGO_TH = bez([0, TY], [250, TY], [300, my + m / 2], [mx, my + m / 2], 34).concat(rr(mx, my, m, m, r + 10).slice(0));
+}
+
+const SC = [
+  { t0: 0,    fn: sHook,   n: 'Hook',      d: '“For 50,000 years, your habits were chosen for you.”' },
+  { t0: 2.8,  fn: sHunter, n: 'Hunter',    d: 'Cave, fire, a bearded hunter. “Hunger chose the hunter’s.”' },
+  { t0: 6.0,  fn: sFarmer, n: 'Farmer',    d: 'Sun wheels over. “The seasons chose the farmer’s.”' },
+  { t0: 9.0,  fn: sWorker, n: 'Worker',    d: 'Three men in lockstep. “The clock chose the worker’s.”' },
+  { t0: 12.0, fn: sNow,    n: 'Distraction', d: '“Today, everything pulls at you.”' },
+  { t0: 16.0, fn: sRoles,  n: 'You choose', d: 'Reader, runner, guitarist, painter, each with a year’s maths.' },
+  { t0: 24.0, fn: sCard,   n: 'One tap',   d: '“One tap a day. Nothing resets.” The card flips to ink.' },
+  { t0: 27.0, fn: sEnd,    n: 'Ritual',    d: 'White end card, lime accents, Mochi’s app icon.' },
+];
+const END = 30;
+const dur = i => (SC[i + 1] ? SC[i + 1].t0 : END) - SC[i].t0;
+
+/* Each scene's lime thread draws one small square: one kept day. */
+const LX = 1490, LS = 40;
+const TH = ln(0, TY, LX, TY, 30).concat(poly([[LX, TY], [LX, TY - LS], [LX + LS, TY - LS], [LX + LS, TY]]).slice(1), ln(LX + LS, TY, W, TY, 30).slice(1));
+const TH_DONE = (LX + LS * 3) / (W + LS * 2);
+function thread(i, t) {
+  let p, pts;
+  if (i < SC.length - 1) { p = seg(t, i ? SC[i].t0 + .3 : .15, SC[i + 1].t0 + .3); pts = TH;
+    const tf = (i ? SC[i].t0 + .3 : .15) + (SC[i + 1].t0 + .3 - (i ? SC[i].t0 + .3 : .15)) * TH_DONE, fq = back(seg(t, tf, tf + .25));
+    if (fq > 0) { const s = (LS - 10) * fq; sq(LX + LS / 2 - s / 2, TY - LS / 2 - s / 2, s, LIME, 1, .25); }
+  } else { p = eio(seg(t, SC[i].t0 + .1, SC[i].t0 + 1.1)); pts = LOGO_TH; }
+  if (!pts) return;
+  const id = ++SID; sk(pts, p, { w: 7, c: INK, one: true, id, amp: 1 }); const r = sk(pts, p, { w: 4, c: LIME, one: true, id, amp: 1 });
+  if (r && p < 1) tip = { x: r.x + i * W, y: r.y };
+}
+
+function cam(t) {
+  let i = 0; for (let j = 0; j < SC.length; j++) if (t >= SC[j].t0) i = j;
+  let x = i * W, z = 1 + .03 * seg(t - SC[i].t0, 0, dur(i));
+  if (i > 0 && t < SC[i].t0 + PAN) { const e = eio((t - SC[i].t0) / PAN); x = (i - 1) * W + e * W; z = lerp(1.03, 1, e); }
+  return { i, x, z };
+}
+
+/* ================= paper ================= */
+const gc = document.createElement('canvas'); gc.width = gc.height = 320;
+const gx = gc.getContext('2d'); let sd = 7; const rn = () => (sd = sd * 16807 % 2147483647) / 2147483647;
+for (let i = 0; i < 7000; i++) { const v = rn() < .5 ? 40 : 255; gx.fillStyle = `rgba(${v},${v},${v - 10},${.035 + rn() * .05})`; gx.fillRect(rn() * 320, rn() * 320, 1 + rn() * 1.6, 1 + rn() * 1.6); }
+for (let i = 0; i < 70; i++) { gx.strokeStyle = `rgba(80,78,64,${.03 + rn() * .05})`; gx.lineWidth = .7; gx.beginPath(); const x = rn() * 320, y = rn() * 320, a = rn() * 6.28, l = 6 + rn() * 18; gx.moveTo(x, y); gx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); gx.stroke(); }
+const grain = ctx.createPattern(gc, 'repeat');
+
+function render(t) {
+  T = t; BOIL = Math.floor(performance.now() / 110); tip = null;
+  const c = cam(t), lt = t - SC[c.i].t0;
+  let amp = 0;
+  if (c.i === 4) amp = 7 * seg(lt, 1.0, 2.2) * (1 - seg(lt, 2.4, 2.7));
+  const shx = hash(Math.floor(t * 30), 1) * amp, shy = hash(Math.floor(t * 30), 2) * amp;
+  ctx.setTransform(k, 0, 0, k, 0, 0);
+  ctx.fillStyle = PAPER; ctx.fillRect(0, 0, W, H);
+  ctx.save();
+  const dz = window.__lens; if (dz) { ctx.translate(W / 2, H / 2); ctx.scale(dz[2], dz[2]); ctx.translate(-dz[0], -dz[1]); }
+  ctx.translate(W / 2, H / 2); ctx.scale(c.z, c.z); ctx.translate(-W / 2 - c.x + shx, -H / 2 + shy);
+  for (let i = Math.max(0, c.i - 1); i <= Math.min(SC.length - 1, c.i + 1); i++) {
+    if (Math.abs(i * W - c.x) >= W) continue;
+    SID = i * 100000; ctx.save(); ctx.translate(i * W, 0);
+    SC[i].fn(Math.max(-1, t - SC[i].t0));
+    thread(i, t);
+    ctx.restore();
+  }
+  ctx.fillStyle = grain; ctx.fillRect(c.x - 300, -300, W + 600, H + 600);
+  if (tip) pencil(tip.x, tip.y);
+  ctx.restore();
+  const v = ctx.createRadialGradient(W / 2, H / 2, 420, W / 2, H / 2, 1000);
+  v.addColorStop(0, 'rgba(18,18,15,0)'); v.addColorStop(1, 'rgba(18,18,15,.12)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+}
+
+/* ================= player ================= */
+const $ = id => document.getElementById(id);
+const scrub = $('scrub'), tc = $('tc'), loopBox = $('loop'), shotsEl = $('shots');
+let t = 0, playing = false, last = null;
+const fmt = s => `${Math.floor(s / 60)}:${(s % 60).toFixed(1).padStart(4, '0')}`;
+SC.forEach((s, i) => {
+  const li = document.createElement('li');
+  li.innerHTML = `<button type="button"><span class="t">${fmt(s.t0).replace(/\.\d$/, '')}</span><span class="n">${s.n}</span><span class="d">${s.d}</span></button>`;
+  li.firstChild.addEventListener('click', () => { t = s.t0 + (i ? PAN : 0); setPlaying(true); });
+  shotsEl.appendChild(li);
+});
+function setPlaying(v) {
+  playing = v; if (v && t >= END) t = 0;
+  $('playTxt').textContent = v ? 'Pause' : (t >= END ? 'Replay' : 'Play');
+  $('playIcon').innerHTML = v ? '<path d="M4 2.5h3v11H4zm5 0h3v11H9z"/>' : '<path d="M4 2.5v11l9-5.5z"/>';
+}
+$('play').addEventListener('click', () => setPlaying(!playing));
+$('restart').addEventListener('click', () => { t = 0; setPlaying(true); });
+cv.addEventListener('click', () => setPlaying(!playing));
+scrub.addEventListener('input', () => { t = +scrub.value; });
+const wrapEl = $('stageWrap');
+function setMax(v) { wrapEl.classList.toggle('max', v); document.body.style.overflow = v ? 'hidden' : ''; setTimeout(fit, 30); }
+function enterFull() {
+  if (document.fullscreenEnabled && wrapEl.requestFullscreen) {
+    try { const r = wrapEl.requestFullscreen(); if (r && r.catch) r.catch(() => setMax(true)); } catch (e) { setMax(true); }
+  } else setMax(true);
+}
+function exitFull() { if (document.fullscreenElement) { try { document.exitFullscreen(); } catch (e) {} } setMax(false); }
+$('fs').addEventListener('click', () => (document.fullscreenElement || wrapEl.classList.contains('max')) ? exitFull() : enterFull());
+$('exitmax').addEventListener('click', e => { e.stopPropagation(); exitFull(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && wrapEl.classList.contains('max')) setMax(false); });
+document.addEventListener('fullscreenchange', () => setTimeout(fit, 30));
+document.addEventListener('keydown', e => { if (e.code === 'Space' && !/INPUT|BUTTON/.test(e.target.tagName)) { e.preventDefault(); setPlaying(!playing); } });
+
+function fit() { const w = cv.getBoundingClientRect().width || 800, d = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = Math.max(1, Math.round(w * d)); cv.height = Math.max(1, Math.round(w * d * 9 / 16)); k = cv.width / W; }
+new ResizeObserver(fit).observe(cv); fit();
+
+let curShot = -1;
+function frame(now) {
+  if (last == null) last = now;
+  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  if (playing) { t += dt; if (t >= END) { t = END; if (loopBox.checked) t = 0; else setPlaying(false); } }
+  render(t);
+  scrub.value = t; tc.textContent = `${fmt(t)} / 0:30`;
+  const si = cam(t).i;
+  if (si !== curShot) { curShot = si; [...shotsEl.children].forEach((li, i) => li.setAttribute('aria-current', i === si ? 'true' : 'false')); }
+  requestAnimationFrame(frame);
+}
+window.__seek = v => { t = v; setPlaying(false); };
+const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const fonts = document.fonts ? Promise.all([800, 700, 600, 500].map(w => document.fonts.load(font(60, w)))) : Promise.resolve();
+Promise.race([Promise.all([assets, fonts]), new Promise(r => setTimeout(r, 3000))]).catch(() => {}).then(() => {
+  const embed = document.documentElement.classList.contains('embed');
+  if (embed) {
+    /* On the home page it loops, and plays only while it is on screen. */
+    loopBox.checked = true;
+    let seen = false, userPaused = false;
+    cv.addEventListener('click', () => { userPaused = !playing; });
+    $('play').addEventListener('click', () => { userPaused = !playing; });
+    new IntersectionObserver(es => {
+      seen = es[0].isIntersecting;
+      if (!reduce && !userPaused) setPlaying(seen);
+    }, { threshold: .45 }).observe(cv);
+    const mark = () => document.documentElement.classList.toggle('paused', !playing);
+    setInterval(mark, 250);
+    if (reduce) { t = 6; setPlaying(false); }
+  } else if (reduce) { t = END; setPlaying(false); } else setPlaying(true);
+  requestAnimationFrame(frame);
+});
+})();
+</script>
+
+</body></html>

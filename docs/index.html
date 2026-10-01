@@ -26,6 +26,7 @@
       <span class="tile"><canvas id="brandCat" style="height:24px"></canvas></span>Ritual
     </a>
     <nav aria-label="Sections">
+      <a href="#watch">Film</a>
       <a href="#why">Why Ritual</a>
       <a href="#journey">Your year</a>
       <a href="#mochi">Mochi</a>
@@ -38,7 +39,8 @@
 <main>
 
 <!-- Hero: the promise, then the product itself -->
-<section class="hero">
+<section class="hero" id="hero">
+  <canvas class="field" id="field" aria-hidden="true"></canvas>
   <div class="wrap">
     <p class="deal"><span class="dot"></span>No ads<i>·</i>No tracking<i>·</i>Pay once or never<i>·</i><b>You choose</b></p>
     <h1>Build your new <em>identity</em>,<br> from your home screen.</h1>
@@ -83,15 +85,28 @@
   <div class="row rev" id="rowB"></div>
 </section>
 
+<!-- The film -->
+<section id="watch" class="film">
+  <div class="wrap">
+    <div class="head reveal">
+      <span class="tag">The film · 0:30</span>
+      <h2>Thirty seconds.<br><em>Fifty thousand years.</em></h2>
+    </div>
+    <div class="frame reveal">
+      <iframe src="film/index.html?embed" title="Ritual, the thirty second film" loading="lazy" allow="fullscreen" allowfullscreen></iframe>
+    </div>
+  </div>
+</section>
+
 <!-- The pain, first -->
 <section id="why" class="why">
   <div class="wrap">
-    <div class="head">
+    <div class="head reveal">
       <span class="tag">Why Ritual</span>
       <h2>Most habit apps are deleted<br><em>by week three.</em></h2>
       <p class="sub">Opening an app to log a habit is a second habit, and it's the one that breaks first. Ritual lives where you already look a hundred times a day.</p>
     </div>
-    <div class="reasons">
+    <div class="reasons reveal">
       <article>
         <div class="shot"><canvas id="whyA"></canvas></div>
         <h3>Never open the app.</h3>
@@ -114,14 +129,14 @@
 <!-- A year with Ritual, told in order -->
 <section id="journey" class="journey">
   <div class="wrap">
-    <div class="head">
+    <div class="head reveal">
       <span class="tag">Your year with Ritual</span>
       <h2>One square a day.<br><em>A new you by December.</em></h2>
     </div>
 
     <ol class="chapters" id="chapters">
 
-      <li class="chapter" id="sentence">
+      <li class="chapter reveal" data-tint="#13140F" id="sentence">
         <div class="copy">
           <span class="when">Day 1</span>
           <h3>Say who you want to be.</h3>
@@ -133,7 +148,7 @@
         </div>
       </li>
 
-      <li class="chapter">
+      <li class="chapter reveal" data-tint="#131A0A">
         <div class="copy">
           <span class="when">Every day</span>
           <h3>Tap it from your home screen. That's it.</h3>
@@ -144,7 +159,7 @@
         </div>
       </li>
 
-      <li class="chapter" id="year">
+      <li class="chapter reveal" data-tint="#10130E" id="year">
         <div class="copy">
           <span class="when">All year</span>
           <h3>Watch your year fill in.</h3>
@@ -163,7 +178,7 @@
         </div>
       </li>
 
-      <li class="chapter">
+      <li class="chapter reveal" data-tint="#21130A">
         <div class="copy">
           <span class="when">Day 30</span>
           <h3>It's official. You're someone new.</h3>
@@ -176,7 +191,7 @@
         </div>
       </li>
 
-      <li class="chapter">
+      <li class="chapter reveal" data-tint="#210E0B">
         <div class="copy">
           <span class="when">Then</span>
           <h3>Tell everyone. You earned it.</h3>
@@ -189,7 +204,7 @@
         </div>
       </li>
 
-      <li class="chapter" id="shelf">
+      <li class="chapter reveal" data-tint="#17160F" id="shelf">
         <div class="copy">
           <span class="when">Day 365</span>
           <h3>Look back at who you became.</h3>
@@ -221,7 +236,7 @@
     <div class="head">
       <h2>Pay once or never.<br><em>You choose.</em></h2>
     </div>
-    <div class="plans">
+    <div class="plans reveal">
       <div class="plan">
         <span class="tag">Free</span>
         <p class="amount">$0<small>forever</small></p>
@@ -248,7 +263,7 @@
 <!-- Last call -->
 <section id="get" class="last">
   <div class="wrap">
-    <div class="panel">
+    <div class="panel reveal">
       <h2>Who will you be<br><em>a year from now?</em></h2>
       <p class="sub">Start with one sentence. Mochi's waiting.</p>
       <div class="stores center">
@@ -414,6 +429,14 @@ function start() {
   /* The rail down the year fills as you read */
   rail();
 
+  /* The premium layer: the field of squares, the tilt, the reveals */
+  field();
+  tilt();
+  const rv = new IntersectionObserver(es => es.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add("in"); rv.unobserve(e.target); }
+  }), { threshold: .12, rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll(".reveal").forEach(el => rv.observe(el));
+
   /* Share */
   const story = $("#story"), art = $("#shareArt");
   story._paint = () => {
@@ -476,16 +499,82 @@ function yearScrub() {
 /* The lime line down the chapters follows the middle of the screen, and
    each chapter's marker lights as the line reaches it. */
 function rail() {
-  const list = $("#chapters"), items = [...list.querySelectorAll(".chapter")];
+  const list = $("#chapters"), journey = $("#journey"), items = [...list.querySelectorAll(".chapter")];
   const update = () => {
     const r = list.getBoundingClientRect(), mid = innerHeight * .55;
     const p = Math.max(0, Math.min(1, (mid - r.top) / r.height));
     list.style.setProperty("--p", p.toFixed(4));
-    items.forEach(li => li.classList.toggle("on", li.getBoundingClientRect().top < mid));
+    let tint = null;
+    items.forEach(li => { const on = li.getBoundingClientRect().top < mid; li.classList.toggle("on", on); if (on) tint = li.dataset.tint; });
+    journey.style.setProperty("--tint", tint || "var(--page)");
   };
   addEventListener("scroll", update, { passive: true });
   addEventListener("resize", update);
   update();
+}
+
+/* Behind the hero, a year's worth of empty squares. Now and then one fills
+   in, the pointer fills the ones it passes, and a tap sends a ring out. */
+function field() {
+  const cv = $("#field"), hero = $("#hero"), ctx = cv.getContext("2d");
+  const STEP = 20, SIZE = 14, R = 110;
+  let w = 0, h = 0, cols = 0, rows = 0, lit = null, dpr = 1, on = true;
+  let px = -1e4, py = -1e4;
+  const rings = [];
+  const size = () => {
+    dpr = Math.min(2, devicePixelRatio || 1);
+    w = hero.clientWidth; h = hero.clientHeight;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    cv.style.width = w + "px"; cv.style.height = h + "px";
+    cols = Math.ceil(w / STEP) + 1; rows = Math.ceil(h / STEP) + 1;
+    lit = new Float32Array(cols * rows);
+  };
+  size();
+  addEventListener("resize", size);
+  hero.addEventListener("pointermove", e => { const r = hero.getBoundingClientRect(); px = e.clientX - r.left; py = e.clientY - r.top; });
+  hero.addEventListener("pointerleave", () => { px = py = -1e4; });
+  hero.addEventListener("pointerdown", e => { const r = hero.getBoundingClientRect(); rings.push({ x: e.clientX - r.left, y: e.clientY - r.top, t: performance.now() }); });
+  new IntersectionObserver(es => { on = es[0].isIntersecting; if (on && !still) requestAnimationFrame(draw); }).observe(hero);
+  const ox = () => (w - (cols - 1) * STEP) / 2;
+  function draw(now) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    const x0 = ox();
+    if (!still) for (let k = 0; k < 2; k++) lit[(Math.random() * lit.length) | 0] = 1;
+    for (let i = rings.length - 1; i >= 0; i--) if (now - rings[i].t > 1400) rings.splice(i, 1);
+    for (let j = 0; j < rows; j++) for (let i = 0; i < cols; i++) {
+      const x = x0 + i * STEP, y = j * STEP, n = j * cols + i;
+      let v = lit[n] * .965;
+      const dx = x - px, dy = y - py, d = Math.sqrt(dx * dx + dy * dy);
+      if (d < R) v = Math.max(v, 1 - d / R);
+      for (const r of rings) {
+        const rad = (now - r.t) * .6, dd = Math.abs(Math.hypot(x - r.x, y - r.y) - rad);
+        if (dd < 18) v = Math.max(v, (1 - dd / 18) * (1 - (now - r.t) / 1400));
+      }
+      lit[n] = v;
+      if (v > .02) { ctx.fillStyle = `rgba(201,247,63,${(v * .6).toFixed(3)})`; }
+      else ctx.fillStyle = "rgba(242,239,228,.045)";
+      ctx.fillRect(x - SIZE / 2, y - SIZE / 2, SIZE, SIZE);
+    }
+    if (on && !still) requestAnimationFrame(draw);
+  }
+  if (still) { for (let k = 0; k < 60; k++) lit[(Math.random() * lit.length) | 0] = .8; }
+  requestAnimationFrame(draw);
+}
+
+/* The phone leans toward the pointer, and the widgets beside it drift the
+   other way, so the stage has depth without a single shadow. */
+function tilt() {
+  const stage = document.querySelector(".stage");
+  if (still || !matchMedia("(pointer: fine)").matches) return;
+  addEventListener("pointermove", e => {
+    const r = stage.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > innerHeight) return;
+    const mx = Math.max(-1, Math.min(1, (e.clientX - (r.left + r.width / 2)) / (r.width / 2)));
+    const my = Math.max(-1, Math.min(1, (e.clientY - (r.top + r.height / 2)) / (innerHeight / 2)));
+    stage.style.setProperty("--mx", mx.toFixed(3));
+    stage.style.setProperty("--my", my.toFixed(3));
+  }, { passive: true });
 }
 
 function paintAll() {

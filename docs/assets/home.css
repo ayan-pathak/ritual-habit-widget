@@ -89,7 +89,11 @@ h2 em { color: var(--soft); }
 section { padding-block: clamp(72px, 10vw, 140px); }
 
 /* ── Hero ─────────────────────────────────────────────────────────────── */
-.hero { text-align: center; padding-block: clamp(48px, 7vw, 96px) 0; overflow: hidden; }
+.hero { position: relative; text-align: center; padding-block: clamp(48px, 7vw, 96px) 0; overflow: hidden; touch-action: pan-y; }
+.hero > .wrap { position: relative; z-index: 1; }
+/* The field of squares behind the hero, fading out toward the edges. */
+.field { position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 38%, #000 20%, transparent 78%); mask-image: radial-gradient(ellipse 70% 60% at 50% 38%, #000 20%, transparent 78%); }
 .hero .sub { margin-inline: auto; }
 .deal { display: inline-flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 8px; margin: 0 0 28px; padding: 7px 14px 7px 12px;
   border: 1px solid var(--line-2); border-radius: 999px; background: var(--surface); font-size: 13px; font-weight: 600; color: var(--soft); }
@@ -100,7 +104,8 @@ section { padding-block: clamp(72px, 10vw, 140px); }
 
 /* The stage: the phone, with two more widgets floating at its sides. */
 .stage { position: relative; margin: clamp(48px, 6vw, 80px) auto 0; max-width: 1040px; height: clamp(520px, 56vw, 640px); }
-.phone { position: absolute; left: 50%; bottom: -60px; transform: translateX(-50%); width: clamp(280px, 30vw, 340px); aspect-ratio: 9 / 18.5;
+.stage { --mx: 0; --my: 0; perspective: 1400px; }
+.phone { position: absolute; left: 50%; bottom: -60px; transform: translateX(-50%) rotateY(calc(var(--mx) * 7deg)) rotateX(calc(var(--my) * -5deg)); transition: transform .5s cubic-bezier(.2, .7, .3, 1); transform-style: preserve-3d; width: clamp(280px, 30vw, 340px); aspect-ratio: 9 / 18.5;
   border-radius: 52px; background: #050504; padding: 11px; border: 1px solid var(--line-2); z-index: 2; }
 .phone .screen { position: relative; width: 100%; height: 100%; border-radius: 42px; overflow: hidden; background: #34322A; }
 .phone video { width: 100%; height: 100%; object-fit: cover; }
@@ -117,7 +122,7 @@ section { padding-block: clamp(72px, 10vw, 140px); }
 @keyframes tap { 20% { opacity: .9; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1.4); } }
 
 .float { position: absolute; width: clamp(240px, 27vw, 330px); z-index: 1; animation: bob 6s ease-in-out infinite; }
-.float canvas { width: 100%; border-radius: 24px; }
+.float canvas { width: 100%; border-radius: 24px; transform: translate(calc(var(--mx) * -18px), calc(var(--my) * -12px)); transition: transform .6s cubic-bezier(.2, .7, .3, 1); }
 .float.left { left: 0; top: 18%; --rot: -7deg; }
 .float.right { right: 0; top: 40%; --rot: 6deg; animation-delay: -3s; }
 @keyframes bob { 0%, 100% { transform: rotate(var(--rot)) translateY(0); } 50% { transform: rotate(var(--rot)) translateY(-10px); } }
@@ -272,4 +277,25 @@ canvas.mbody { flex: none; }
   .hero *, .stage, .float, .track, .bubble.in, .said .end.pop { animation: none !important; }
   .chapter::before { transition: none; }
   .float.left { transform: rotate(-7deg); } .float.right { transform: rotate(6deg); }
+}
+
+/* ── The film ─────────────────────────────────────────────────────────── */
+.film { padding-bottom: 0; }
+.film .frame { position: relative; margin-top: clamp(36px, 5vw, 56px); aspect-ratio: 16 / 9; border-radius: var(--r); overflow: hidden; background: var(--paper); border: 1px solid var(--line-2); }
+.film iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+
+/* ── The premium layer ────────────────────────────────────────────────── */
+/* Fine grain over everything, so the dark reads as a material. */
+body::after { content: ""; position: fixed; inset: 0; z-index: 100; pointer-events: none; opacity: .07; mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+/* The year section takes on the colour of the chapter you are reading. */
+.journey { --tint: var(--page); background: var(--tint); transition: background-color .9s ease; }
+/* Things settle into place as they arrive, from a visible resting state. */
+.reveal { transition: transform .9s cubic-bezier(.2, .7, .3, 1), opacity .9s ease; }
+.reveal:not(.in) { transform: translateY(28px); opacity: .35; }
+.reasons article, .plan { transition: transform .35s cubic-bezier(.2, .7, .3, 1), border-color .35s; }
+.reasons article:hover, .plan:hover { transform: translateY(-6px); border-color: var(--line-2); }
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal:not(.in) { transform: none; opacity: 1; transition: none; }
+  .phone, .float canvas { transition: none; }
 }
