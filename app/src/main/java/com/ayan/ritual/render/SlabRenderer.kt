@@ -48,7 +48,14 @@ object SlabRenderer {
          * count when a day is kept from the widget, or now and then a nudge.
          * The widget cannot move him, so this is how he speaks up there.
          */
-        val say: String? = null
+        val say: String? = null,
+        /**
+         * Height of a clear strip left above the card, in dp. When there is
+         * one, Mochi is not boxed in the header: he pops up from behind the
+         * card's top edge into the strip with his paws over it, the way he
+         * peeks over cards in the app. Only the widget asks for this.
+         */
+        val peekDp: Float = 0f
     )
 
     const val ACTION_HEIGHT_DP = 34f
@@ -64,6 +71,41 @@ object SlabRenderer {
     }
 
     fun draw(canvas: Canvas, w: Float, h: Float, model: SlabModel, cfg: Config) {
+        val d = cfg.density
+        val lift = if (cfg.cat && cfg.header) cfg.peekDp * d else 0f
+        if (lift <= 0f) {
+            drawCard(canvas, w, h, model, cfg, peeking = false)
+            return
+        }
+
+        // The card sits below the strip; he is drawn after it so his paws
+        // land on top of its edge, and his frame's own clip hides the rest.
+        canvas.save()
+        canvas.translate(0f, lift)
+        drawCard(canvas, w, h - lift, model, cfg, peeking = true)
+        canvas.restore()
+
+        val frameH = lift / (MochiBody.ledgeAt() - MochiBody.popTopAt()) * 0.96f
+        val frameW = frameH * MochiBody.RATIO
+        // His middle is the frame's middle; keep his head inside the card's padding.
+        val centreX = w - cfg.padDp * d - frameH * 0.30f
+        val left = centreX - frameW / 2f
+        val top = lift - MochiBody.ledgeAt() * frameH
+        canvas.save()
+        canvas.translate(left, top)
+        MochiBody.draw(canvas, frameH, Pose.POP, MochiBody.POP_HELD, mood = model.mood)
+        canvas.restore()
+
+        val said = cfg.say
+        if (!said.isNullOrBlank()) {
+            // Beside his head, in the strip, rather than over the name.
+            val headL = centreX - frameH * 0.28f
+            val bubbleMid = maxOf(lift / 2f, 14.5f * d)
+            drawSay(canvas, said, RectF(headL, bubbleMid - lift / 2f, centreX, bubbleMid + lift / 2f), cfg.padDp * d, d)
+        }
+    }
+
+    private fun drawCard(canvas: Canvas, w: Float, h: Float, model: SlabModel, cfg: Config, peeking: Boolean) {
         val d = cfg.density
         fun dp(v: Float) = v * d
 
@@ -126,7 +168,7 @@ object SlabRenderer {
         if (cfg.header) {
             var textRight = w - pad
 
-            if (cfg.cat) {
+            if (cfg.cat && !peeking) {
                 val catH = dp(30f)
                 val catW = Cat.widthFor(catH)
                 val boxW = catW + dp(11f)
@@ -140,7 +182,7 @@ object SlabRenderer {
                 Cat.draw(canvas, box.centerX() - catW / 2f, box.bottom - catH, catH, model.mood)
                 textRight = boxL - dp(10f)
                 catBox = box
-            } else {
+            } else if (!cfg.cat) {
                 // No cat: the streak takes the corner instead.
                 val num = paint(dp(17f), onBlock, Fonts.extraBold(), -0.02f).apply {
                     textAlign = Paint.Align.RIGHT

@@ -113,6 +113,22 @@ class RitualWidgetProvider : AppWidgetProvider() {
         /** Largest bitmap we hand to RemoteViews; comfortably inside the transaction limit. */
         private const val MAX_PIXELS = 1_400_000
 
+        /** The card needs this much height before any of it can go to Mochi's strip. */
+        private const val CARD_MIN_DP = 140
+        private const val PEEK_DP = 28
+        /** Below this he would be too small to read, so he goes back in his header box. */
+        private const val PEEK_MIN_DP = 18
+
+        /**
+         * How much clear space to leave above the card for Mochi to pop up
+         * into. Launchers give a 4x2 widget different heights; the card keeps
+         * what it needs first.
+         */
+        private fun peekFor(hDp: Int): Float {
+            val room = (hDp - CARD_MIN_DP).coerceAtMost(PEEK_DP)
+            return if (room >= PEEK_MIN_DP) room.toFloat() else 0f
+        }
+
         fun refreshAll(context: Context) {
             val manager = AppWidgetManager.getInstance(context)
             val ids = manager.getAppWidgetIds(
@@ -185,6 +201,7 @@ class RitualWidgetProvider : AppWidgetProvider() {
                     action = habit != null,
                     cornerDp = 24f,
                     padDp = 15f,
+                    peekDp = peekFor(hDp),
                     say = if (habit != null) Moments.widgetSay(context, widgetId, System.currentTimeMillis()) else null
                 )
             )

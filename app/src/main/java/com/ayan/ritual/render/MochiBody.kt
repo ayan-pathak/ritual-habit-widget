@@ -104,6 +104,16 @@ object MochiBody {
      */
     fun ledgeAt(): Float = LEDGE / CH
 
+    /**
+     * Where the top of his portrait sits once a [Pose.POP] is fully up, as a
+     * fraction of the frame's height: everything between this and [ledgeAt]
+     * is what shows above the edge.
+     */
+    fun popTopAt(): Float = (LEDGE + 50f - 670f) / CH
+
+    /** Clock time, seconds, at which a plain [Pose.POP] is fully up, paws on, head level. */
+    const val POP_HELD = 0.54f
+
     fun groundAt(pose: Pose): Float = when (pose) {
         Pose.PEEK, Pose.POP -> 1f
         Pose.PERCH -> (OY + GROUND - 300f) / CH
