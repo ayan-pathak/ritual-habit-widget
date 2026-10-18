@@ -492,6 +492,9 @@ fun ColourTiles(
 /**
  * The one text field in the app. Paper on cream, no outline, and no label
  * inside it — the caps label above does that job.
+ *
+ * A [secret] field carries a Show / Hide word at its right end, so a password
+ * typed on a phone keyboard can be checked before it is sent.
  */
 @Composable
 fun Field(
@@ -501,12 +504,14 @@ fun Field(
     keyboard: KeyboardOptions,
     secret: Boolean = false
 ) {
-    Box(
+    var shown by remember { mutableStateOf(false) }
+    Row(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
             .background(Paper)
-            .padding(horizontal = 18.dp, vertical = 16.dp)
+            .padding(start = 18.dp, end = if (secret) 6.dp else 18.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         BasicTextField(
             value = value,
@@ -515,8 +520,8 @@ fun Field(
             textStyle = Body.copy(fontSize = 16.sp, color = Ink),
             cursorBrush = SolidColor(Ink),
             keyboardOptions = keyboard,
-            visualTransformation = if (secret) PasswordVisualTransformation() else VisualTransformation.None,
-            modifier = Modifier.fillMaxWidth(),
+            visualTransformation = if (secret && !shown) PasswordVisualTransformation() else VisualTransformation.None,
+            modifier = Modifier.weight(1f).padding(vertical = 16.dp),
             decorationBox = { inner ->
                 if (value.isEmpty()) {
                     Text(placeholder, style = Body.copy(fontSize = 16.sp, color = InkFaint))
@@ -524,6 +529,15 @@ fun Field(
                 inner()
             }
         )
+        if (secret) {
+            CapsLabel(
+                if (shown) "Hide" else "Show",
+                modifier = Modifier
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable { shown = !shown }
+                    .padding(horizontal = 12.dp, vertical = 14.dp)
+            )
+        }
     }
 }
 
