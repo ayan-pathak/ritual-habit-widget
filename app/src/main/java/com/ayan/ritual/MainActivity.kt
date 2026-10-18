@@ -5,23 +5,38 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import android.widget.Toast
 import androidx.core.view.WindowCompat
 import com.ayan.ritual.billing.Unlock
 import com.ayan.ritual.cloud.Account
 import com.ayan.ritual.cloud.CloudSync
+import com.ayan.ritual.data.Goal
 import com.ayan.ritual.data.HabitStore
+import com.ayan.ritual.data.Moments
 import com.ayan.ritual.data.Onboarding
 import com.ayan.ritual.render.Fonts
 import com.ayan.ritual.ui.CreateScreen
 import com.ayan.ritual.ui.DetailScreen
 import com.ayan.ritual.ui.AccountScreen
+import com.ayan.ritual.ui.AskScreen
+import com.ayan.ritual.ui.BragSheet
+import com.ayan.ritual.ui.SLOTS
+import com.ayan.ritual.ui.sentenceStart
+import com.ayan.ritual.ui.tailOf
+import com.ayan.ritual.ui.toModel
+import com.ayan.ritual.render.ACCENTS
+import com.ayan.ritual.share.StoryShare
 import com.ayan.ritual.ui.BuiltScreen
 import com.ayan.ritual.ui.HomeScreen
 import com.ayan.ritual.ui.OnboardingFlow
@@ -31,6 +46,8 @@ import com.ayan.ritual.ui.RitualTheme
 import com.ayan.ritual.ui.ShelfScreen
 import com.ayan.ritual.ui.WelcomeScreen
 import com.ayan.ritual.widget.RitualWidgetProvider
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 
 sealed interface Route {
@@ -39,10 +56,23 @@ sealed interface Route {
     data object Onboarding : Route
     data object Home : Route
     data class Detail(val habitId: String) : Route
-    /** Creating the ritual that builds [identity], which is blank when a
-        later one is added from Home. */
-    data class Create(val identity: String = "") : Route
-    data class Paywall(val reason: PaywallReason = PaywallReason.ANOTHER) : Route
+    /**
+     * The sentence a ritual will build: asked first for every new one, and
+     * again when one is edited. The rest is the draft to hand back to
+     * [Create], so going there and back loses nothing. [fromCreate] is where
+     * back goes: to that draft, or out to Home.
+     */
+    data class Ask(
+        val tail: String = "", val name: String = "", val slot: Int = 0, val accent: Int = 0,
+        val editId: String? = null, val fromCreate: Boolean = false
+    ) : Route
+    /** Naming the ritual that builds the sentence ending in [tail]; with [editId], changing one. */
+    data class Create(
+        val tail: String = "", val name: String = "", val slot: Int = 0, val accent: Int = 0,
+        val editId: String? = null
+    ) : Route
+    /** [then] is where closing it goes; Home when there is nowhere better. */
+    data class Paywall(val reason: PaywallReason = PaywallReason.ANOTHER, val then: Route? = null) : Route
     data object Account : Route
     /** Thirty days cleared, waiting to be claimed. */
     data class Built(val habitId: String) : Route
@@ -148,6 +178,19 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
 
     val habits by HabitStore.habitsState
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    // A post worth making, every tenth day kept past the thirty. From the
+    // widget it waits for the app to open; from a ritual's page it follows
+    // the count he has just said.
+    var brag by remember { mutableStateOf<Pair<String, Int>?>(null) }
+    LaunchedEffect(Unit) {
+        val pending = Moments.pendingBrag(context)
+        if (pending != null && habits.any { it.id == pending.first && it.isDone(LocalDate.now()) }) {
+            delay(600)
+            brag = pending
+        }
+    }
 
     // Backup: signed in *and* unlocked. Signing in alone is an account, not a
     // backup; the squares stay on this phone until the unlock turns it on.
@@ -169,80 +212,146 @@ private fun RitualApp(openHabitId: String?, onConsumed: () -> Unit) {
         if (ready != null && !busy) route = Route.Built(ready.id)
     }
 
-    when (val r = route) {
-        is Route.Welcome -> WelcomeScreen(
-            onSignedIn = { route = firstRoute() },
-            onSkip = {
-                Onboarding.markSkippedSignIn()
-                route = firstRoute()
+    Box(Modifier.fillMaxSize()) {
+        when (val r = route) {
+            is Route.Welcome -> WelcomeScreen(
+                onSignedIn = { route = firstRoute() },
+                onSkip = {
+                    Onboarding.markSkippedSignIn()
+                    route = firstRoute()
+                }
+            )
+
+            is Route.Onboarding -> OnboardingFlow(
+                habits = habits,
+                onFinished = { id ->
+                    Onboarding.finishFlow()
+                    val landing = id?.let { Route.Detail(it) } ?: Route.Home
+                    // The first ritual is set up, which is the one moment to say
+                    // once, and in general, what the unlock buys. Closing it lands
+                    // exactly where finishing the flow always did.
+                    route = if (Unlock.unlocked) landing else Route.Paywall(PaywallReason.WELCOME, then = landing)
+                }
+            )
+
+            is Route.Home -> HomeScreen(
+                habits = habits,
+                onOpen = { route = Route.Detail(it.id) },
+                onCreate = { route = Route.Ask(accent = habits.size % ACCENTS.size) },
+                onPaywall = { route = Route.Paywall() },
+                onAccount = { route = Route.Account },
+                onShelf = { route = Route.Shelf }
+            )
+
+            is Route.Paywall -> PaywallScreen(reason = r.reason, onClose = { route = r.then ?: Route.Home })
+
+            is Route.Account -> AccountScreen(
+                onBack = { route = Route.Home },
+                onBackup = { route = Route.Paywall(PaywallReason.BACKUP) }
+            )
+
+            is Route.Built -> {
+                val habit = habits.firstOrNull { it.id == r.habitId }
+                if (habit == null) {
+                    route = Route.Home
+                } else {
+                    BuiltScreen(
+                        habit = habit,
+                        // Day thirty is a sentence that is now true, not an
+                        // ending: it goes on the shelf either way, and carrying
+                        // on goes back to the same ritual, still counting.
+                        onCarryOn = {
+                            HabitStore.markBuilt(context, habit.id)
+                            route = Route.Detail(habit.id)
+                            Toast.makeText(context, "On your shelf. Day ${Goal.DAYS + 1} is next.", Toast.LENGTH_SHORT).show()
+                        },
+                        onClaim = {
+                            HabitStore.markBuilt(context, habit.id)
+                            route = Route.Shelf
+                        }
+                    )
+                }
             }
-        )
 
-        is Route.Onboarding -> OnboardingFlow(
-            habits = habits,
-            onFinished = { id ->
-                Onboarding.finishFlow()
-                route = id?.let { Route.Detail(it) } ?: Route.Home
+            is Route.Shelf -> ShelfScreen(
+                habits = habits,
+                onBack = { route = Route.Home },
+                onShare = { }
+            )
+
+            is Route.Ask -> AskScreen(
+                initialTail = r.tail,
+                editing = r.editId != null,
+                onNext = { tail -> route = Route.Create(tail, r.name, r.slot, r.accent, r.editId) },
+                onBack = {
+                    route = if (r.fromCreate) Route.Create(r.tail, r.name, r.slot, r.accent, r.editId) else Route.Home
+                }
+            )
+
+            is Route.Create -> {
+                val editing = r.editId?.let { id -> habits.firstOrNull { it.id == id } }
+                if (r.editId != null && editing == null) {
+                    route = Route.Home
+                } else {
+                    CreateScreen(
+                        identity = if (r.tail.isBlank()) "" else sentenceStart(Onboarding.name) + r.tail.trim(),
+                        title = if (editing != null) "Edit ritual" else "Now, the ritual.",
+                        lead = if (editing != null) null else "One small thing you'll do each day that makes it true.",
+                        initialAccent = r.accent,
+                        initialName = r.name,
+                        initialSlot = r.slot,
+                        editing = editing,
+                        onChangeSentence = { name, slot, accent ->
+                            route = Route.Ask(r.tail, name, slot, accent, r.editId, fromCreate = true)
+                        },
+                        onDeleted = { route = Route.Home },
+                        onDone = { route = Route.Detail(it.id) },
+                        onBack = {
+                            route = if (editing != null) Route.Detail(editing.id) else Route.Ask(r.tail, accent = r.accent)
+                        }
+                    )
+                }
             }
-        )
 
-        is Route.Home -> HomeScreen(
-            habits = habits,
-            onOpen = { route = Route.Detail(it.id) },
-            onCreate = { route = Route.Create() },
-            onPaywall = { route = Route.Paywall() },
-            onAccount = { route = Route.Account },
-            onShelf = { route = Route.Shelf }
-        )
-
-        is Route.Paywall -> PaywallScreen(reason = r.reason, onClose = { route = Route.Home })
-
-        is Route.Account -> AccountScreen(
-            onBack = { route = Route.Home },
-            onBackup = { route = Route.Paywall(PaywallReason.BACKUP) }
-        )
-
-        is Route.Built -> {
-            val habit = habits.firstOrNull { it.id == r.habitId }
-            if (habit == null) {
-                route = Route.Home
-            } else {
-                BuiltScreen(
-                    habit = habit,
-                    onClaim = {
-                        HabitStore.markBuilt(context, habit.id)
-                        route = Route.Shelf
-                    },
-                    // Not now is not never: it stays unclaimed and the check
-                    // above will offer it again on the next launch.
-                    onLater = { route = Route.Home }
-                )
+            is Route.Detail -> {
+                val habit = habits.firstOrNull { it.id == r.habitId }
+                if (habit == null) {
+                    route = Route.Home
+                } else {
+                    DetailScreen(
+                        habit = habit,
+                        onBack = { route = Route.Home },
+                        onPaywall = { reason -> route = Route.Paywall(reason) },
+                        onEdit = {
+                            route = Route.Create(
+                                tail = tailOf(habit.identity), name = habit.name,
+                                slot = SLOTS.indexOf(habit.slot).coerceAtLeast(0), accent = habit.accentIndex,
+                                editId = habit.id
+                            )
+                        },
+                        onBrag = { n -> scope.launch { delay(1900); brag = habit.id to n } }
+                    )
+                }
             }
         }
 
-        is Route.Shelf -> ShelfScreen(
-            habits = habits,
-            onBack = { route = Route.Home },
-            onShare = { }
-        )
-
-        is Route.Create -> CreateScreen(
-            identity = r.identity,
-            onDone = { route = Route.Detail(it.id) },
-            onBack = { route = Route.Home }
-        )
-
-        is Route.Detail -> {
-            val habit = habits.firstOrNull { it.id == r.habitId }
-            if (habit == null) {
-                route = Route.Home
-            } else {
-                DetailScreen(
-                    habit = habit,
-                    onBack = { route = Route.Home },
-                    onPaywall = { reason -> route = Route.Paywall(reason) }
-                )
-            }
+        val asking = brag
+        val bragHabit = asking?.let { (id, _) -> habits.firstOrNull { it.id == id } }
+        if (asking != null && bragHabit != null) {
+            BragSheet(
+                habit = bragHabit,
+                days = asking.second,
+                onShare = {
+                    Moments.markBragged(context, bragHabit.id, asking.second)
+                    brag = null
+                    if (Unlock.unlocked) StoryShare.shareStreak(context, bragHabit.toModel(LocalDate.now(), LocalDate.now().year))
+                    else route = Route.Paywall(PaywallReason.SHARE)
+                },
+                onDismiss = {
+                    Moments.markBragged(context, bragHabit.id, asking.second)
+                    brag = null
+                }
+            )
         }
     }
 }

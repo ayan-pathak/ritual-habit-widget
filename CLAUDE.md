@@ -63,6 +63,14 @@ His mood is derived from streak state (`Cat.moodFor`), never chosen for decorati
 
 **He grows out of the bottom edge of whatever holds him**, never floats in the middle of it. A portrait cropped by its own frame reads as a character; one centred in a box reads as a sticker. Where there is no box he stands straight on the colour, and there is never a pale tile behind him: two near-whites meeting was the one place he lost his edges.
 
+### Full body
+
+`render/MochiBody.kt` gives him a sitting body for the bigger moments, one `Pose` per screen: waving on Welcome, peeking over Next, saying hi on the name step, perched on the sentence card, cheering beside the day-thirty post, sitting on the widget, a key / card / selfie / cloud on the four paywalls, a party on day thirty, and dozing on an empty home. The head and chest are still the real portrait (rasterised once per size); the body below is drawn in the portrait's own greys and outline weight, every limb one curved outline with toes, so nothing reads as a straight line next to the face. Each frame is a pure function of the clock, and `MochiPose` in `ui/Components.kt` only keeps time and stands the frame's ground line on the bottom edge of its box. Badges and the detail header keep the head-only `MochiTile`. The widget pops him up from behind the card's top edge (`SlabRenderer.Config.peekDp`, a still `Pose.POP` frame in a clear strip above the card), since nothing can draw outside a widget's own bounds; on a widget too short to spare the strip he goes back in his header box.
+
+He also moves about the app, always in answer to something: he walks in along the Welcome block and along the top of the widget before settling (`MochiWalkIn`), says the name being typed back to them, rises from the bottom of the screen with hearts and the count when a day is kept (the page opens room below its last row for him, so he never covers the button just pressed), and now and then peeks over a different card on Home. `Pose.POP` hides behind an edge: `MochiBody.ledgeAt()` is where that edge sits in his frame, he is clipped above it, and his paws hook over it. Line it up with the top of whatever he rises from; never leave him floating over a button. What he says comes from `data/Moments.kt`: the run when there is one, otherwise the total. Past day thirty, every tenth day kept he asks for a post (`BragSheet`).
+
+On the widget he cannot move, so he speaks instead: `SlabRenderer.Config.say` draws a bubble beside him. Marking from the widget shows the count for a few seconds, and a periodic update sometimes leaves a nudge or the count up until the next one. A change of pose blends over `MochiBody.BLEND` rather than cutting. Every animated value must start and end each cycle where it began: a squash that snaps from one frame to the next reads as jitter, which is what `jump` and `hopOnce` are shaped to avoid.
+
 ### Motion
 
 `render/MochiMotion.kt` is the beat table and a clock, with no Compose and no `android.graphics` in it, so iOS can run the same timings against its own drawing. `MochiTile` advances it once a frame and moves a rasterised mood rather than redrawing seventy-five paths.
@@ -82,6 +90,7 @@ A beat answers a change of state, exactly as the face does. `MochiTile` picks it
 ## Gotchas
 
 - `Fonts.load(context)` must run before any renderer draws text. `MainActivity`, `WidgetConfigActivity` and the widget provider all call it.
+- The widget is one size only, 4x2 with `resizeMode="none"` (`res/xml/ritual_widget_info.xml`). Other sizes broke the card on some launchers; do not reopen resizing.
 - The widget's tap targets are transparent panes in `res/layout/widget_ritual.xml` laid over the bitmap. If you move the action pill in `SlabRenderer.drawAction`, move `tap_action` to match.
 - `Palette` colours are `val`, not `const val` — Kotlin will not accept `.toInt()` in a compile-time constant.
 

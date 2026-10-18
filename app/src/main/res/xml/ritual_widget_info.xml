@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+  One size only: four cells wide, two tall, and no resizing. The card was
+  drawn for that shape; squeezed square or stretched tall on some launchers
+  it broke, so the launcher is no longer offered any other.
+-->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="250dp"
     android:minHeight="110dp"
-    android:minResizeWidth="180dp"
-    android:minResizeHeight="80dp"
-    android:maxResizeWidth="520dp"
-    android:maxResizeHeight="340dp"
     android:targetCellWidth="4"
     android:targetCellHeight="2"
-    android:resizeMode="horizontal|vertical"
+    android:resizeMode="none"
     android:updatePeriodMillis="1800000"
     android:widgetCategory="home_screen"
     android:initialLayout="@layout/widget_ritual"
